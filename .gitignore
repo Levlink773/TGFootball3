@@ -1,0 +1,57 @@
+# Операционные системы
+.DS_Store
+Thumbs.db
+
+photos_info.json
+# Папки и файлы, создаваемые IDE
+.vscode/
+.idea/
+*.sublime-workspace
+*.sublime-project
+# Папка с виртуальным окружением
+venv/
+env/
+.env/
+.env
+.alembic.ini
+/photos_info.json
+*.zip
+
+# Файлы с кэшированием
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Файлы для тестов
+.coverage
+nosetests.xml
+coverage.xml
+*.cover
+*.log
+
+# Конфигурационные файлы
+*.ini
+*.cfg
+
+# Папка с файлом базы данных SQLite
+db.sqlite3
+
+# Папка с результатами сборки
+build/
+dist/
+
+# Файлы с тестовыми данными
+*.csv
+*.xlsx
+
+# Дополнительные файлы
+*.swp
+*.swo
+*.bak
+
+# Пакеты и зависимости
+*.egg-info/
+*.egg
+*.dist-info/
+*.nib
