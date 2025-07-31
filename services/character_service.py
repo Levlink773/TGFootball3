@@ -1,6 +1,9 @@
+from sqlalchemy.orm import selectinload
+
 from database.models.character import Character
 from database.models.reminder_character import ReminderCharacter
 from database.models.item import Item
+from database.models.user_bot import UserBot, STATUS_USER_REGISTER
 
 from database.session import get_session
 from sqlalchemy import select, update, or_
@@ -23,8 +26,27 @@ class CharacterService:
                 )
                 all_characters_not_bot = result.unique().scalars().all()
                 return all_characters_not_bot
-   
 
+    @classmethod
+    async def get_all_characters_where_end_training(clc) -> list[Character]:
+        async for session in get_session():
+            stmt = (
+                select(Character)
+                .where(Character.is_bot == False)
+                .join(Character.owner)  # join по foreign key characters_user_id
+                .where(UserBot.status_register == STATUS_USER_REGISTER.END_TRAINING)
+                .options(
+                    selectinload(Character.owner),
+                    selectinload(Character.club),
+                    selectinload(Character.reminder),
+                    selectinload(Character.t_shirt),
+                    selectinload(Character.shorts),
+                    selectinload(Character.gaiters),
+                    selectinload(Character.boots),
+                )
+            )
+            result = await session.execute(stmt)
+            return list(result.scalars().all())
 
     @classmethod
     async def get_all_users_not_bot(cls) -> list[Character]:
@@ -45,7 +67,7 @@ class CharacterService:
                 result = await session.execute(stmt)
                 all_characters_not_bot = result.unique().scalars().all()
                 return all_characters_not_bot
-   
+
     @classmethod
     async def get_character(cls, character_user_id: int) -> Character:
         async for session in get_session():
@@ -55,7 +77,6 @@ class CharacterService:
                 )
                 current_character = result.scalar_one_or_none()
                 return current_character
-            
 
     @classmethod
     async def get_character_by_id(cls, character_id: int) -> Character:
@@ -66,14 +87,12 @@ class CharacterService:
                 )
                 current_character = result.scalar_one_or_none()
                 return current_character
-    
-            
-    
+
     @classmethod
     async def create_character(cls, character_obj: Character) -> Character:
         character_obj.gender = character_obj.gender.value
         character_obj.position = character_obj.position.value
-        
+
         async for session in get_session():
             async with session.begin():
                 try:
@@ -83,9 +102,10 @@ class CharacterService:
                 merged_obj = await session.merge(character_obj)
                 await session.commit()
                 return merged_obj
-            
+
     @classmethod
-    async def update_character_characteristic(cls, character_id: int, type_characteristic: str, amount_add_points: int) -> Character:
+    async def update_character_characteristic(cls, character_id: int, type_characteristic: str,
+                                              amount_add_points: int) -> Character:
         async for session in get_session():
             async with session as sess:
                 try:
@@ -102,10 +122,10 @@ class CharacterService:
                         f"Характеристика: '{type_characteristic}', добавленные очки: {amount_add_points}. "
                         f"Текст ошибки: {E}"
                     )
-            
 
     @classmethod
-    async def update_training_params(cls, character_obj: Character, characteristic: str, training_time: datetime) -> Character:
+    async def update_training_params(cls, character_obj: Character, characteristic: str,
+                                     training_time: datetime) -> Character:
         async for session in get_session():
             async with session.begin():
                 try:
@@ -118,7 +138,6 @@ class CharacterService:
                 await session.commit()
                 return merged_obj
 
-
     @classmethod
     async def consume_energy(cls, character_id: int, energy_consumed: int) -> Character:
         async for session in get_session():
@@ -128,22 +147,20 @@ class CharacterService:
                     character.current_energy -= energy_consumed
                     await session.flush()
 
-                
-    
     @classmethod
     async def edit_character_energy(
-        cls, 
-        character_id: int, 
-        amount_energy: int) -> Character:
+            cls,
+            character_id: int,
+            amount_energy: int) -> Character:
         async for session in get_session():
             async with session.begin():
                 character = await session.get(Character, character_id)
                 if character:
                     character.current_energy += amount_energy
                     await session.flush()
-                
-    @classmethod        
-    async def update_character_club_id(cls,character: Character ,club_id: int):
+
+    @classmethod
+    async def update_character_club_id(cls, character: Character, club_id: int):
         async for session in get_session():
             async with session.begin():
                 try:
@@ -156,7 +173,7 @@ class CharacterService:
                 merged_obj = await session.merge(character)
                 await session.commit()
                 return merged_obj
-            
+
     @classmethod
     async def update_energy_for_non_bots(cls):
         async for session in get_session():
@@ -180,7 +197,7 @@ class CharacterService:
                     await session.commit()
                 except Exception as e:
                     raise e
-                
+
     @classmethod
     async def get_character_how_update_energy(cls) -> list[Character]:
         async for session in get_session():
@@ -189,15 +206,14 @@ class CharacterService:
                     result = await session.execute(
                         select(Character)
                         .where(Character.is_bot == False)
-                        .where(Character.current_energy <= CONST_ENERGY) 
+                        .where(Character.current_energy <= CONST_ENERGY)
                         .where(Character.vip_pass_expiration_date <= datetime.now())
                     )
                     all_characters_not_bot = result.unique().scalars().all()
                     return all_characters_not_bot
                 except Exception as e:
                     raise e
-                
-                
+
     @classmethod
     async def leave_club(cls, character: Character):
         async for session in get_session():
@@ -211,19 +227,19 @@ class CharacterService:
                 except Exception as e:
                     await session.rollback()
                     raise e
-                
+
     @classmethod
     async def update_money_character(cls, character_id: int, amount_money_adjustment: int):
         async for session in get_session():
             async with session.begin():
                 stmt = (
                     update(Character)
-                    .where(Character.id == character_id) 
-                    .values(money=Character.money + amount_money_adjustment) 
+                    .where(Character.id == character_id)
+                    .values(money=Character.money + amount_money_adjustment)
                 )
                 await session.execute(stmt)
                 await session.commit()
-                
+
     @classmethod
     async def add_exp_character(cls, character_id: int, amount_exp_add: int):
         async for session in get_session():
@@ -236,8 +252,7 @@ class CharacterService:
 
                 session.add(character)
                 await session.commit()
-                
-                
+
     @classmethod
     async def update_character_education_time(cls, character: Character, amount_add_time: timedelta):
         async for session in get_session():
@@ -246,12 +261,11 @@ class CharacterService:
                     session.add(character)
                 except:
                     pass
-                character.reminder.education_reward_date = datetime.now()+amount_add_time
+                character.reminder.education_reward_date = datetime.now() + amount_add_time
                 merged_obj = await session.merge(character)
                 await session.commit()
                 return merged_obj
-            
-                
+
     @classmethod
     async def equip_item(cls, character_obj: Character, item_obj: Item) -> Character:
         category_field_map = {
@@ -260,7 +274,8 @@ class CharacterService:
             'GAITERS': 'gaiters_id',
             'BOOTS': 'boots_id'
         }
-        item_category = item_obj.category.value.upper() if isinstance(item_obj.category, Enum) else item_obj.category.upper()
+        item_category = item_obj.category.value.upper() if isinstance(item_obj.category,
+                                                                      Enum) else item_obj.category.upper()
         field_name = category_field_map.get(item_category)
 
         async for session in get_session():
@@ -269,13 +284,12 @@ class CharacterService:
                     session.add(character_obj)
                 except:
                     pass
-                
+
                 merged_character = await session.merge(character_obj)
                 setattr(merged_character, field_name, item_obj.id)
                 await session.commit()
-                
+
                 return merged_character
-            
 
     @classmethod
     async def edit_status_reward_by_referal(cls, character_user_id: int):
@@ -288,7 +302,7 @@ class CharacterService:
                 )
                 await session.execute(stmt)
                 await session.commit()
-                
+
     @classmethod
     async def get_my_referals(cls, character_user_id: int):
         async for session in get_session():
@@ -301,15 +315,12 @@ class CharacterService:
                     return all_characters_not_bot
                 except Exception as e:
                     raise e
-                
 
-
-                
     @classmethod
     async def change_position(
-        cls,
-        character_id: Character,
-        position: str
+            cls,
+            character_id: Character,
+            position: str
     ):
         async for session in get_session():
             async with session.begin():
@@ -319,61 +330,60 @@ class CharacterService:
                     .values(position=position)
                 )
                 await session.execute(stmt)
-                await session.commit()                
-                
+                await session.commit()
+
     @classmethod
     async def add_trainin_key(
-        cls,
-        character_id: int,
+            cls,
+            character_id: int,
     ):
         async for session in get_session():
             async with session.begin():
                 stmt = (
                     update(Character)
                     .where(Character.id == character_id)
-                    .values(training_key= Character.training_key + 1)
+                    .values(training_key=Character.training_key + 1)
                 )
                 await session.execute(stmt)
                 await session.commit()
-                
+
     @classmethod
     async def remove_training_key(
-        cls,
-        character_id: int,
+            cls,
+            character_id: int,
     ):
         async for session in get_session():
             async with session.begin():
                 stmt = (
                     update(Character)
                     .where(Character.id == character_id)
-                    .values(training_key= Character.training_key - 1)
+                    .values(training_key=Character.training_key - 1)
                 )
                 await session.execute(stmt)
                 await session.commit()
-                
+
     @classmethod
     async def get_characters_by_position(
-        cls,
-        position: PositionCharacter
+            cls,
+            position: PositionCharacter
     ) -> list[Character]:
-        
+
         async for session in get_session():
             async with session.begin():
-                
                 stmt = (
                     select(Character)
                     .where(Character.position == position.value)
                     .where(Character.is_bot == False)
                 )
-                
+
                 result = await session.execute(stmt)
                 characters = result.unique().scalars().all()
                 return characters
-            
+
     @classmethod
     async def update_get_new_member_bonus(
-        cls,
-        character_id: int,
+            cls,
+            character_id: int,
     ):
         async for session in get_session():
             async with session.begin():
