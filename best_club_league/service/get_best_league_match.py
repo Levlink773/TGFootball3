@@ -87,7 +87,9 @@ class BestClubLeagueMatchService:
         top_clubs = await self.get_top_clubs()
         group_generator = generate_club_group(top_clubs)
         for group in LeagueRanking:
-            group_clubs = next(group_generator)
+            group_clubs = next(group_generator, None) # CH
+            if group_clubs is None: # CH
+                return # CH
             await self.create_matches(
                 group_clubs = group_clubs,
                 group       = group

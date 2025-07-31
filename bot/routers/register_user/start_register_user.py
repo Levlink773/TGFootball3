@@ -47,7 +47,7 @@ class StartRegisterUser:
         await asyncio.sleep(TIME_SLEEP_REGISTER_MESSAGE)
         
         await self._edit_status(
-            new_status=STATUS_USER_REGISTER.CREATER_CHARACTER
+            new_status=STATUS_USER_REGISTER.CREATE_CHARACTER
         )
         await self._send_message(
             text = TEXT_STAGE_REGISTER_USER[self._status],

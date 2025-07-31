@@ -227,9 +227,11 @@ class MatchData:
     
     @property
     def all_characters_in_clubs(self) -> list[Character]:
-        return [
-            character for club in self.all_clubs 
-            for character in club.club.characters
+        return [ # CH
+            character # CH
+            for club in self.all_clubs # CH
+            if club.club and club.club.characters # CH
+            for character in club.club.characters # CH
         ]
     
     def get_chance_clubs(self) -> Tuple[int, int]:
