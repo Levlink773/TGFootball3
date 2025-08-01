@@ -1,7 +1,6 @@
 import random
-from typing import Any, Coroutine
 
-from sqlalchemy import select, Row, RowMapping
+from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 
 from database.models.blitz_character import BlitzCharacter
@@ -71,3 +70,10 @@ class BlitzTeamService:
             if len(characters) != 2:
                 raise ValueError(f"Команда должна содержать 2 персонажа, но найдено: {len(characters)}")
             return characters[0], characters[1]
+
+    @classmethod
+    async def get_by_id(cls, team_id: int) -> BlitzTeam | None:
+        async for session in get_session():
+            async with session.begin():
+                result = await session.execute(select(BlitzTeam).where(BlitzTeam.id == team_id))
+                return result.scalar_one_or_none()

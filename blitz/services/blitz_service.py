@@ -1,6 +1,6 @@
-from typing import Any, Coroutine
+from typing import Any
 
-from sqlalchemy import select, delete, Row, RowMapping
+from sqlalchemy import select, delete
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import selectinload
 

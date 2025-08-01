@@ -1,12 +1,13 @@
 import asyncio
 from datetime import datetime, time, timedelta
+from typing import Any, Coroutine
 
 from blitz.blitz_reminder import BlitzReminder
-from blitz.services.blitz_service import BlitzService
 from blitz.enum_blitz import BlitzStatus
+from blitz.services.blitz_service import BlitzService
 from blitz.services.blitz_team_service import BlitzTeamService
+from blitz.services.message_sender.blitz_sender import BlitzTeamSender
 from database.models.blitz import Blitz
-from database.models.blitz_team import BlitzTeam
 
 
 class StartBlitzs:
@@ -57,10 +58,9 @@ class StartBlitz:
         self.stages_of_final = stages_of_final
         self.necessary_users = 2 ** stages_of_final
 
-    async def _start_blitz(self, blitz_id: int) -> Blitz:
+    async def _start_blitz(self, blitz_id: int):
         teams = await BlitzTeamService.create_teams(self.necessary_users / 2, blitz_id)
-
-
+        await BlitzTeamSender.send_teams_message(teams)
 
 
 
