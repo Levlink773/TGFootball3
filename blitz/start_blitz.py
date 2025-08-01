@@ -6,6 +6,7 @@ from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 
 from blitz.blitz_reminder import BlitzReminder
+from blitz.blitz_service import BlitzService
 from database.models.blitz import Blitz
 from database.session import get_session
 
@@ -54,33 +55,16 @@ class StartBlitz:
     def __init__(self, start_datetime: datetime):
         self.start_datetime = start_datetime.replace(microsecond=0)
 
-    async def __register_blitz(self) -> Optional[Blitz]:
-        async for session in get_session():
-            async with session.begin():
-                result = await session.execute(select(Blitz).where(Blitz.start_at == self.start_datetime))
-                blitz: Blitz = result.scalar_one_or_none()
-
-                if not blitz:
-                    new_blitz = Blitz(start_at=self.start_datetime)
-                    try:
-                       session.add(new_blitz)
-                       await session.flush()
-                       return new_blitz
-                    except IntegrityError:
-                        await session.rollback()
-                        result = await session.execute(select(Blitz).where(Blitz.start_at == self.start_datetime))
-                        blitz = result.scalar_one()
-                        return blitz
-
-                return blitz
     async def _start_blitz(self) -> Blitz:
         # Здесь будет сама логика блиц турнира
         pass
 
     async def start(self):
-        blitz: Blitz = await self.__register_blitz()
+        blitz: Blitz = await BlitzService().get_or_create_blitz_by_start(self.start_datetime)
 
         await BlitzReminder(blitz, 20, 30).remind()
         print("🏁 Блиц начинается!")
         await self._start_blitz()
         print("🏁 Блиц завершен!")
+        await BlitzService.remove_blitz_by_id(blitz.id)
+        print("🏁 Блиц удален!")

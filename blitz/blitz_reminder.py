@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
-from blitz.blitz_register_service import BlitzRegisterService
+from blitz.blitz_service import BlitzService
 from bot.callbacks.blitz_callback import BlitzRegisterCallback
 from database.models.blitz import Blitz
 from database.models.character import Character
@@ -78,6 +78,6 @@ class BlitzReminder:
         now = datetime.now()
         if now < today_start:
             await asyncio.sleep((today_start - now).total_seconds())
-        characters = await BlitzRegisterService.get_characters_from_blitz_character(self.blitz_id)
+        characters = await BlitzService.get_characters_from_blitz_character(self.blitz_id)
         for character in characters:
             await _send_message(character, "🚀 «Турнір почався! Граємо 1/8 фіналу!»")
