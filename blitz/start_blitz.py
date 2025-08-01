@@ -1,9 +1,10 @@
-from datetime import time, datetime
+import asyncio
+from datetime import datetime, time, timedelta
 from typing import Optional
 
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 
-from blitz.blitz_register_service import BlitzRegisterService
 from blitz.blitz_reminder import BlitzReminder
 from database.models.blitz import Blitz
 from database.session import get_session
@@ -15,8 +16,19 @@ class StartBlitzs:
         StartBlitzs.validate_start_times(start_times)
 
         while True:
-            for start_time in start_times:
-                await StartBlitz(start_time).start()
+            now = datetime.now()
+            next_start_datetime = None
+
+            for t in sorted(start_times):
+                potential_start = datetime.combine(now.date(), t)
+                if potential_start < now:
+                    potential_start += timedelta(days=1)
+
+                if next_start_datetime is None or potential_start < next_start_datetime:
+                    next_start_datetime = potential_start
+            print(f"Планирую следующий блиц на {next_start_datetime}")
+            await StartBlitz(next_start_datetime).start()
+            await asyncio.sleep(1)
 
     @staticmethod
     def validate_start_times(start_times: list[time]):
@@ -39,41 +51,36 @@ class StartBlitzs:
 
 
 class StartBlitz:
-    def __init__(self, start_time: time):
-        self.start_time = start_time
+    def __init__(self, start_datetime: datetime):
+        self.start_datetime = start_datetime.replace(microsecond=0)
 
     async def __register_blitz(self) -> Optional[Blitz]:
-        current_datetime = self.__start_time_as_datetime()
-
         async for session in get_session():
             async with session.begin():
-                result = await session.execute(select(Blitz))
-                blitz: Blitz = result.scalars().first()
+                result = await session.execute(select(Blitz).where(Blitz.start_at == self.start_datetime))
+                blitz: Blitz = result.scalar_one_or_none()
 
                 if not blitz:
-                    new_blitz = Blitz(start_at=current_datetime)
-                    session.add(new_blitz)
-                    await session.flush()
-                    return new_blitz
+                    new_blitz = Blitz(start_at=self.start_datetime)
+                    try:
+                       session.add(new_blitz)
+                       await session.flush()
+                       return new_blitz
+                    except IntegrityError:
+                        await session.rollback()
+                        result = await session.execute(select(Blitz).where(Blitz.start_at == self.start_datetime))
+                        blitz = result.scalar_one()
+                        return blitz
 
-                if blitz.start_at == current_datetime:
-                    return blitz
-
-                await session.delete(blitz)
-                new_blitz = Blitz(start_at=current_datetime)
-                session.add(new_blitz)
-                await session.flush()
-                return new_blitz
+                return blitz
+    async def _start_blitz(self) -> Blitz:
+        # Здесь будет сама логика блиц турнира
+        pass
 
     async def start(self):
         blitz: Blitz = await self.__register_blitz()
-        BlitzRegisterService.current_blitz_id = blitz.id
 
-        await BlitzReminder(self.start_time).remind()
+        await BlitzReminder(blitz, 20, 30).remind()
         print("🏁 Блиц начинается!")
-        BlitzRegisterService.can_register = False
-
-
-    def __start_time_as_datetime(self) -> datetime:
-        now = datetime.now()
-        return datetime.combine(now.date(), self.start_time)
+        await self._start_blitz()
+        print("🏁 Блиц завершен!")
