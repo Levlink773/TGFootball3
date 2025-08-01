@@ -1,14 +1,12 @@
 import asyncio
 from datetime import datetime, time, timedelta
-from typing import Optional
-
-from sqlalchemy import select
-from sqlalchemy.exc import IntegrityError
 
 from blitz.blitz_reminder import BlitzReminder
-from blitz.blitz_service import BlitzService
+from blitz.services.blitz_service import BlitzService
+from blitz.enum_blitz import BlitzStatus
+from blitz.services.blitz_team_service import BlitzTeamService
 from database.models.blitz import Blitz
-from database.session import get_session
+from database.models.blitz_team import BlitzTeam
 
 
 class StartBlitzs:
@@ -52,19 +50,31 @@ class StartBlitzs:
 
 
 class StartBlitz:
-    def __init__(self, start_datetime: datetime):
+    def __init__(self, start_datetime: datetime, stages_of_final: int = 5):
         self.start_datetime = start_datetime.replace(microsecond=0)
+        if stages_of_final <= 1:
+            raise ValueError("count of final must be greater than 1")
+        self.stages_of_final = stages_of_final
+        self.necessary_users = 2 ** stages_of_final
 
-    async def _start_blitz(self) -> Blitz:
-        # Здесь будет сама логика блиц турнира
-        pass
+    async def _start_blitz(self, blitz_id: int) -> Blitz:
+        teams = await BlitzTeamService.create_teams(self.necessary_users / 2, blitz_id)
 
-    async def start(self):
+
+
+
+
+
+    async def start(self) -> BlitzStatus:
         blitz: Blitz = await BlitzService().get_or_create_blitz_by_start(self.start_datetime)
 
-        await BlitzReminder(blitz, 20, 30).remind()
+        status = await BlitzReminder(blitz, necessary_count_users=self.necessary_users).remind()
+        if not status:
+            print("Блиц турнир отменен!")
+            return BlitzStatus.CANCELED
         print("🏁 Блиц начинается!")
-        await self._start_blitz()
+        await self._start_blitz(blitz.id)
         print("🏁 Блиц завершен!")
         await BlitzService.remove_blitz_by_id(blitz.id)
         print("🏁 Блиц удален!")
+        return BlitzStatus.FINISH

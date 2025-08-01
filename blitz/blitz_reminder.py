@@ -1,42 +1,28 @@
 import asyncio
-import traceback
 from datetime import datetime, timedelta
 
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
-from blitz.blitz_service import BlitzService
+from blitz.services.blitz_service import BlitzService
+from blitz.services.message_sender.blitz_sender import send_message_all_characters
 from bot.callbacks.blitz_callback import BlitzRegisterCallback
 from database.models.blitz import Blitz
 from database.models.character import Character
-from loader import bot
 from services.character_service import CharacterService
-
-
-async def _send_message(character: Character, text: str, reply_markup: InlineKeyboardMarkup = None):
-    try:
-        if character.is_bot:
-            return
-
-        await bot.send_message(
-            chat_id=character.characters_user_id,
-            text=text,
-            reply_markup=reply_markup
-        )
-    except Exception as E:
-        traceback.print_exc()
-        print(E)
 
 
 class BlitzReminder:
     def __init__(self,
                  blitz: Blitz,
                  remind_for_simple_users: int = 20,
-                 remind_for_vip_users: int = 30
+                 remind_for_vip_users: int = 30,
+                 necessary_count_users: int = 32
                  ):
         self.blitz_start_at = blitz.start_at
         self.blitz_id = blitz.id
         self.remind_for_simple_users = remind_for_simple_users
         self.remind_for_vip_users = remind_for_vip_users
+        self.necessary_count_users = necessary_count_users
 
     async def __reminder_blitz_for_users(self, characters: list[Character], required_vip: bool, blitz_id: int):
         filtered_characters = [
@@ -49,10 +35,9 @@ class BlitzReminder:
         markup = InlineKeyboardMarkup(inline_keyboard=[
             [InlineKeyboardButton(text="Register", callback_data=BlitzRegisterCallback(blitz_id=blitz_id).pack())]
         ])
-        for character in filtered_characters:
-            await _send_message(character, text, reply_markup=markup)
+        await send_message_all_characters(filtered_characters, text, reply_markup=markup)
 
-    async def remind(self):
+    async def remind(self) -> bool:
         now = datetime.now()
         today_start = self.blitz_start_at
 
@@ -79,5 +64,9 @@ class BlitzReminder:
         if now < today_start:
             await asyncio.sleep((today_start - now).total_seconds())
         characters = await BlitzService.get_characters_from_blitz_character(self.blitz_id)
-        for character in characters:
-            await _send_message(character, "🚀 «Турнір почався! Граємо 1/8 фіналу!»")
+        if len(characters) == self.necessary_count_users:
+            await send_message_all_characters(characters, "🚀 «Турнір почався! Граємо 1/8 фіналу!»")
+        else:
+            await send_message_all_characters(characters, "Blitz Canceled!")
+            return False
+        return True

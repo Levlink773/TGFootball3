@@ -1,4 +1,6 @@
-from sqlalchemy import select, delete
+from typing import Any, Coroutine
+
+from sqlalchemy import select, delete, Row, RowMapping
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import selectinload
 
@@ -11,7 +13,7 @@ from database.session import get_session
 
 class BlitzService:
     @classmethod
-    async def get_or_create_blitz_by_start(cls, start_datetime) -> Blitz:
+    async def get_or_create_blitz_by_start(cls, start_datetime) -> Blitz | None:
         async for session in get_session():
             async with session.begin():
                 result = await session.execute(select(Blitz).where(Blitz.start_at == start_datetime))
@@ -32,7 +34,7 @@ class BlitzService:
                 return blitz
 
     @classmethod
-    async def add_character_to_blitz(cls, blitz_id: int, character: Character) -> BlitzCharacter:
+    async def add_character_to_blitz(cls, blitz_id: int, character: Character) -> BlitzCharacter | None:
 
         async for session in get_session():
             async with session.begin():
@@ -63,13 +65,13 @@ class BlitzService:
                 return blitz_character
 
     @classmethod
-    async def get_blitz_by_id(cls, blitz_id: int) -> Blitz:
+    async def get_blitz_by_id(cls, blitz_id: int) -> Blitz | None:
         async for session in get_session():
-            result = await session.execute(select(Blitz).where(Blitz.id == blitz_id))
+            result = await session.execute(select(Blitz).where(Blitz.id == blitz_id).options(selectinload(Blitz.characters)))
             return result.scalar_one_or_none()
 
     @classmethod
-    async def remove_blitz_by_id(cls, blitz_id: int) -> Blitz:
+    async def remove_blitz_by_id(cls, blitz_id: int) -> Any | None:
         async for session in get_session():
             async with session.begin():
                 result = await session.execute(
@@ -85,7 +87,7 @@ class BlitzService:
         return blitz.characters
 
     @classmethod
-    async def get_characters_from_blitz_character(cls, blitz_id: int) -> list[Character]:
+    async def get_characters_from_blitz_character(cls, blitz_id: int) -> None | list[Any] | list[Character]:
         blitz_characters: list[BlitzCharacter] = await cls.get_blitz_character(blitz_id)
         character_ids = [bc.character_id for bc in blitz_characters]
 
@@ -99,4 +101,4 @@ class BlitzService:
                 .options(selectinload(Character.owner), selectinload(Character.club))
             )
             characters = result.scalars().all()
-            return characters
+            return list(characters)

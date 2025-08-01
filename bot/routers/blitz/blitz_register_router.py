@@ -3,7 +3,7 @@ import traceback
 from aiogram import Router
 from aiogram.types import CallbackQuery
 
-from blitz.blitz_service import BlitzService
+from blitz.services.blitz_service import BlitzService
 from blitz.exception import BlitzCloseError, CharacterExistsInBlitzError, BlitzDoesNotExistError
 from bot.callbacks.blitz_callback import BlitzRegisterCallback
 from database.models.character import Character
