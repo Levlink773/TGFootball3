@@ -1,8 +1,5 @@
-import random
-
 from enum import Enum
 
-from match.entities import MatchData
 from .types import SceneTemplate
 from ..entities import BlitzMatchData
 
@@ -207,13 +204,13 @@ GOAL_EVENT_SCENES = [
 class TemplatesMatch(Enum):    
     
     START_MATCH = """
-⚽️ Розпочинається епічний матч між командами <b>{name_first_club}</b> та <b>{name_second_club}</b>! 
+⚽️ Розпочинається епічний матч між командами <b>{name_first_team}</b> та <b>{name_second_team}</b>! 
 
-🏟️ Місце зустрічі: <b>{stadium_name}</b>.
+🏟️ Місце зустрічі бліц турнір
 
 🔹 На поле виходять бойові склади:
-- <b>{name_first_club}</b>: сила <b>{power_first_club:.2f}</b> 
-- <b>{name_second_club}</b>: сила <b>{power_second_club:.2f}</b>
+- <b>{name_first_team}</b>: сила <b>{power_first_team:.2f}</b> 
+- <b>{name_second_team}</b>: сила <b>{power_second_team:.2f}</b>
 
 🔥 Нехай цей поєдинок покаже, хто найсильніший! 🏆
 """
@@ -221,13 +218,11 @@ class TemplatesMatch(Enum):
     TEMPLATE_PARTICIPANTS_MATCH = """
 📋 <b>Склад команд на матч:</b>
 
-🔸 <b>{name_first_club}</b>
-- Кількість гравців: <b>{members_first_club}</b>
+🔸 <b>{name_first_team}</b>
 - Гравці: 
 {players_first_club}
 
-🔸 <b>{name_second_club}</b>
-- Кількість гравців: <b>{members_second_club}</b>
+🔸 <b>{name_second_team}</b>
 - Гравці: 
 {players_second_club}
 
@@ -238,11 +233,11 @@ class TemplatesMatch(Enum):
 👤 {character_name} | ⚔️ Сила: <b>{power_user:.2f}</b> | 📈 Рівень: <b>{lvl}</b>"""
 
     TEMPLATE_COMING_GOAL = """  
-⚽️ <b>До вирішального моменту залишилося лише 40 секунд!</b> ⚽️  
+⚽️ <b>До вирішального моменту залишилося лише 30 секунд!</b> ⚽️  
 
 🔥 <b>Поточні шанси на гол:</b>  
-- ⚽️ Команда:{name_first_club} - <b>{chance_first_club:.2f}%</b>  
-- ⚽️ Команда:{name_second_club} - <b>{chance_second_club:.2f}%</b>  
+- ⚽️ Команда:{name_first_team} - <b>{chance_first_team:.2f}%</b>  
+- ⚽️ Команда:{name_second_team} - <b>{chance_second_team:.2f}%</b>  
 
 💥 <b>Це момент істини!</b>
 Ваша енергія може стати тим самим поштовхом, що змінить усе — підтримайте свою команду, і вона проб’є точно в ціль! 🚀
@@ -251,20 +246,18 @@ class TemplatesMatch(Enum):
 Цей бонус посилить удар і збільшить шанси забити гол! ⚡️
 
 📣 <b>Усе в ваших руках!</b>
-⏳ Лише <b>40 секунд</b>, щоб вплинути на хід епізоду!
+⏳ Лише <b>30 секунд</b>, щоб вплинути на хід епізоду!
 <b>Надішліть енергію</b> — і допоможіть команді пробити ворота! 🥅🏆
 """  
 
     TEMPLATE_END = """
-🎉 Матч між командами <b>{name_first_club}</b> та <b>{name_second_club}</b> завершена! 
+🎉 Матч між командами <b>{name_first_team}</b> та <b>{name_second_team}</b> завершена! 
 
-📊 Кінцевий рахунок: <b>{goals_first_club}</b> - <b>{goals_second_club}</b>.
+📊 Кінцевий рахунок: <b>{goals_first_team}</b> - <b>{goals_second_team}</b>.
 
 {match_information}
 
 🏆 Дякуємо обом командам за чудову гру! Ви продемонстрували справжній дух суперництва та спортивності.
-
-До нових зустрічей на футбольному полі! ⚽️
     """
     
     DRAW_TEMPLATE = """
@@ -272,8 +265,8 @@ class TemplatesMatch(Enum):
 """
     
     WIN_LOSE_TEMPLATE = """
-🥇 Переможець: <b>{winner_club_name}</b>! 
-🥈 Друге місце: <b>{loser_club_name}</b>.
+Переможець: <b>{winner_team_name}</b>! 
+Програвша: <b>{loser_team_name}</b>.
 """
 
     TEMPLATE_REWARD_CHARACTER = """
@@ -296,10 +289,10 @@ class TemplatesMatch(Enum):
 """
     
     TEMPLATE_SCORE = """
-⚽️ <b>{scoring_club}</b> забиває гол!
+⚽️ <b>{scoring_team}</b> забиває гол!
 
-🏟 Матч: <b>{name_first_club}</b> — <b>{name_second_club}</b>
-📊 Рахунок: <b>{goals_first_club}</b> - <b>{goals_second_club}</b>
+🏟 Матч: <b>{name_first_team}</b> — <b>{name_second_team}</b>
+📊 Рахунок: <b>{goals_first_team}</b> - <b>{goals_second_team}</b>
 """
 
     TEMPLATE_MVP_CONGRATULATION = """
@@ -329,14 +322,14 @@ class GetterTemplatesMatch:
     ) -> str:
         
         context = {
-            'name_first_club': self.match_data.first_team.team_name,
-            'name_second_club': self.match_data.second_team.team_name,
-            'goals_first_club': self.match_data.first_team.goals,
-            'goals_second_club': self.match_data.second_team.goals,
-            'power_first_club': self.match_data.first_team.team_power ,
-            'power_second_club': self.match_data.second_team.team_power,
-            'members_first_club': len(self.match_data.first_team.characters_in_match),
-            'members_second_club': len(self.match_data.second_team.characters_in_match)
+            'name_first_team': self.match_data.first_team.team_name,
+            'name_second_team': self.match_data.second_team.team_name,
+            'goals_first_team': self.match_data.first_team.goals,
+            'goals_second_team': self.match_data.second_team.goals,
+            'power_first_team': self.match_data.first_team.team_power ,
+            'power_second_team': self.match_data.second_team.team_power,
+            'members_first_team': len(self.match_data.first_team.characters_in_match),
+            'members_second_team': len(self.match_data.second_team.characters_in_match)
         }
         if extra_context:
             context.update(extra_context)

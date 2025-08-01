@@ -102,3 +102,4 @@ class BlitzService:
             )
             characters = result.scalars().all()
             return list(characters)
+    

@@ -61,6 +61,9 @@ class StartBlitz:
     async def _start_blitz(self, blitz_id: int):
         teams = await BlitzTeamService.create_teams(self.necessary_users / 2, blitz_id)
         await BlitzTeamSender.send_teams_message(teams)
+        for i in range(self.stages_of_final):
+            await asyncio.sleep(60)
+            Blitz
 
 
 

@@ -3,12 +3,14 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Optional, Literal, Tuple
 
+from database.models.blitz_character import BlitzCharacter
 from database.models.blitz_team import BlitzTeam
 from database.models.character import Character
 from .constans import TIME_BLITZ_FIGHT
 from .utils import (
     calculate_bonus_donate_energy
 )
+from ..services.blitz_character_service import BlitzCharacterService
 from ..services.blitz_team_service import BlitzTeamService
 
 
@@ -27,8 +29,10 @@ class MatchTeamBlitz:
     
     async def init_data(self):
         self.team: BlitzTeam = await BlitzTeamService.get_by_id(team_id=self.team_id)
-        self.characters_in_match.add(self.team.characters[0])
-        self.characters_in_match.add(self.team.characters[1])
+        blitzs_characters: list[BlitzCharacter] = self.team.characters
+        for blitz_character in blitzs_characters:
+            character = await BlitzCharacterService.get_character_from_blitz_character(blitz_character)
+            self.characters_in_match.add(character)
 
     
     @property
@@ -47,29 +51,10 @@ class MatchTeamBlitz:
         return self.team.name
     
     @property
-    def stadium_name(self) -> str:
-        return "Unknown Stadium"
-    
-    @property
     def charactets_match_ids(self) -> list[int]:
         return [
             character.id 
             for character in self.characters_in_match
-        ]
-        
-    def get_charaters_by_position(
-        self, 
-        position: Literal[
-            "Воротар",
-            "Захисник",
-            "Півзахисник",
-            "Нападник"
-        ]
-    ) ->list[Character]:
-        return [
-            character
-            for character in self.characters_in_match
-            if character.position_enum == position
         ]
     
     def get_character_by_power(
@@ -132,11 +117,7 @@ class BlitzMatchData:
     async def init_teams(self) -> None:
         await self.first_team.init_data()
         await self.second_team.init_data()
-        
-        
-    def teams_have_characters(self) -> bool:
-        return (bool(self.first_team.characters_in_match) or bool(self.second_team.characters_in_match))
-    
+
     @property
     def all_teams(self) -> list[MatchTeamBlitz]:
         return [
@@ -159,11 +140,10 @@ class BlitzMatchData:
             for character in team.characters_in_match
         ]
     
-    
-    @property
-    def all_characters_in_teams(self) -> list[Character]:
+
+    async def all_characters_in_teams(self) -> list[Character]:
         return [ # CH
-            character # CH
+            (await BlitzCharacterService.get_character_from_blitz_character(character)) # CH
             for team in self.all_teams # CH
             if team.team and team.team.characters # CH
             for character in team.team.characters # CH

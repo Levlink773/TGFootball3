@@ -1,18 +1,15 @@
-import re
 import random
-from typing import Optional, Literal
+import re
+from typing import Optional
 
 from database.models.character import Character
-
-from match.entities import MatchData
-from match.enum import TypeGoalEvent
-
-from .types import SceneTemplate
 from .templates import (
     NO_GOAL_EVENT_SCENES,
     GOAL_EVENT_SCENES
 )
+from .types import SceneTemplate
 from ..entities import BlitzMatchData
+from ..enum_blitz_match import TypeGoalEvent
 
 POSITION_MAP = {
     "goalkeeper": "Воротар",
