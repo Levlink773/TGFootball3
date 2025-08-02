@@ -118,7 +118,7 @@ class BlitzMatchSender:
         )
         message_photo = await self.sender.send_messages(
             text=text,
-            characters=await self.match_data.all_characters_in_teams(),
+            characters=self.match_data.all_characters,
             photo=photo
         )
         if message_photo and not is_save:
@@ -199,7 +199,7 @@ class BlitzMatchSender:
 
         message_photo = await self.sender.send_messages(
             text=text_scene,
-            characters=(await self.match_data.all_characters_in_teams()),
+            characters=self.match_data.all_characters,
             photo=photo
         )
         if message_photo and not is_save:
@@ -229,7 +229,7 @@ class BlitzMatchSender:
             }
         )
         message_photo = await self.sender.send_messages(
-            characters=await self.match_data.all_characters_in_teams(),
+            characters=self.match_data.all_characters,
             text=text,
             keyboard=keyboard,
             photo=photo
@@ -274,7 +274,7 @@ class BlitzMatchSender:
             text = self.getter_templates.format_message(template=template)
 
         message_photo = await self.sender.send_messages(
-            characters=await self.match_data.all_characters_in_teams(),
+            characters=self.match_data.all_characters,
             text=text,
             photo=photo
         )

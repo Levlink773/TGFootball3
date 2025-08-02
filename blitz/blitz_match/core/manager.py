@@ -11,3 +11,7 @@ class TeamBlitzMatchManager:
     @classmethod
     def get_match(cls, blitz_match_id: str) -> BlitzMatchData | None:
         return cls.all_matches.get(blitz_match_id, None)
+
+    @classmethod
+    def clear_matches(cls) -> None:
+        cls.all_matches.clear()

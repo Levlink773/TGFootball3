@@ -60,7 +60,7 @@ async def donate_energy_from_blitz_match_handler(
         await query.answer("Ви не берете участь у цьому матчі", show_alert=True)
         return await query.message.delete()
 
-    await state.update_data(match_data=match_data)
+    await state.update_data(match_data_id=match_data.blitz_match_id)
     await state.update_data(end_time=callback_data.time_end_goal)
     await state.set_state(DonateEnergyInBlitzMatch.send_epizode_donate_energy)
     await query.message.answer(
@@ -92,8 +92,8 @@ async def donate_epizode_energy(
 
     data = await state.get_data()
     end_time = data.get("end_time", None)
-    match_data: BlitzMatchData = data.get("match_data", False)
-    if not match_data or not end_time:
+    match_data_id = data.get("match_data_id")
+    if not match_data_id or not end_time:
         await state.clear()
         return
     if int(time.time()) > end_time:
@@ -101,22 +101,23 @@ async def donate_epizode_energy(
         return await message.answer(
             "Час для цього голу вже закінчився",
         )
+    match_data: BlitzMatchData = TeamBlitzMatchManager.get_match(match_data_id)
 
     old_chance_team = match_data.get_chance_teams()
     old_first_club_chance = old_chance_team[0] * 100
     old_second_club_chance = old_chance_team[1] * 100
 
     if character.id in match_data.first_team.charactets_match_ids:
-        match_data.first_team.epiіsode_donate_energy += energy
+        match_data.first_team.episode_donate_energy += energy
         my_team = match_data.first_team
 
     elif character.id in match_data.second_team.charactets_match_ids:
-        match_data.second_team.epiіsode_donate_energy += energy
+        match_data.second_team.episode_donate_energy += energy
         my_team = match_data.second_team
     else:
         return
 
-    if my_team.epiіsode_donate_energy >= MIN_DONATE_ENERGY_TO_BONUS_KOEF:
+    if my_team.episode_donate_energy >= MIN_DONATE_ENERGY_TO_BONUS_KOEF:
         if not my_team.text_is_send_epizode_donate_energy:
             random_patch = random.choice(DONE_ENERGY_PHOTOS)
             is_save, photo = await get_photo(random_patch)
@@ -128,7 +129,7 @@ async def donate_epizode_energy(
             )
 
             message_photo = await send_message_characters_club(
-                characters_club=await match_data.all_characters_in_teams(),
+                characters_club=match_data.all_characters,
                 my_character=None,
                 text=text_epizode_donate,
                 photo=photo,
@@ -155,7 +156,7 @@ async def donate_epizode_energy(
     """
     await CharacterService.consume_energy(character_id=character.id, energy_consumed=energy)
     await send_message_characters_club(
-        characters_club=(await match_data.all_characters_in_teams()),
+        characters_club=match_data.all_characters,
         my_character=None,
         text=text
     )
