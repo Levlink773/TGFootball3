@@ -1,13 +1,17 @@
 import asyncio
+import random
 from datetime import datetime, time, timedelta
 from typing import Any, Coroutine
 
+from blitz.blitz_match.core.match import BlitzMatch
+from blitz.blitz_match.entities import MatchTeamBlitz, BlitzMatchData
 from blitz.blitz_reminder import BlitzReminder
 from blitz.enum_blitz import BlitzStatus
 from blitz.services.blitz_service import BlitzService
 from blitz.services.blitz_team_service import BlitzTeamService
 from blitz.services.message_sender.blitz_sender import BlitzTeamSender
 from database.models.blitz import Blitz
+from database.models.blitz_team import BlitzTeam
 
 
 class StartBlitzs:
@@ -58,15 +62,43 @@ class StartBlitz:
         self.stages_of_final = stages_of_final
         self.necessary_users = 2 ** stages_of_final
 
+    async def _start_blitz_match(self, teams: tuple[BlitzTeam, BlitzTeam]) -> tuple[BlitzTeam, BlitzTeam]:
+        match_team_first = MatchTeamBlitz(team_id=teams[0].id)
+        match_team_second = MatchTeamBlitz(team_id=teams[1].id)
+        match_data = BlitzMatchData(
+            match_id=teams[0].characters[0].blitz_id,
+            first_team=match_team_first,
+            second_team=match_team_second
+        )
+        blitz_match = BlitzMatch(match_data, datetime.now())
+        winner_team, looser_team = await blitz_match.start_match()
+        return winner_team, looser_team
+
     async def _start_blitz(self, blitz_id: int):
-        teams = await BlitzTeamService.create_teams(self.necessary_users / 2, blitz_id)
+        teams: list[BlitzTeam] = await BlitzTeamService.create_teams(
+            team_count=int(self.necessary_users / 2),
+            blitz_id=blitz_id
+        )
+        random.shuffle(teams)
         await BlitzTeamSender.send_teams_message(teams)
-        for i in range(self.stages_of_final):
+
+        while len(teams) > 2:
             await asyncio.sleep(60)
-            Blitz
 
+            pair_teams = BlitzTeamService.pair_teams(teams)
+            tasks = [
+                self._start_blitz_match((first, second))
+                for first, second in pair_teams
+            ]
+            results_match = await asyncio.gather(*tasks)
 
+            teams = [winner for winner, _ in results_match]
 
+        # Финал
+        await asyncio.sleep(60)  # пауза перед финалом
+        final_winner, final_looser = await self.start_blitz_match((teams[0], teams[1]))
+
+        return final_winner  # Победитель турнира
 
     async def start(self) -> BlitzStatus:
         blitz: Blitz = await BlitzService().get_or_create_blitz_by_start(self.start_datetime)

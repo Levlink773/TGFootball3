@@ -77,3 +77,8 @@ class BlitzTeamService:
             async with session.begin():
                 result = await session.execute(select(BlitzTeam).where(BlitzTeam.id == team_id))
                 return result.scalar_one_or_none()
+    @classmethod
+    def pair_teams(cls, teams: list[BlitzTeam]) -> list[tuple[BlitzTeam, BlitzTeam]]:
+        if len(teams) % 2 != 0:
+            raise ValueError("Количество команд должно быть чётным")
+        return [(teams[i], teams[i + 1]) for i in range(0, len(teams), 2)]

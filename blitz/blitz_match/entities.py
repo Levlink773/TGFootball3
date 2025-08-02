@@ -1,12 +1,10 @@
 import random
 from dataclasses import dataclass, field
-from datetime import datetime
-from typing import Optional, Literal, Tuple
+from typing import Optional, Tuple
 
 from database.models.blitz_character import BlitzCharacter
 from database.models.blitz_team import BlitzTeam
 from database.models.character import Character
-from .constans import TIME_BLITZ_FIGHT
 from .utils import (
     calculate_bonus_donate_energy
 )
@@ -95,16 +93,9 @@ class MatchTeamBlitz:
 class BlitzMatchData:
     
     match_id: str
-    group_id: str
     
     first_team: MatchTeamBlitz
-    second_team: MatchTeamBlitz 
-    
-    start_time: datetime
-
-    @property
-    def end_time(self) -> datetime:
-        return self.start_time + TIME_BLITZ_FIGHT
+    second_team: MatchTeamBlitz
     
     @property
     def first_team_id(self) -> int:

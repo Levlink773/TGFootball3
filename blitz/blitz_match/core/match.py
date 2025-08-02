@@ -15,7 +15,7 @@ from ..message_sender.match_sender import BlitzMatchSender
 semaphore_add_key = Semaphore(2)
 
 
-class Match:
+class BlitzMatch:
     SCORE_POINTS_BY_EVENT = {
         TypeGoalEvent.GOAL: 1,
         TypeGoalEvent.NO_GOAL: 0.25
