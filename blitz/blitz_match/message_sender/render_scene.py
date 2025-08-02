@@ -43,13 +43,13 @@ class SceneRenderer:
 
     def _map_characters_to_positions(self) -> dict[str, Character]:
         """
-        Определить роли персонажей и их принадлежность к клубам.
+        Определить роли персонажей и их принадлежность к командам.
         """
         mapping = {}
 
         for character in self.characters_scene:
-            club, prefix = self._get_club_and_prefix(character)
-            if not club:
+            team, prefix = self._get_team_and_prefix(character)
+            if not team:
                 continue
 
             for eng_pos, position in POSITION_MAP.items():
@@ -63,7 +63,7 @@ class SceneRenderer:
 
         return mapping
 
-    def _get_club_and_prefix(self, character: Character) -> tuple[Optional[object], str]:
+    def _get_team_and_prefix(self, character: Character) -> tuple[Optional[object], str]:
         if self.match_data.first_team.is_character_in_team(character):
             return self.match_data.first_team, ""
         elif self.match_data.second_team.is_character_in_team(character):

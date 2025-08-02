@@ -8,6 +8,8 @@ from blitz.blitz_match.entities import MatchTeamBlitz, BlitzMatchData
 from blitz.blitz_match.utils import generate_blitz_match_id
 from blitz.blitz_reminder import BlitzReminder
 from blitz.enum_blitz import BlitzStatus
+from blitz.services.blitz_reward_service import BlitzRewardService, RewardWinnerBlitzTeam, RewardPreWinnerBlitzTeam, \
+    RewardSimpleBlitzTeam
 from blitz.services.blitz_service import BlitzService
 from blitz.services.blitz_team_service import BlitzTeamService
 from blitz.services.message_sender.blitz_sender import BlitzTeamSender
@@ -87,7 +89,7 @@ class StartBlitz:
         )
         random.shuffle(teams)
         await BlitzTeamSender.send_teams_message(teams)
-
+        looser_team = []
         while len(teams) > 2:
             await asyncio.sleep(60)
 
@@ -97,11 +99,16 @@ class StartBlitz:
                 for first, second in pair_teams
             ]
             results_match = await asyncio.gather(*tasks)
-
+            looser_team.extend([looser for _, looser in results_match])
             teams = [winner for winner, _ in results_match]
 
         await asyncio.sleep(60)
         final_winner, final_looser = await StartBlitz._start_blitz_match((teams[0], teams[1]))
+        bz_reward = BlitzRewardService.reward_blitz_team
+        asyncio.create_task(bz_reward(RewardWinnerBlitzTeam(final_winner)))
+        asyncio.create_task(bz_reward(RewardPreWinnerBlitzTeam(final_winner)))
+        reward_tasks = [asyncio.create_task(bz_reward(RewardSimpleBlitzTeam(lose_team)) for lose_team in looser_team)]
+        await asyncio.gather(*reward_tasks)
         TeamBlitzMatchManager.clear_matches()
         return final_winner
 
@@ -113,7 +120,7 @@ class StartBlitz:
             print("Блиц турнир отменен!")
             return BlitzStatus.CANCELED
         print("🏁 Блиц начинается!")
-        winner_team = await self._start_blitz(blitz.id)
+        await self._start_blitz(blitz.id)
         print("🏁 Блиц завершен!")
         await BlitzService.remove_blitz_by_id(blitz.id)
         print("🏁 Блиц удален!")
