@@ -74,8 +74,8 @@ class GoalGenerator:
         return all_events
 
     def generate_time_events(self) -> list[datetime]:
-        safe_start_time = self.start_time + timedelta(minutes=2)
-        safe_end_time = self.end_time - timedelta(minutes=2)
+        safe_start_time = self.start_time + timedelta(seconds=30)
+        safe_end_time = self.end_time - timedelta(seconds=30)
         safe_duration = (safe_end_time - safe_start_time).total_seconds()
 
         total_required_gap = MIN_GAP * (MAX_EVENTS - 1)

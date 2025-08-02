@@ -92,7 +92,7 @@ class MatchTeamBlitz:
 @dataclass
 class BlitzMatchData:
     
-    match_id: str
+    blitz_match_id: str
     
     first_team: MatchTeamBlitz
     second_team: MatchTeamBlitz

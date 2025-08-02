@@ -3,8 +3,10 @@ import random
 from datetime import datetime, time, timedelta
 from typing import Any, Coroutine
 
+from blitz.blitz_match.core.manager import TeamBlitzMatchManager
 from blitz.blitz_match.core.match import BlitzMatch
 from blitz.blitz_match.entities import MatchTeamBlitz, BlitzMatchData
+from blitz.blitz_match.utils import generate_blitz_match_id
 from blitz.blitz_reminder import BlitzReminder
 from blitz.enum_blitz import BlitzStatus
 from blitz.services.blitz_service import BlitzService
@@ -65,11 +67,13 @@ class StartBlitz:
     async def _start_blitz_match(self, teams: tuple[BlitzTeam, BlitzTeam]) -> tuple[BlitzTeam, BlitzTeam]:
         match_team_first = MatchTeamBlitz(team_id=teams[0].id)
         match_team_second = MatchTeamBlitz(team_id=teams[1].id)
+        blitz_match_id = generate_blitz_match_id(teams[0].id, teams[1].id)
         match_data = BlitzMatchData(
-            match_id=teams[0].characters[0].blitz_id,
+            blitz_match_id=blitz_match_id,
             first_team=match_team_first,
             second_team=match_team_second
         )
+        TeamBlitzMatchManager.add_match(match_data)
         blitz_match = BlitzMatch(match_data, datetime.now())
         winner_team, looser_team = await blitz_match.start_match()
         return winner_team, looser_team

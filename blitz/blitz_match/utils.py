@@ -1,3 +1,5 @@
+import hashlib
+
 from .constans import (
     MIN_DONATE_ENERGY_TO_BONUS_KOEF,
     KOEF_DONATE_ENERGY,
@@ -36,3 +38,8 @@ def calculate_bonus_donate_energy(
     percent = donate_energy * BASE_KOEF_ADD_POWER
     total_power = power_club + power_opponent_club
     return percent * (total_power / 100)
+
+def generate_blitz_match_id(team1_id: int, team2_id: int) -> str:
+    sorted_ids = sorted([team1_id, team2_id])
+    combined = f"{sorted_ids[0]}-{sorted_ids[1]}"
+    return hashlib.sha256(combined.encode()).hexdigest()[:16]  # сокращённый hash

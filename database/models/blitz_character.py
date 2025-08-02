@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, ForeignKey
+from sqlalchemy import Column, Integer, ForeignKey, Float
 from sqlalchemy.orm import relationship
 from database.model_base import Base
 
@@ -9,6 +9,8 @@ class BlitzCharacter(Base):
 
     blitz_id = Column(Integer, ForeignKey("blitzs.id", ondelete="CASCADE"))
     team_id = Column(Integer, ForeignKey("blitz_team.id", ondelete="CASCADE"))
+    goals_count = Column(Integer, nullable=False, default=0, server_default='0')
+    count_score = Column(Float, nullable=False, default=0, server_default='0')
 
     blitz = relationship("Blitz", back_populates="characters")
     team = relationship("BlitzTeam", back_populates="characters")

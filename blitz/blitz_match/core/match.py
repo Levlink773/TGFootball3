@@ -2,15 +2,14 @@ import random
 from asyncio import Semaphore
 from datetime import datetime, timedelta
 
-from constants import TIME_FIGHT
 from database.models.blitz_team import BlitzTeam
 from database.models.character import Character
-from services.match_character_service import MatchCharacterService
 from .goal_generator import GoalGenerator
-from ..constans import TIME_EVENT_DONATE_ENERGY
+from ..constans import TIME_EVENT_DONATE_ENERGY, TIME_BLITZ_FIGHT
 from ..entities import BlitzMatchData, MatchTeamBlitz
 from ..enum_blitz_match import TypeGoalEvent
 from ..message_sender.match_sender import BlitzMatchSender
+from ...services.blitz_character_service import BlitzCharacterService
 
 semaphore_add_key = Semaphore(2)
 
@@ -31,7 +30,7 @@ class BlitzMatch:
         self.match_sender = BlitzMatchSender(match_data)
         self.count_goals = self._generate_count_goals()
         
-        end_time = start_time + TIME_FIGHT
+        end_time = start_time + TIME_BLITZ_FIGHT
             
             
         self.goal_generator = GoalGenerator(
@@ -114,8 +113,7 @@ class BlitzMatch:
             character = character_goal,
             score_add = 1
         )
-        await MatchCharacterService.add_goal_to_character(
-            match_id = self.match_data.match_id,
+        await BlitzCharacterService.add_goal_to_character(
             character_id = character_goal.id,
         )
 
@@ -136,10 +134,9 @@ class BlitzMatch:
     async def _add_event(
         self,
         character: Character,
-        score_add: int = 0.25
+        score_add: float = 0.25
     ) -> None:
-        await MatchCharacterService.add_score_to_character(
+        await BlitzCharacterService.add_score_to_character(
             character_id = character.id,
-            match_id = self.match_data.match_id,
             add_score = score_add
         )

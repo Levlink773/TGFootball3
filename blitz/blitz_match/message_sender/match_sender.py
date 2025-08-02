@@ -1,31 +1,29 @@
 import random
-from typing import Optional, Union
+from typing import Optional
 
 from aiogram import Bot
 from aiogram.types import FSInputFile, Message
 
-from bot.keyboards.league_keyboard import donate_energy_to_match
+from bot.keyboards.blitz_keyboard import donate_energy_to_blitz_match
 from database.models.character import Character
-from database.models.match_character import MatchCharacter
 from loader import bot
 from logging_config import logger
-from ..constans import (
-    GOAL_PHOTOS_PATCH,
-    NO_GOAL_PHOTOS_PATCH,
-    MVP_PHOTO_PATCH,
-    DONATE_ENERGY_PATCH_PHOTOS,
-    END_MATCH_PHOTOS_PATCH,
-    SEND_INFO_CHARACTERS_PATCH_PHOTOS,
-    START_MATCH_PHOTO_PATCH,
-    MIN_DONATE_ENERGY_TO_BONUS_KOEF,
-    KOEF_DONATE_ENERGY
-)
 from utils.photo_utils import get_photo, save_photo_id
 from utils.rate_limitter import rate_limiter
 from .render_scene import SceneRenderer
 from .templates import (
     GetterTemplatesMatch,
     TemplatesMatch
+)
+from ..constans import (
+    GOAL_PHOTOS_PATCH,
+    NO_GOAL_PHOTOS_PATCH,
+    DONATE_ENERGY_PATCH_PHOTOS,
+    END_MATCH_PHOTOS_PATCH,
+    SEND_INFO_CHARACTERS_PATCH_PHOTOS,
+    START_MATCH_PHOTO_PATCH,
+    MIN_DONATE_ENERGY_TO_BONUS_KOEF,
+    KOEF_DONATE_ENERGY
 )
 from ..entities import BlitzMatchData, MatchTeamBlitz
 from ..enum_blitz_match import TypeGoalEvent
@@ -214,8 +212,8 @@ class BlitzMatchSender:
     async def send_ping_donate_energy(self, goal_time: int) -> None:
         chance_teams = self.match_data.get_chance_teams()
         template = TemplatesMatch.TEMPLATE_COMING_GOAL
-        keyboard = donate_energy_to_match(
-            match_id=self.match_data.match_id,
+        keyboard = donate_energy_to_blitz_match(
+            blitz_match_id=self.match_data.blitz_match_id,
             time_end_goal=goal_time,
         )
 
