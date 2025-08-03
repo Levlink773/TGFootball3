@@ -57,14 +57,14 @@ async def donate_energy_from_blitz_match_handler(
         return
 
     if character.characters_user_id not in match_data.all_characters_user_ids_in_match:
-        await query.answer("Ви не берете участь у цьому матчі", show_alert=True)
+        await query.answer("Ви не берете участь у цьому бліц-матчі", show_alert=True)
         return await query.message.delete()
 
     await state.update_data(match_data_id=match_data.blitz_match_id)
     await state.update_data(end_time=callback_data.time_end_goal)
     await state.set_state(DonateEnergyInBlitzMatch.send_epizode_donate_energy)
     await query.message.answer(
-        f"Напишіть скільки ви хочете поповнити енергії в поточний матч\n1 енергія + 1 сила до команди в матчі\n\nПоточна енергія у тебе - {character.current_energy} 🔋")
+        f"Напишіть скільки ви хочете поповнити енергії в поточний бліц-матч\n1 енергія + 1 сила до команди в матчі\n\nПоточна енергія у тебе - {character.current_energy} 🔋")
 
 
 @add_energy_in_match_router.message(

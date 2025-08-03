@@ -10,6 +10,22 @@ from database.models.blitz import Blitz
 from database.models.character import Character
 from services.character_service import CharacterService
 
+START_TOURNAMENT = """
+🚀 <b>БЛІЦ-ТУРНІР РОЗПОЧАВСЯ!</b> 🚀
+
+📣 Ласкаво просимо на найшвидший і найзапекліший турнір дня! Сьогодні о 15:00 32 учасники (16 команд по 2 гравці) вийшли на поле, щоб вибороти звання чемпіона блиц-турніру.
+
+⚙️ Механіка коротка, але яскрава:
+– 5 хвилин або до 7 вирішальних моментів  
+– 30 секунд на атаку  
+– Донат енергії ×5  
+
+🔥 Лічильник запущено: зараз формується список команд і незабаром ви дізнаєтеся своїх напарників.  
+
+⏳ Через хвилину почнеться 1/8 фіналу – будьте готові до блискавичної боротьби й точних ударів!  
+Удачі всім і нехай сильніші здобудуть перемогу! 💥
+            """
+
 
 class BlitzReminder:
     def __init__(self,
@@ -31,9 +47,11 @@ class BlitzReminder:
         ]
         if not filtered_characters:
             return
-        text = ("🔔 «Сьогодні о 15:00 блиц-турнір! Встигни зареєструватися та перемогти!»" if required_vip else "🔔 «До старту блиц-турніру залишилось 20 хвилин. Запис відкритий!»")
+        text = (
+            "🔔 «Сьогодні о 15:00 блиц-турнір! Встигни зареєструватися та перемогти!»" if required_vip else "🔔 «До старту блиц-турніру залишилось 20 хвилин. Запис відкритий!»")
         markup = InlineKeyboardMarkup(inline_keyboard=[
-            [InlineKeyboardButton(text="Register", callback_data=BlitzRegisterCallback(blitz_id=blitz_id).pack())]
+            [InlineKeyboardButton(text="Зареєструватись 💪",
+                                  callback_data=BlitzRegisterCallback(blitz_id=blitz_id).pack())]
         ])
         await send_message_all_characters(filtered_characters, text, reply_markup=markup)
 
@@ -65,7 +83,7 @@ class BlitzReminder:
             await asyncio.sleep((today_start - now).total_seconds())
         characters = await BlitzService.get_characters_from_blitz_character(self.blitz_id)
         if len(characters) == self.necessary_count_users:
-            await send_message_all_characters(characters, "🚀 «Турнір почався! Граємо 1/8 фіналу!»")
+            await send_message_all_characters(characters, START_TOURNAMENT)
         else:
             cancel_blitz_text = '''
 <b>На жаль, на цей бліц-турнір не з'явилось достатньої кількості гравці!</b>

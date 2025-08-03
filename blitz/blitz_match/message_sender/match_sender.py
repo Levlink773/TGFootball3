@@ -23,7 +23,7 @@ from ..constans import (
     SEND_INFO_CHARACTERS_PATCH_PHOTOS,
     START_MATCH_PHOTO_PATCH,
     MIN_DONATE_ENERGY_TO_BONUS_KOEF,
-    KOEF_DONATE_ENERGY
+    KOEF_DONATE_ENERGY, STAGE_MAP
 )
 from ..entities import BlitzMatchData, MatchTeamBlitz
 from ..enum_blitz_match import TypeGoalEvent
@@ -114,7 +114,10 @@ class BlitzMatchSender:
         is_save, photo = await get_photo(START_MATCH_PHOTO_PATCH)
 
         text = self.getter_templates.format_message(
-            template=TemplatesMatch.START_MATCH,
+            template=TemplatesMatch.START_MATCH_FINAL if self.match_data.stage == 1 else TemplatesMatch.START_MATCH,
+            extra_context={
+                "stages_of_blitz": STAGE_MAP.get(self.match_data.stage / 2)
+            }
         )
         message_photo = await self.sender.send_messages(
             text=text,
@@ -145,7 +148,7 @@ class BlitzMatchSender:
         random_patch = get_random_photo(SEND_INFO_CHARACTERS_PATCH_PHOTOS)
         is_save, photo = await get_photo(random_patch)
         text = self.getter_templates.format_message(
-            template=TemplatesMatch.TEMPLATE_PARTICIPANTS_MATCH,
+            template=TemplatesMatch.TEMPLATE_PARTICIPANTS_MATCH_FINAL if self.match_data.stage == 1 else TemplatesMatch.TEMPLATE_PARTICIPANTS_MATCH,
             extra_context={
                 "players_first_team": text_participants(
                     characters=self.match_data.first_team.characters_in_match
@@ -254,6 +257,8 @@ class BlitzMatchSender:
                 team_id=winner_match_team.team_id
             )
             template = TemplatesMatch.TEMPLATE_END if not required_consider_power else TemplatesMatch.TEMPLATE_END_CONSIDER_POWER
+            template_final = TemplatesMatch.TEMPLATE_END_FINAL if not required_consider_power else TemplatesMatch.TEMPLATE_END_CONSIDER_POWER_FINAL
+            template = template_final if self.match_data.stage == 1 else template
             template_match_info = TemplatesMatch.WIN_LOSE_TEMPLATE
             text_match_info = self.getter_templates.format_message(
                 template=template_match_info,
@@ -268,7 +273,7 @@ class BlitzMatchSender:
                     "winner_team_name": winner_match_team.team_name,
                     "loser_team_name": loser_team.team_name,
                     "match_information": text_match_info,
-                    "stages_of_blitz": self.match_data.stages_of_next_blitz,
+                    "stages_of_blitz": STAGE_MAP.get(self.match_data.stage / 2),
                 }
             )
         else:

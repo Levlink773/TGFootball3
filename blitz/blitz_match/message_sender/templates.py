@@ -171,7 +171,7 @@ class TemplatesMatch(Enum):
 - <b>{name_first_team}</b>: загальна сила <b>{power_first_team:.2f}</b> 
 - <b>{name_second_team}</b>: загальна сила <b>{power_second_team:.2f}</b>
 
-🔥 Хто вийде переможцем у цій швидкій сутичці та пройде у <b>{stages_of_blitz}</b>? Поїхали! 🏆
+🔥 Хто вийде переможцем у цій швидкій сутичці та пройде до <b>{stages_of_blitz}</b>? Поїхали! 🏆
 """
     START_MATCH_FINAL = """
 🌟 <b>ФІНАЛ БЛІЦ-ТУРНІРУ!</b> 🌟
@@ -189,22 +189,35 @@ class TemplatesMatch(Enum):
 
 🕰️ Час тиснути на газ – гра починається!
     """
+    TEMPLATE_PARTICIPANTS_MATCH = """
+📋 <b>Склади команд на бліц-матч:</b>
+
+🔸 <b>{name_first_team}</b>
+- Гравці: 
+{players_first_club}
+
+🔸 <b>{name_second_team}</b>
+- Гравці: 
+{players_second_club}
+
+🏆 Гра обіцяє бути швидкою та видовищною!
+    """
 
     TEMPLATE_PARTICIPANTS_MATCH_FINAL = """
-    🎯 <b>ФІНАЛЬНІ СКЛАДИ БЛІЦ-МАТЧУ:</b>
+🎯 <b>ФІНАЛЬНІ СКЛАДИ БЛІЦ-МАТЧУ:</b>
 
-    ⚔️ У останньому двобої зустрічаються справжні титани:
-    <b>{name_first_team}</b>
-    - Гравці:
-    {players_first_club}
+⚔️ У останньому двобої зустрічаються справжні титани:
+<b>{name_first_team}</b>
+- Гравці:
+{players_first_club}
 
-    <b>{name_second_team}</b>
-    - Гравці:
-    {players_second_club}
+<b>{name_second_team}</b>
+- Гравці:
+{players_second_club}
 
-    🏟️ Арена: «Сяйво Бліц-турніру»
+🏟️ Арена: «Сяйво Бліц-турніру»
 
-    🔥 Готові стати свідками легендарного поєдинку? Нехай переможе найсильніший! 💥
+🔥 Готові стати свідками легендарного поєдинку? Нехай переможе найсильніший! 💥
     """
 
     TEMPLATE_PARTICIPANT = """

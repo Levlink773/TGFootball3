@@ -32,8 +32,17 @@ class BlitzTeamSender:
     @classmethod
     async def send_team_message(cls, team: BlitzTeam):
         character1, character2 = await BlitzTeamService.get_characters_from_blitz_team(team)
-        await bot.send_message(character1.characters_user_id, f"Ваш командный игрок {character2.owner.user_name}.")
-        await bot.send_message(character2.characters_user_id, f"Ваш командный игрок {character1.owner.user_name}.")
+        text1 = (
+            f"🤝 Ваша команда сформована, ви в команді «{team.name}»! Ваш напарник: <b>{character2.owner.user_name}</b>."
+            "⏱️ У вас є 1 хвилина, щоб розробити ідеальну тактику для бліц-турніру. Нехай кожен пас і удар будуть точними! 💥"
+        )
+        text2 = (
+            f"🤝 Ваша команда сформована, ви в команді «{team.name}»! Ваш напарник: <b>{character1.owner.user_name}</b>."
+            "⏱️ У вас є 1 хвилина на узгодження стратегії для бліц-турніру. Покажіть командний дух і здобудьте перемогу! 🏆"
+        )
+
+        await bot.send_message(character1.characters_user_id, text1)
+        await bot.send_message(character2.characters_user_id, text2)
     @classmethod
     async def send_teams_message(cls, teams: list[BlitzTeam]):
         for team in teams:

@@ -15,19 +15,21 @@ class BlitzAnnounceService:
             raise ValueError("На жаль, пар для матчів не знайдено.")
 
         stage_map = {
-            16: "1/8 фіналу",
-            8: "1/4 фіналу",
-            4: "1/2 фіналу",
-            2: "Фінал",
-            1: "Матч за 3-є місце"
+            16: "1/16 фіналу",
+            8: "1/8 фіналу",
+            4: "1/4 фіналу",
+            2: "1/2 фіналу",
+            1: "Фінал",
+            0: "Матч за 3-є місце"
         }
         stage = stage_map.get(len(pairs), "Наступний раунд")
 
-        lines = [f"⚽️ <b>Анонс блиц-раунду ({stage})!</b> ⚽️", ""]
+        lines = [f"⚽️ <b>Анонс бліц-раунду ({stage})!</b> ⚽️", ""]
         for idx, (team_a, team_b) in enumerate(pairs, start=1):
             lines.append(f"🔸 Матч {idx}: <b>{team_a.name}</b> vs <b>{team_b.name}</b>")
         lines.append("")
-        lines.append("Підготуйтеся до старту! Нехай переможе найсильніший! 💥")
+        lines.append("⏳ У вас 60 секунд. Підготуйтеся до старту!")
+        lines.append("Нехай переможе найсильніший! 💥")
 
         text = "\n".join(lines)
         await send_message_all_characters(characters, text)

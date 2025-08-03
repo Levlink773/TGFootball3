@@ -13,11 +13,10 @@ from blitz.services.blitz_reward_service import BlitzRewardService, RewardWinner
     RewardSimpleBlitzTeam
 from blitz.services.blitz_service import BlitzService
 from blitz.services.blitz_team_service import BlitzTeamService
-from blitz.services.message_sender.blitz_sender import BlitzTeamSender, send_message_all_characters
+from blitz.services.message_sender.blitz_sender import BlitzTeamSender
 from database.models.blitz import Blitz
 from database.models.blitz_team import BlitzTeam
 from database.models.character import Character
-
 
 
 class StartBlitzs:
@@ -96,10 +95,10 @@ class StartBlitz:
         characters: list[Character] = await BlitzService.get_characters_from_blitz_character(blitz_id)
         looser_team = []
         while len(teams) > 2:
-            await asyncio.sleep(60)
 
             pair_teams = BlitzTeamService.pair_teams(teams)
             asyncio.create_task(BlitzAnnounceService.announce_matchups(characters, pair_teams))
+            await asyncio.sleep(60)
             tasks = [
                 StartBlitz._start_blitz_match((first, second), len(pair_teams))
                 for first, second in pair_teams
@@ -110,9 +109,10 @@ class StartBlitz:
             asyncio.create_task(BlitzAnnounceService.announce_round_results(characters, winner_teams_stage, looser_teams_stage))
             looser_team.extend(looser_teams_stage)
             teams = winner_teams_stage
-
+        pair_teams = [(teams[0], teams[1])]
+        asyncio.create_task(BlitzAnnounceService.announce_matchups(characters, pair_teams))
         await asyncio.sleep(60)
-        final_winner, final_looser = await StartBlitz._start_blitz_match((teams[0], teams[1]), 2)
+        final_winner, final_looser = await StartBlitz._start_blitz_match(pair_teams[0], 1)
         bz_reward = BlitzRewardService.reward_blitz_team
         await asyncio.gather(
             bz_reward(RewardWinnerBlitzTeam(final_winner)),
