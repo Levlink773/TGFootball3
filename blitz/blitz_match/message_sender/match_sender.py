@@ -172,6 +172,7 @@ class BlitzMatchSender:
             characters_scene: list[Character] = [],
             character_goal: Optional[Character] = None,
             character_assist: Optional[Character] = None,
+            character_enemy: Optional[Character] = None,
             goal_team: Optional[MatchTeamBlitz] = None,
     ) -> None:
         render_scene = SceneRenderer(
@@ -179,7 +180,8 @@ class BlitzMatchSender:
             goal_event=goal_event,
             characters_scene=characters_scene,
             scorer=character_goal,
-            assistant=character_assist
+            assistant=character_assist,
+            character_enemy=character_enemy
         )
 
         patch_to_photo = get_random_patch_photo_by_event(

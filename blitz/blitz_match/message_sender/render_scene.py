@@ -11,13 +11,6 @@ from .types import SceneTemplate
 from ..entities import BlitzMatchData
 from ..enum_blitz_match import TypeGoalEvent
 
-POSITION_MAP = {
-    "goalkeeper": "Воротар",
-    "defender": "Захисник",
-    "midfielder": "Півзахисник",
-    "attacker": "Нападник"
-}
-
 EVENT_SCENES = {
     TypeGoalEvent.NO_GOAL : NO_GOAL_EVENT_SCENES, 
     TypeGoalEvent.GOAL: GOAL_EVENT_SCENES
@@ -33,12 +26,14 @@ class SceneRenderer:
         characters_scene: list[Character] = [],  # Список персонажей, участвующих в моменте
         scorer: Optional[Character] = None,     # Игрок, забивший гол
         assistant: Optional[Character] = None, # Игрок, сделавший ассист
+        character_enemy: Optional[Character] = None,
     ):
         self.match_data = match_data
         self.scenes = EVENT_SCENES[goal_event]
         self.characters_scene = characters_scene
         self.scorer = scorer
         self.assistant = assistant
+        self.character_enemy = character_enemy
         self.custom_mapping = self._map_characters_to_positions()
 
     def _map_characters_to_positions(self) -> dict[str, Character]:
@@ -51,15 +46,14 @@ class SceneRenderer:
             team, prefix = self._get_team_and_prefix(character)
             if not team:
                 continue
-
-            for eng_pos, position in POSITION_MAP.items():
-                if character.position == position:
-                    mapping[prefix + eng_pos] = character
+            mapping[prefix + "team_character"] = character
 
         if self.scorer:
             mapping["scorer"] = self.scorer
         if self.assistant:
             mapping["assistant"] = self.assistant
+        if self.character_enemy:
+            mapping[f"enemy_team_character"] = self.character_enemy
 
         return mapping
 

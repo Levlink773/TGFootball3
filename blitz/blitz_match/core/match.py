@@ -100,11 +100,14 @@ class BlitzMatch:
         assist_character = goal_team.get_character_by_power(
             no_character=character_goal
         )
+        character_enemy = self.match_data.get_opposite_team(
+            goal_team.team_id).get_character_by_power() if random.random() > 0.5 else None
         await self.match_sender.send_event_scene(
             goal_event=TypeGoalEvent.GOAL,
             character_goal=character_goal,
             goal_team=goal_team,
             character_assist=assist_character,
+            character_enemy=character_enemy
         )
         await self._add_event(
             character=character_goal,

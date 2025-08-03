@@ -3,220 +3,179 @@ from enum import Enum
 from .types import SceneTemplate
 from ..entities import BlitzMatchData
 
+# --- СЦЕНИ БЕЗ ГОЛА (NO_GOAL_EVENT_SCENES) ---
+# Списки розширено, щоб для кожної комбінації було мінімум 3 варіанти.
 NO_GOAL_EVENT_SCENES = [
+    # --- Roles: ["team_character", "enemy_team_character"] ---
     SceneTemplate(
-        text="Неймовірно! 🧤 <b>{goalkeeper}</b> стрибає, мов кіт, і витягує потужний удар від <b>{enemy_midfielder}</b>! Здавалося, м’яч вже летів у кут воріт, але воротар демонструє справжнє диво реакції. Команду знову врятовано! 🔥💪",
-        required_positions=["goalkeeper", "enemy_midfielder"]
+        text="<b>{team_character}</b> б'є впритул, але <b>{enemy_team_character}</b> у шпагаті блокує цей удар! Неймовірний захист! 🧱🔥",
+        required_positions=["team_character", "enemy_team_character"]
     ),
     SceneTemplate(
-        text="Шалена напруга! <b>{enemy_defender}</b> пробиває з близької відстані після кутового, але <b>{goalkeeper}</b> в останню мить виставляє руку і вибиває м’яч з лінії воріт! Фантастичне спасіння! 🫣🧱 Команда дихає з полегшенням.",
-        required_positions=["goalkeeper", "enemy_defender"]
+        text="Удар зльоту від <b>{team_character}</b>! Але <b>{enemy_team_character}</b> кидається під м'яч і рятує команду. Це самопожертва! 💥🛡️",
+        required_positions=["team_character", "enemy_team_character"]
     ),
     SceneTemplate(
-        text="<b>{enemy_midfielder}</b> вже замахується на удар, але <b>{defender}</b> вчасно кидається під м’яч і блокує спробу! Миттєва реакція захисника рятує від проблем. Який самовідданий момент! 🦸‍♂️⚔️",
-        required_positions=["defender", "enemy_midfielder"]
+        text="Небезпечний простріл на <b>{team_character}</b>, але <b>{enemy_team_character}</b> в останню мить вибиває м'яч з-під ніг. Ледь не проскочило! ⚡️",
+        required_positions=["team_character", "enemy_team_character"]
     ),
     SceneTemplate(
-        text="<b>{enemy_attacker}</b> входить у штрафний майданчик і готується до удару, але <b>{defender}</b> блискавично виконує ідеальний підкат! Суперник падає, м'яч у захисника. Справжнє мистецтво оборони! 🔥🦶",
-        required_positions=["defender", "enemy_attacker"]
+        text="<b>{team_character}</b> вже замахнувся на удар, але <b>{enemy_team_character}</b> встигає підкотитися і вибити м’яч. Героєм матчу може стати! 🦸",
+        required_positions=["team_character", "enemy_team_character"]
     ),
     SceneTemplate(
-        text="<b>{midfielder}</b> розганяє контратаку з центру поля, точною передачею виводить <b>{enemy_attacker}</b> на удар, але той не встигає замкнути момент! Захисники повертаються в останню мить. ⚡️⚽️",
-        required_positions=["midfielder", "enemy_attacker"]
+        text="Після розкішного пасу <b>{team_character}</b> виходить на ударну позицію, але <b>{enemy_team_character}</b> чудово читає гру і перехоплює м’яч! 🧠",
+        required_positions=["team_character", "enemy_team_character"]
     ),
     SceneTemplate(
-        text="<b>{midfielder}</b> перехоплює м’яч на половині суперника, передає на <b>{enemy_defender}</b>, який несподівано підключився до атаки, але оборона миттєво зреагувала. Ще трохи — і це міг бути гол! 🔥🎯",
-        required_positions=["midfielder", "enemy_defender"]
+        text="<b>{team_character}</b> пробиває у верхній кут, але <b>{enemy_team_character}</b> витягує цей м’яч з-під поперечини! Фантастичний сейв! 🧤😮",
+        required_positions=["team_character", "enemy_team_character"]
     ),
     SceneTemplate(
-        text="<b>{attacker}</b> наносить щільний удар з-за меж штрафного — м’яч летить просто під поперечину! Але <b>{enemy_goalkeeper}</b> в неймовірному стрибку парирує! Яка гра воротаря! 🥅⚡️",
-        required_positions=["attacker", "enemy_goalkeeper"]
+        text="<b>{team_character}</b> виривається сам на сам, але <b>{enemy_team_character}</b> кидається в ноги і рятує ситуацію! Блискавична реакція! ⚡️🧤",
+        required_positions=["team_character", "enemy_team_character"]
     ),
     SceneTemplate(
-        text="<b>{attacker}</b> знаходить простір між захисниками, готується пробити, але <b>{enemy_defender}</b> кидається під м’яч і блокує момент! Це був останній шанс забити, і він згаяний! 🚫⚽️",
-        required_positions=["attacker", "enemy_defender"]
+        text="Момент для <b>{team_character}</b>! Удар — але <b>{enemy_team_character}</b> на лінії воріт виносить м’яч! Просто неймовірно! 🚫🥅",
+        required_positions=["team_character", "enemy_team_character"]
     ),
     SceneTemplate(
-        text="Неймовірно! 🧤 <b>{goalkeeper}</b> залишається єдиним гравцем на полі, коли м’яч після удару від своїх летить прямо до воріт, але воротару вдалося зробити неймовірне відбиття! Такий сейв без опору — це вражає! 🔥💪",
-        required_positions=["goalkeeper"]
+        text="<b>{team_character}</b> намагається обійти <b>{enemy_team_character}</b> і пробити, але той не дозволяє цього, виграючи мікродуель. 🥊",
+        required_positions=["team_character", "enemy_team_character"]
     ),
     SceneTemplate(
-        text="<b>{goalkeeper}</b> абсолютно один у своїй зоні, але несподівано м’яч летить прямо до воріт після відскоку від поперечини! Воротар зреагував швидко і зловив його! Врятував команду! 🧤⚡️",
-        required_positions=["goalkeeper"]
+        text="Блискуча передача на <b>{team_character}</b> і здається, що це гол! Але <b>{enemy_team_character}</b> встигає підставити ногу! Шанс втрачено! ❌",
+        required_positions=["team_character", "enemy_team_character"]
+    ),
+    # --- Roles: ["team_character"] ---
+    SceneTemplate(
+        text="<b>{team_character}</b> обігрує всіх і вже б'є по воротах, але м’яч влучає у штангу і вилітає за межі поля! Який момент! 😱🥅",
+        required_positions=["team_character"]
     ),
     SceneTemplate(
-        text="<b>{defender}</b> сам на полі, перехоплює м’яч, що відскочив від суперника, і відправляє його назад у поле, нікого немає! Оборона без ворогів — чиста робота! 🔒⚽️",
-        required_positions=["defender"]
+        text="<b>{team_character}</b> пробиває в дотик після класної передачі, але м’яч просвистів поруч зі стійкою. Лічені сантиметри! 🌀",
+        required_positions=["team_character"]
     ),
     SceneTemplate(
-        text="<b>{defender}</b> розташувався на своїй половині поля і виглядає як справжній стовп оборони, коли м’яч долітає до нього після паса від партнерів. Він без жодних проблем контролює ситуацію! 🛡️✨",
-        required_positions=["defender"]
+        text="<b>{team_character}</b> виривається сам на сам і вже готовий забивати, але підслизнувся в останню мить! Невдача! ❄️🤦",
+        required_positions=["team_character"]
     ),
     SceneTemplate(
-        text="<b>{attacker}</b> самотньо стоїть на межі штрафного, отримує м'яч і без жодного опору пробиває по воротах! Але… не встигає він замкнути момент! Ось це було неочікувано! ⚡️💥",
-        required_positions=["attacker"]
+        text="Після індивідуального проходу <b>{team_character}</b> потужно б'є — і м’яч з гуркотом влучає в поперечину! Глядачі схопилися за голови! 😵‍💫",
+        required_positions=["team_character"]
     ),
     SceneTemplate(
-        text="<b>{attacker}</b> отримує м'яч на власній половині, суперник не приїхав, і він без зайвих турбот вирушає до воріт! Та ось, ще один шанс — і він не зможе його використати через неточний удар! 🚀😅",
-        required_positions=["attacker"]
+        text="<b>{team_character}</b> опиняється у вигідній позиції, б’є... але м’яч проходить вище воріт! Такий шанс не кожного дня! 🎯",
+        required_positions=["team_character"]
     ),
-    SceneTemplate(
-        text="<b>{midfielder}</b> сам на полі, здійснює шикарний пас через усе поле! Ось таке поле для маневру, нікого немає, щоб перехопити! У нього є час подумати і зробити точний крок! 🎯⚡️",
-        required_positions=["midfielder"]
-    ),
-    SceneTemplate(
-        text="<b>{midfielder}</b> розпочинає атаку з центра поля, партнери не суперники, і він без проблем намагається знайти ідеальний пас. Вражаюче спокійно, навіть без конкурентів! 💨⚽️",
-        required_positions=["midfielder"]
-    ),
-    SceneTemplate(
-        text="Неймовірно! 🧤 <b>{enemy_goalkeeper}</b> залишається єдиним гравцем на полі, коли м’яч після удару від своїх летить прямо до воріт, але воротару вдалося зробити неймовірне відбиття! Такий сейв без опору — це вражає! 🔥💪",
-        required_positions=["enemy_goalkeeper"]
-    ),
-    SceneTemplate(
-        text="<b>{enemy_goalkeeper}</b> абсолютно один у своїй зоні, але несподівано м’яч летить прямо до воріт після відскоку від поперечини! Воротар зреагував швидко і зловив його! Врятував команду! 🧤⚡️",
-        required_positions=["enemy_goalkeeper"]
-    ),
-    SceneTemplate(
-        text="<b>{enemy_defender}</b> сам на полі, перехоплює м’яч, що відскочив від суперника, і відправляє його назад у поле, нікого немає! Оборона без ворогів — чиста робота! 🔒⚽️",
-        required_positions=["enemy_defender"]
-    ),
-    SceneTemplate(
-        text="<b>{enemy_defender}</b> розташувався на своїй половині поля і виглядає як справжній стовп оборони, коли м’яч долітає до нього після паса від партнерів. Він без жодних проблем контролює ситуацію! 🛡️✨",
-        required_positions=["enemy_defender"]
-    ),
-    SceneTemplate(
-        text="<b>{enemy_attacker}</b> самотньо стоїть на межі штрафного, отримує м'яч і без жодного опору пробиває по воротах! Але… не встигає він замкнути момент! Ось це було неочікувано! ⚡️💥",
-        required_positions=["enemy_attacker"]
-    ),
-    SceneTemplate(
-        text="<b>{enemy_attacker}</b> отримує м'яч на власній половині, суперник не приїхав, і він без зайвих турбот вирушає до воріт! Та ось, ще один шанс — і він не зможе його використати через неточний удар! 🚀😅",
-        required_positions=["enemy_attacker"]
-    ),
-    SceneTemplate(
-        text="<b>{enemy_midfielder}</b> сам на полі, здійснює шикарний пас через усе поле! Ось таке поле для маневру, нікого немає, щоб перехопити! У нього є час подумати і зробити точний крок! 🎯⚡️",
-        required_positions=["enemy_midfielder"]
-    ),
-    SceneTemplate(
-        text="<b>{enemy_midfielder}</b> розпочинає атаку з центра поля, партнери не суперники, і він без проблем намагається знайти ідеальний пас. Вражаюче спокійно, навіть без конкурентів! 💨⚽️",
-        required_positions=["enemy_midfielder"]
-    )
+
 ]
 
+# --- ГОЛЕВЫЕ СЦЕНЫ (GOAL_EVENT_SCENES) ---
+# Списки розширено, щоб для кожної комбінації було мінімум 3 варіанти.
 GOAL_EVENT_SCENES = [
+    # --- Roles: ["assistant", "scorer"] ---
     SceneTemplate(
-        text="<b>{assistant}</b> навішує у штрафний майданчик, <b>{scorer}</b> випереджає <b>{enemy_goalkeeper}</b> і головою відправляє м’яч у сітку! 🧠🥅",
-        required_positions=["assistant", "scorer", "enemy_goalkeeper"]
-    ),
-    SceneTemplate(
-        text="<b>{assistant}</b> тягне м'яч через усе поле, віддає пас п’ятою — <b>{scorer}</b> добиває! Вау! 😱🔥",
+        text="<b>{assistant}</b> і <b>{scorer}</b> розіграли блискучу стіночку, після якої <b>{scorer}</b> спокійно відправив м'яч у сітку! Ідеальна взаємодія! 🤝⚽️",
         required_positions=["assistant", "scorer"]
     ),
     SceneTemplate(
-        text="<b>{midfielder}</b> елегантно відкриває фланг для <b>{assistant}</b>, той прострілює — <b>{scorer}</b> забиває у дотик! ⚡🎯",
-        required_positions=["midfielder", "assistant", "scorer"]
-    ),
-    SceneTemplate(
-        text="<b>{assistant}</b> перехоплює передачу у <b>{enemy_defender}</b> і миттєво запускає <b>{scorer}</b> у прорив. Після серії пасів — розстріл воріт! 💥🏹",
-        required_positions=["enemy_defender", "assistant", "scorer"]
-    ),
-    SceneTemplate(
-        text="<b>{assistant}</b> виводить <b>{scorer}</b> один на один, і той холоднокровно переграє <b>{enemy_goalkeeper}</b>! ❄️⚽",
-        required_positions=["assistant", "scorer", "enemy_goalkeeper"]
-    ),
-    SceneTemplate(
-        text="<b>{assistant}</b> тікає по флангу, обігрує суперника і віддає на <b>{scorer}</b>, який майстерно пробиває в нижній кут! 🎩🥅",
+        text="<b>{assistant}</b> протягнув м'яч флангом і віддав ідеальний пас на <b>{scorer}</b>, якому залишалося лише підставити ногу! ГОЛ! 🔥🎯",
         required_positions=["assistant", "scorer"]
     ),
     SceneTemplate(
-        text="<b>{assistant}</b> несподівано підключається до атаки і скидає на <b>{scorer}</b>, той пробиває без шансів для <b>{enemy_goalkeeper}</b>! 🚀🧤",
-        required_positions=["assistant", "scorer", "enemy_goalkeeper"]
+        text="Яка комбінація! <b>{assistant}</b> віддає пас п'ятою, а <b>{scorer}</b> в дотик відправляє м'яч у ворота! Це було красиво! 🤩",
+        required_positions=["assistant", "scorer"]
+    ),
+
+    # --- Roles: ["assistant", "scorer", "enemy_goalkeeper"] ---
+    SceneTemplate(
+        text="<b>{assistant}</b> перехоплює м'яч, миттєвий пас на <b>{scorer}</b> — і той потужним ударом прошиває <b>{enemy_team_character}</b>! ⚡️🥅",
+        required_positions=["assistant", "scorer", "enemy_team_character"]
     ),
     SceneTemplate(
-        text="<b>{scorer}</b> самотужки проривається крізь оборону і потужно пробиває повз <b>{enemy_goalkeeper}</b>! 🦁💪",
-        required_positions=["scorer", "enemy_goalkeeper"]
+        text="<b>{assistant}</b> навішує у штрафний майданчик, <b>{scorer}</b> виграє верхову боротьбу і головою б'є повз <b>{enemy_team_character}</b>! 🧠",
+        required_positions=["assistant", "scorer", "enemy_team_character"]
     ),
     SceneTemplate(
-        text="<b>{scorer}</b> підбирає м’яч після рикошету, робить кілька фінтів і забиває фантастичний гол! 🎯🔥",
+        text="<b>{assistant}</b> виводить <b>{scorer}</b> віч-на-віч, і той холоднокровно переграє <b>{enemy_team_character}</b>! Класика! ❄️",
+        required_positions=["assistant", "scorer", "enemy_team_character"]
+    ),
+
+    # --- Roles: ["scorer", "enemy_defender"] ---
+    SceneTemplate(
+        text="<b>{scorer}</b> накрутив <b>{enemy_team_character}</b> фінтами і невідпорно пробив у дальній кут! Майстерний гол! 🎩✨",
+        required_positions=["scorer", "enemy_team_character"]
+    ),
+    SceneTemplate(
+        text="<b>{scorer}</b> ставить корпус, відтісняє <b>{enemy_team_character}</b> і з розвороту б'є точно в ціль! Силовий гол! 💪",
+        required_positions=["scorer", "enemy_team_character"]
+    ),
+    SceneTemplate(
+        text="<b>{enemy_team_character}</b> намагається перехопити м'яч, але <b>{scorer}</b> виявляється спритнішим і з-під захисника відправляє м'яч у сітку! ⚡️",
+        required_positions=["scorer", "enemy_team_character"]
+    ),
+
+    # --- Roles: ["assistant", "scorer", "enemy_team_character"] ---
+    SceneTemplate(
+        text="<b>{assistant}</b> віддає пас у розріз, <b>{scorer}</b> випереджає <b>{enemy_team_character}</b> і холоднокровно реалізує свій момент! 🚀",
+        required_positions=["assistant", "scorer", "enemy_team_character"]
+    ),
+    SceneTemplate(
+        text="<b>{assistant}</b> прокидає м'яч поміж ніг <b>{enemy_team_character}</b>, а <b>{scorer}</b> вже чекає на передачу і забиває! Ефектно! 🤯",
+        required_positions=["assistant", "scorer", "enemy_team_character"]
+    ),
+    SceneTemplate(
+        text="<b>{scorer}</b> отримує пас від <b>{assistant}</b>, і навіть відчайдушний підкат від <b>{enemy_team_character}</b> не рятує команду від голу! 💥",
+        required_positions=["assistant", "scorer", "enemy_team_character"]
+    ),
+
+    # --- Roles: ["scorer"] ---
+    SceneTemplate(
+        text="<b>{scorer}</b> наважується на удар з дальньої дистанції — і м'яч залітає точнісінько в дев'ятку! Неймовірний постріл! 💣💥",
         required_positions=["scorer"]
     ),
     SceneTemplate(
-        text="<b>{scorer}</b> несподівано підключається до атаки, обігрує трьох і кладе м'яч у дев’ятку! 🚀",
+        text="<b>{scorer}</b> підхоплює м'яч після рикошету, миттєво оцінює ситуацію і влучним ударом забиває гол! Гольове чуття! 🎯",
+        required_positions=["scorer"]
+    ),
+    SceneTemplate(
+        text="<b>{scorer}</b> бере ініціативу на себе, йде в сольний прохід і завершує його ідеальним ударом! Все зробив сам! 🦁",
         required_positions=["scorer"]
     ),
 
-    # enemy_goalkeeper
+    # --- Roles: ["scorer", "enemy_team_character"] ---
     SceneTemplate(
-        text="<b>{scorer}</b> пробиває з дальньої дистанції — <b>{enemy_goalkeeper}</b> тягнеться, але м'яч влітає у кут! 🔥🧤",
-        required_positions=["scorer", "enemy_goalkeeper"]
+        text="<b>{scorer}</b> підхоплює м'яч, на швидкості обходить захисника і б'є повз <b>{enemy_team_character}</b>! Сольний прохід, що завершився голом! 💪",
+        required_positions=["scorer", "enemy_team_character"]
     ),
     SceneTemplate(
-        text="<b>{assistant}</b> дає ідеальний пас на <b>{scorer}</b>, той обігрує <b>{enemy_goalkeeper}</b> і спокійно закочує м’яч у ворота. ❄️⚽",
-        required_positions=["assistant", "scorer", "enemy_goalkeeper"]
+        text="<b>{scorer}</b> б'є з гострого кута, <b>{enemy_team_character}</b> не очікував такого рішення! М'яч у сітці! Хитрий гол! 😏",
+        required_positions=["scorer", "enemy_team_character"]
     ),
     SceneTemplate(
-        text="<b>{scorer}</b> виходить один на один, <b>{enemy_goalkeeper}</b> намагається скоротити кут — але без шансів! ГОЛ! 💪🥅",
-        required_positions=["scorer", "enemy_goalkeeper"]
+        text="<b>{scorer}</b> потужно пробиває по центру воріт, <b>{enemy_team_character}</b> не встигає зреагувати на силу удару! Прошив воротаря! 🚀",
+        required_positions=["scorer", "enemy_team_character"]
     ),
-
-    # enemy_defender
-    SceneTemplate(
-        text="<b>{scorer}</b> обігрує <b>{enemy_defender}</b> двічі і потужно б’є у ближній кут! 🎯🔥",
-        required_positions=["scorer", "enemy_defender"]
-    ),
-    SceneTemplate(
-        text="<b>{assistant}</b> пускає м’яч між ніг <b>{enemy_defender}</b>, <b>{scorer}</b> підхоплює і забиває! 🤯⚽",
-        required_positions=["assistant", "scorer", "enemy_defender"]
-    ),
-    SceneTemplate(
-        text="<b>{enemy_defender}</b> намагається перехопити, але <b>{scorer}</b> блискавично реагує і добиває у ворота! ⚡🥅",
-        required_positions=["scorer", "enemy_defender"]
-    ),
-
-    # enemy_midfielder
-    SceneTemplate(
-        text="<b>{enemy_midfielder}</b> втрачає м’яч у центрі поля — <b>{assistant}</b> перехоплює, пас на <b>{scorer}</b> — ГОЛ! 💥",
-        required_positions=["enemy_midfielder", "assistant", "scorer"]
-    ),
-    SceneTemplate(
-        text="<b>{assistant}</b> прокидає повз <b>{enemy_midfielder}</b> і знаходить <b>{scorer}</b>, який завершив атаку! 🚀🎯",
-        required_positions=["assistant", "scorer", "enemy_midfielder"]
-    ),
-    SceneTemplate(
-        text="<b>{scorer}</b> переграє <b>{enemy_midfielder}</b> в один дотик і б’є не залишаючи шансів воротарю! ⚽🔥",
-        required_positions=["scorer", "enemy_midfielder"]
-    ),
-
-    # enemy_attacker
-    SceneTemplate(
-        text="<b>{enemy_attacker}</b> втрачає м'яч у нападі, <b>{assistant}</b> миттєво віддає на <b>{scorer}</b> — контратака успішна! 🎯💨",
-        required_positions=["enemy_attacker", "assistant", "scorer"]
-    ),
-    SceneTemplate(
-        text="<b>{enemy_attacker}</b> не встигає повернутися в оборону, і <b>{scorer}</b> користується вільним простором! 🏃‍♂️🔥",
-        required_positions=["scorer", "enemy_attacker"]
-    ),
-    SceneTemplate(
-        text="<b>{scorer}</b> перехоплює передачу від <b>{enemy_attacker}</b> і миттєво забиває з-за меж штрафного! 💥🥅",
-        required_positions=["scorer", "enemy_attacker"]
-    )
 ]
 
-class TemplatesMatch(Enum):    
-    
+
+class TemplatesMatch(Enum):
+    # Текст адаптирован под более быстрый и напряженный формат блиц-турнира 2v2
     START_MATCH = """
-⚽️ Розпочинається епічний матч між командами <b>{name_first_team}</b> та <b>{name_second_team}</b>! 
+⚔️ Розпочинається напружений бліц-матч 2 на 2 між командами <b>{name_first_team}</b> та <b>{name_second_team}</b>!
 
-🏟️ Місце зустрічі бліц турнір
+🏟️ Арена: Бліц-турнір
 
-🔹 На поле виходять бойові склади:
-- <b>{name_first_team}</b>: сила <b>{power_first_team:.2f}</b> 
-- <b>{name_second_team}</b>: сила <b>{power_second_team:.2f}</b>
+🔹 Бойові двійки готові до бою:
+- <b>{name_first_team}</b>: загальна сила <b>{power_first_team:.2f}</b> 
+- <b>{name_second_team}</b>: загальна сила <b>{power_second_team:.2f}</b>
 
-🔥 Нехай цей поєдинок покаже, хто найсильніший! 🏆
+🔥 Хто вийде переможцем у цій швидкій сутичці? Поїхали! 🏆
 """
 
     TEMPLATE_PARTICIPANTS_MATCH = """
-📋 <b>Склад команд на матч:</b>
+📋 <b>Склади команд на бліц-матч:</b>
 
 🔸 <b>{name_first_team}</b>
 - Гравці: 
@@ -226,68 +185,67 @@ class TemplatesMatch(Enum):
 - Гравці: 
 {players_second_club}
 
-🏆 Гра обіцяє бути цікавою та напруженою!
+🏆 Гра обіцяє бути швидкою та видовищною!
 """
-    
+
     TEMPLATE_PARTICIPANT = """
 👤 {character_name} | ⚔️ Сила: <b>{power_user:.2f}</b> | 📈 Рівень: <b>{lvl}</b>"""
 
     TEMPLATE_COMING_GOAL = """  
-⚽️ <b>До вирішального моменту залишилося лише 30 секунд!</b> ⚽️  
+⚽️ <b>Вирішальний момент епізоду вже близько!</b> ⚽️  
 
 🔥 <b>Поточні шанси на гол:</b>  
-- ⚽️ Команда:{name_first_team} - <b>{chance_first_team:.2f}%</b>  
-- ⚽️ Команда:{name_second_team} - <b>{chance_second_team:.2f}%</b>  
+- ⚽️ Команда {name_first_team}: <b>{chance_first_team:.2f}%</b>  
+- ⚽️ Команда {name_second_team}: <b>{chance_second_team:.2f}%</b>  
 
 💥 <b>Це момент істини!</b>
-Ваша енергія може стати тим самим поштовхом, що змінить усе — підтримайте свою команду, і вона проб’є точно в ціль! 🚀
+Ваша енергія може стати тим самим поштовхом, що змінить усе — підтримайте свою команду! 🚀
 
 ✨ <b>Досягніть {min_donate_energy_bonus} енергії</b> в цьому епізоді — і отримаєте буст <b>+{koef_donate_energy}% до суми донату</b>!
 Цей бонус посилить удар і збільшить шанси забити гол! ⚡️
 
-📣 <b>Усе в ваших руках!</b>
-⏳ Лише <b>30 секунд</b>, щоб вплинути на хід епізоду!
-<b>Надішліть енергію</b> — і допоможіть команді пробити ворота! 🥅🏆
-"""  
+⏳ У вас лише <b>30 секунд</b>, щоб вплинути на результат!
+<b>Надішліть енергію</b> — і допоможіть своїй команді перемогти! 🥅🏆
+"""
 
     TEMPLATE_END = """
-🎉 Матч між командами <b>{name_first_team}</b> та <b>{name_second_team}</b> завершена! 
+🎉 Бліц-матч між командами <b>{name_first_team}</b> та <b>{name_second_team}</b> завершено! 
 
 📊 Кінцевий рахунок: <b>{goals_first_team}</b> - <b>{goals_second_team}</b>.
 
 {match_information}
 
-🏆 Дякуємо обом командам за чудову гру! Ви продемонстрували справжній дух суперництва та спортивності.
+🏆 Дякуємо командам за видовищну гру та справжній дух суперництва!
     """
-    
+
     DRAW_TEMPLATE = """
-Матч завершився внічию! ⚽
+Матч завершився внічию! Обидві команди билися гідно! 🤝
 """
-    
+
     WIN_LOSE_TEMPLATE = """
 Переможець: <b>{winner_team_name}</b>! 
-Програвша: <b>{loser_team_name}</b>.
+Програла: <b>{loser_team_name}</b>.
 """
 
     TEMPLATE_REWARD_CHARACTER = """
-🎁 Нагорода за твій виступ у матчі між Dragons та Sharks:
+🎁 Нагорода за твій виступ у бліц-матчі:
 
-🏅 Ти проявив чудову гру, і ось твої нагороди:
+🏅 Ти показав чудову гру, і ось твої нагороди:
 
 - 🎖 EXP: +{exp}
 - 🪙 Money: +{money}
 """
 
     TEMPLATE_NO_CHARACTERS_IN_MATCH = """
-⚠️ <b>На жаль, цього разу в матчі немає учасників!</b>
+⚠️ <b>На жаль, на цей бліц-матч не з'явились гравці!</b>
 
-❌ Жоден гравець не приєднався до гри, тому матч не відбувся.
+❌ Гра не відбулася.
 
-🔜 <b>Не переживай!</b> Продовжуй тренуватися та готуйся до наступних матчів. Твої шанси на перемогу неодмінно зростатимуть!
+🔜 <b>Не засмучуйся!</b> Тренуйся та готуйся до наступних битв. Твої перемоги ще попереду!
 
-⚽️ Залишайся з нами, нові матчі вже на підході!
+⚽️ Залишайся з нами, нові матчі вже скоро!
 """
-    
+
     TEMPLATE_SCORE = """
 ⚽️ <b>{scoring_team}</b> забиває гол!
 
@@ -296,41 +254,40 @@ class TemplatesMatch(Enum):
 """
 
     TEMPLATE_MVP_CONGRATULATION = """
-🔥 У цьому матчі яскраво проявили себе два гравці — вони стали <b>MVP зустрічі</b>!
+🔥 У цьому бліці яскраво проявили себе два гравці — вони стають <b>MVP зустрічі</b>!
 
-Їхній вклад у гру був вирішальним, і за це вони отримують заслужені нагороди. 👏
+Їхній внесок у гру був вирішальним, і за це вони отримують заслужені нагороди. 👏
 
 🎁 <b>Нагороди вже нараховано кожному з MVP:</b>
-- 🔑Ключ на тренування с тренером
+- 🔑Ключ на тренування з тренером
 {text_mvp_characters}
-Велика повага цим лідерам команди!
+Велика повага цим лідерам!
 """
     TEMPLATE_MVP_PLAYER_POINTS = """
 ⭐️ <b>{nickname}</b> — {points} очок
 """
 
-    
+
 class GetterTemplatesMatch:
-    
+
     def __init__(self, match_data: BlitzMatchData) -> None:
         self.match_data = match_data
-    
+
     def format_message(
-        self, 
-        template: TemplatesMatch, 
-        extra_context: dict = {}
+            self,
+            template: TemplatesMatch,
+            extra_context: dict = {}
     ) -> str:
-        
         context = {
             'name_first_team': self.match_data.first_team.team_name,
             'name_second_team': self.match_data.second_team.team_name,
             'goals_first_team': self.match_data.first_team.goals,
             'goals_second_team': self.match_data.second_team.goals,
-            'power_first_team': self.match_data.first_team.team_power ,
+            'power_first_team': self.match_data.first_team.team_power,
             'power_second_team': self.match_data.second_team.team_power,
             'members_first_team': len(self.match_data.first_team.characters_in_match),
             'members_second_team': len(self.match_data.second_team.characters_in_match)
         }
         if extra_context:
             context.update(extra_context)
-        return template.value.format(**context)    
+        return template.value.format(**context)

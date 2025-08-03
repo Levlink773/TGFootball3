@@ -105,10 +105,14 @@ class StartBlitz:
         await asyncio.sleep(60)
         final_winner, final_looser = await StartBlitz._start_blitz_match((teams[0], teams[1]))
         bz_reward = BlitzRewardService.reward_blitz_team
-        asyncio.create_task(bz_reward(RewardWinnerBlitzTeam(final_winner)))
-        asyncio.create_task(bz_reward(RewardPreWinnerBlitzTeam(final_winner)))
-        reward_tasks = [asyncio.create_task(bz_reward(RewardSimpleBlitzTeam(lose_team)) for lose_team in looser_team)]
-        await asyncio.gather(*reward_tasks)
+        await asyncio.gather(
+            bz_reward(RewardWinnerBlitzTeam(final_winner)),
+            bz_reward(RewardPreWinnerBlitzTeam(final_winner)),
+            *[
+                bz_reward(RewardSimpleBlitzTeam(lose_team))
+                for lose_team in looser_team
+            ]
+        )
         TeamBlitzMatchManager.clear_matches()
         return final_winner
 
