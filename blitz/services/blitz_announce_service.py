@@ -24,7 +24,7 @@ class BlitzAnnounceService:
             2: ("1/2 фіналу", BLITZ_STAGES_PATCH[2]),
             1: ("Фінал", BLITZ_STAGES_PATCH[3]),
         }
-        stage = stage_map.get(len(pairs), "Наступний раунд")
+        stage = stage_map.get(len(pairs), ("Наступний раунд", BLITZ_STAGES_PATCH[0]))
 
         lines = [f"⚽️ <b>Анонс бліц-раунду ({stage[0]})!</b> ⚽️", ""]
         for idx, (team_a, team_b) in enumerate(pairs, start=1):
