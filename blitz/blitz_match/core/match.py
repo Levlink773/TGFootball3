@@ -39,7 +39,9 @@ class BlitzMatch:
         )
 
     def _generate_count_goals(self) -> int:
-        return random.randint(1, 5)
+        choices = [1] * 30 + [3] * 50 + [5] * 20
+        count = random.choice(choices)
+        return count
 
     async def start_match(self) -> tuple[BlitzTeam, BlitzTeam]:
         await self.match_data.init_teams()
@@ -124,8 +126,8 @@ class BlitzMatch:
             )
 
     async def end_match(self) -> tuple[MatchTeamBlitz, MatchTeamBlitz]:
-        winner_match_team = self.match_data.get_winner_team()
-        await self.match_sender.send_end_match(winner_match_team=winner_match_team)
+        winner_match_team, required_consider_power = await self.match_data.get_winner_team()
+        await self.match_sender.send_end_match(winner_match_team, required_consider_power)
         lose_team = self.match_data.get_opposite_team(winner_match_team.team_id)
         return winner_match_team, lose_team
 

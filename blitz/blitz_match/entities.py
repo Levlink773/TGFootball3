@@ -160,16 +160,25 @@ class BlitzMatchData:
             else self.first_team
         )
 
-    def get_winner_team(self) -> Optional[MatchTeamBlitz]:
+    async def get_winner_team(self) -> tuple[MatchTeamBlitz, bool]:
         """
         Get the winner team of the match.
         :return: The winner team
         """
         if self.first_team.goals > self.second_team.goals:
-            return self.first_team
+            return self.first_team, False
         elif self.second_team.goals > self.first_team.goals:
-            return self.second_team
-        return None
+            return self.second_team, False
+        else:
+            first_team_score = await BlitzTeamService.get_score_team(self.first_team.team.id)
+            first_team_power = self.power_first_team + first_team_score
+            second_team_score = await BlitzTeamService.get_score_team(self.second_team.team.id)
+            second_team_power = self.power_second_team + second_team_score
+            if first_team_power > second_team_power:
+                return self.first_team, True
+            elif second_team_power > first_team_power:
+                return self.second_team, True
+            return random.choices([self.first_team, self.second_team]), True
 
     @property
     def power_first_team(self) -> int:

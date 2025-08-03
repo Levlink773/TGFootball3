@@ -210,7 +210,6 @@ class BlitzMatchSender:
                 photo_id=message_photo.photo[0].file_id,
             )
 
-
     async def send_ping_donate_energy(self, goal_time: int) -> None:
         chance_teams = self.match_data.get_chance_teams()
         template = TemplatesMatch.TEMPLATE_COMING_GOAL
@@ -242,10 +241,10 @@ class BlitzMatchSender:
                 photo_id=message_photo.photo[0].file_id,
             )
 
-
     async def send_end_match(
             self,
-            winner_match_team: Optional[MatchTeamBlitz] = None
+            winner_match_team: Optional[MatchTeamBlitz] = None,
+            required_consider_power: bool = False,
     ):
         random_patch = get_random_photo(END_MATCH_PHOTOS_PATCH)
         is_save, photo = await get_photo(random_patch)
@@ -254,7 +253,7 @@ class BlitzMatchSender:
             loser_team = self.match_data.get_opposite_team(
                 team_id=winner_match_team.team_id
             )
-            template = TemplatesMatch.TEMPLATE_END
+            template = TemplatesMatch.TEMPLATE_END if not required_consider_power else TemplatesMatch.TEMPLATE_END_CONSIDER_POWER
             template_match_info = TemplatesMatch.WIN_LOSE_TEMPLATE
             text_match_info = self.getter_templates.format_message(
                 template=template_match_info,

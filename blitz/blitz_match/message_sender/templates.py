@@ -217,6 +217,15 @@ class TemplatesMatch(Enum):
 
 🏆 Дякуємо командам за видовищну гру та справжній дух суперництва!
     """
+    TEMPLATE_END_CONSIDER_POWER = """
+    🎉 Бліц-матч між командами <b>{name_first_team}</b> та <b>{name_second_team}</b> завершено! 
+
+    📊 Кінцевий рахунок: <b>{goals_first_team}</b> - <b>{goals_second_team}</b>.
+
+    {match_information}
+
+    🏆 Дякуємо командам за видовищну гру та справжній дух суперництва!
+        """
 
     DRAW_TEMPLATE = """
 Матч завершився внічию! Обидві команди билися гідно! 🤝

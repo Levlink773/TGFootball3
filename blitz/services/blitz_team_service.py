@@ -1,6 +1,6 @@
 import random
 
-from sqlalchemy import select
+from sqlalchemy import select, func
 from sqlalchemy.orm import selectinload
 
 from database.models.blitz_character import BlitzCharacter
@@ -82,3 +82,13 @@ class BlitzTeamService:
         if len(teams) % 2 != 0:
             raise ValueError("Количество команд должно быть чётным")
         return [(teams[i], teams[i + 1]) for i in range(0, len(teams), 2)]
+    @classmethod
+    async def get_score_team(cls, team_id: int) -> float:
+        async for session in get_session():
+            stmt = select(func.sum(BlitzCharacter.count_score)).where(
+                BlitzCharacter.team_id == team_id
+            )
+            result = await session.execute(stmt)
+            total_score = result.scalar()
+            return total_score or 0.0  # Если None — вернём 0.0
+        return 0.0
