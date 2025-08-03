@@ -267,7 +267,8 @@ class BlitzMatchSender:
                 extra_context={
                     "winner_team_name": winner_match_team.team_name,
                     "loser_team_name": loser_team.team_name,
-                    "match_information": text_match_info
+                    "match_information": text_match_info,
+                    "stages_of_blitz": self.match_data.stages_of_next_blitz,
                 }
             )
         else:

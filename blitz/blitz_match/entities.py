@@ -93,6 +93,7 @@ class MatchTeamBlitz:
 class BlitzMatchData:
 
     blitz_match_id: str
+    stage: int
 
     first_team: MatchTeamBlitz
     second_team: MatchTeamBlitz

@@ -171,22 +171,41 @@ class TemplatesMatch(Enum):
 - <b>{name_first_team}</b>: загальна сила <b>{power_first_team:.2f}</b> 
 - <b>{name_second_team}</b>: загальна сила <b>{power_second_team:.2f}</b>
 
-🔥 Хто вийде переможцем у цій швидкій сутичці? Поїхали! 🏆
+🔥 Хто вийде переможцем у цій швидкій сутичці та пройде у <b>{stages_of_blitz}</b>? Поїхали! 🏆
 """
+    START_MATCH_FINAL = """
+🌟 <b>ФІНАЛ БЛІЦ-ТУРНІРУ!</b> 🌟
 
-    TEMPLATE_PARTICIPANTS_MATCH = """
-📋 <b>Склади команд на бліц-матч:</b>
+⚔️ Найважливіший поєдинок між легендарними командами
+<b>{name_first_team}</b> та <b>{name_second_team}</b> розпочинається прямо зараз! 🏆
 
-🔸 <b>{name_first_team}</b>
-- Гравці: 
-{players_first_club}
+🏟️ Арена: Сяйво Бліц-турніру
 
-🔸 <b>{name_second_team}</b>
-- Гравці: 
-{players_second_club}
+🔹 Бойові двійки готові до вирішального бою:
+- <b>{name_first_team}</b>: загальна сила <b>{power_first_team:.2f}</b>
+- <b>{name_second_team}</b>: загальна сила <b>{power_second_team:.2f}</b>
 
-🏆 Гра обіцяє бути швидкою та видовищною!
-"""
+🔥 Хто увійде в історію та підніме кубок у запеклій сутичці?
+
+🕰️ Час тиснути на газ – гра починається!
+    """
+
+    TEMPLATE_PARTICIPANTS_MATCH_FINAL = """
+    🎯 <b>ФІНАЛЬНІ СКЛАДИ БЛІЦ-МАТЧУ:</b>
+
+    ⚔️ У останньому двобої зустрічаються справжні титани:
+    <b>{name_first_team}</b>
+    - Гравці:
+    {players_first_club}
+
+    <b>{name_second_team}</b>
+    - Гравці:
+    {players_second_club}
+
+    🏟️ Арена: «Сяйво Бліц-турніру»
+
+    🔥 Готові стати свідками легендарного поєдинку? Нехай переможе найсильніший! 💥
+    """
 
     TEMPLATE_PARTICIPANT = """
 👤 {character_name} | ⚔️ Сила: <b>{power_user:.2f}</b> | 📈 Рівень: <b>{lvl}</b>"""
@@ -216,64 +235,60 @@ class TemplatesMatch(Enum):
 {match_information}
 
 🏆 Дякуємо командам за видовищну гру та справжній дух суперництва!
+Переходимо до <b>{stages_of_blitz}</b> 🔥
     """
     TEMPLATE_END_CONSIDER_POWER = """
-    🎉 Бліц-матч між командами <b>{name_first_team}</b> та <b>{name_second_team}</b> завершено! 
+🎉 Бліц-матч між командами <b>{name_first_team}</b> та <b>{name_second_team}</b> завершено! 
 
-    📊 Кінцевий рахунок: <b>{goals_first_team}</b> - <b>{goals_second_team}</b>.
+📊 Кінцевий рахунок: <b>{goals_first_team}</b> - <b>{goals_second_team}</b>.
 
-    {match_information}
+{match_information}
 
-    🏆 Дякуємо командам за видовищну гру та справжній дух суперництва!
+🏆 Дякуємо командам за видовищну гру та справжній дух суперництва!
+Переходимо до <b>{stages_of_blitz}</b> 🔥
         """
+    TEMPLATE_END_FINAL = """
+🎉 <b>ФІНАЛЬНИЙ БЛІЦ-МАТЧ ЗАВЕРШЕНО!</b> 🎉
+
+📊 Фінальний рахунок між <b>{name_first_team}</b> та <b>{name_second_team}</b>: <b>{goals_first_team}</b> - <b>{goals_second_team}</b>.
+
+{match_information}
+
+🏆 Легендарна битва завершена!
+Переможець піднімає кубок і стає володарем блиц-турніру! 🔥
+    """
+
+    # Фінальне завершення з врахуванням сили команд
+    TEMPLATE_END_CONSIDER_POWER_FINAL = """
+🎉 <b>ФІНАЛЬНИЙ БЛІЦ-МАТЧ ЗАВЕРШЕНО!</b> 🎉
+
+📊 Фінальний рахунок між <b>{name_first_team}</b> (сила <b>{power_first_team:.2f}</b>) та <b>{name_second_team}</b> (сила <b>{power_second_team:.2f}</b>):
+<b>{goals_first_team}</b> - <b>{goals_second_team}</b>.
+
+{match_information}
+
+🏆 Незабутній фінал, де сила зіграла ключову роль!
+Переможець бере все і стає героєм блиц-турніру! 🔥
+    """
 
     DRAW_TEMPLATE = """
 Матч завершився внічию! Обидві команди билися гідно! 🤝
 """
 
     WIN_LOSE_TEMPLATE = """
-Переможець: <b>{winner_team_name}</b>! 
-Програла: <b>{loser_team_name}</b>.
+🎉 Переможець бліц-матча: <b>{winner_team_name}</b>! 
+🙄 Програвша команда: <b>{loser_team_name}</b>.
 """
-
-    TEMPLATE_REWARD_CHARACTER = """
-🎁 Нагорода за твій виступ у бліц-матчі:
-
-🏅 Ти показав чудову гру, і ось твої нагороди:
-
-- 🎖 EXP: +{exp}
-- 🪙 Money: +{money}
-"""
-
-    TEMPLATE_NO_CHARACTERS_IN_MATCH = """
-⚠️ <b>На жаль, на цей бліц-матч не з'явились гравці!</b>
-
-❌ Гра не відбулася.
-
-🔜 <b>Не засмучуйся!</b> Тренуйся та готуйся до наступних битв. Твої перемоги ще попереду!
-
-⚽️ Залишайся з нами, нові матчі вже скоро!
-"""
+    WIN_LOSE_TEMPLATE_FINAL = """
+🏆 Переможець: <b>{winner_team_name}</b>! 
+🙄 Програвша команда: <b>{loser_team_name}</b>.
+    """
 
     TEMPLATE_SCORE = """
 ⚽️ <b>{scoring_team}</b> забиває гол!
 
 🏟 Матч: <b>{name_first_team}</b> — <b>{name_second_team}</b>
 📊 Рахунок: <b>{goals_first_team}</b> - <b>{goals_second_team}</b>
-"""
-
-    TEMPLATE_MVP_CONGRATULATION = """
-🔥 У цьому бліці яскраво проявили себе два гравці — вони стають <b>MVP зустрічі</b>!
-
-Їхній внесок у гру був вирішальним, і за це вони отримують заслужені нагороди. 👏
-
-🎁 <b>Нагороди вже нараховано кожному з MVP:</b>
-- 🔑Ключ на тренування з тренером
-{text_mvp_characters}
-Велика повага цим лідерам!
-"""
-    TEMPLATE_MVP_PLAYER_POINTS = """
-⭐️ <b>{nickname}</b> — {points} очок
 """
 
 

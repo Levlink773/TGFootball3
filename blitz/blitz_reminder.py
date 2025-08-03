@@ -67,6 +67,15 @@ class BlitzReminder:
         if len(characters) == self.necessary_count_users:
             await send_message_all_characters(characters, "🚀 «Турнір почався! Граємо 1/8 фіналу!»")
         else:
-            await send_message_all_characters(characters, "Blitz Canceled!")
+            cancel_blitz_text = '''
+<b>На жаль, на цей бліц-турнір не з'явилось достатньої кількості гравці!</b>
+
+❌ Гра не відбулася.
+
+🔜 <b>Не засмучуйся!</b> Тренуйся та готуйся до наступних битв. Твої перемоги ще попереду!
+
+⚽️ Залишайся з нами, новий бліц-турнір вже скоро, а саме завтра о 15:00!
+            '''
+            await send_message_all_characters(characters, cancel_blitz_text)
             return False
         return True

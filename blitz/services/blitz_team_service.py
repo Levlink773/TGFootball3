@@ -92,3 +92,4 @@ class BlitzTeamService:
             total_score = result.scalar()
             return total_score or 0.0  # Если None — вернём 0.0
         return 0.0
+
