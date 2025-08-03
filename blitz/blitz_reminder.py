@@ -1,8 +1,9 @@
 import asyncio
 from datetime import datetime, timedelta
 
-from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, FSInputFile
 
+from blitz.blitz_match.constans import START_BLITZ_PHOTO
 from blitz.services.blitz_service import BlitzService
 from blitz.services.message_sender.blitz_sender import send_message_all_characters
 from bot.callbacks.blitz_callback import BlitzRegisterCallback
@@ -83,7 +84,7 @@ class BlitzReminder:
             await asyncio.sleep((today_start - now).total_seconds())
         characters = await BlitzService.get_characters_from_blitz_character(self.blitz_id)
         if len(characters) == self.necessary_count_users:
-            await send_message_all_characters(characters, START_TOURNAMENT)
+            await send_message_all_characters(characters, START_TOURNAMENT, photo=FSInputFile(START_BLITZ_PHOTO))
         else:
             cancel_blitz_text = '''
 <b>На жаль, на цей бліц-турнір не з'явилось достатньої кількості гравці!</b>

@@ -41,14 +41,21 @@ SEND_INFO_CHARACTERS_PATCH_PHOTOS = [
     "blitz_match/photos/send_info_character_2.jpg",
     "blitz_match/photos/send_info_character_3.jpg",
 ]
-END_blitz_match_PHOTOS_PATCH = [
-    "blitz_match/photos/end_blitz_match_1.jpg",
-    "blitz_match/photos/end_blitz_match_2.jpg",
-    "blitz_match/photos/end_blitz_match_3.jpg",
+END_MATCH_PHOTOS_PATCH = [
+    "blitz_match/photos/end_match_1.jpg",
+    "blitz_match/photos/end_match_2.jpg",
+    "blitz_match/photos/end_match_3.jpg",
 ]
 
-START_blitz_match_PHOTO_PATCH = "blitz_match\photos\start_blitz_match_photo.jpg"
-
+START_MATCH_PHOTO_PATCH = "blitz_match\photos\start_match_photo.jpg"
+START_BLITZ_PHOTO = "blitz_match\photos\img.png"
+END_BLITZ_PHOTO = "blitz_match\photos\img_1.png"
+BLITZ_STAGES_PATCH = [
+    "blitz_match/photos/1v8.jpg",
+    "blitz_match/photos/1v4.jpg",
+    "blitz_match/photos/1v2.jpg",
+    "blitz_match/photos/final.jpg",
+]
 STAGE_MAP = {
     16: "1/16 фіналу",
     8: "1/8 фіналу",

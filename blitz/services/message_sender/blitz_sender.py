@@ -1,6 +1,6 @@
 import traceback
 
-from aiogram.types import InlineKeyboardMarkup
+from aiogram.types import InlineKeyboardMarkup, FSInputFile
 
 from blitz.services.blitz_team_service import BlitzTeamService
 from database.models.blitz_team import BlitzTeam
@@ -8,11 +8,18 @@ from database.models.character import Character
 from loader import bot
 
 
-async def send_message(character: Character, text: str, reply_markup: InlineKeyboardMarkup = None):
+async def send_message(character: Character, text: str, reply_markup: InlineKeyboardMarkup = None, photo: FSInputFile = None):
     try:
         if character.is_bot:
             return
-
+        if photo:
+            await bot.send_photo(
+                photo=photo,
+                chat_id=character.characters_user_id,
+                caption=text,
+                reply_markup=reply_markup
+            )
+            return
         await bot.send_message(
             chat_id=character.characters_user_id,
             text=text,
@@ -23,9 +30,9 @@ async def send_message(character: Character, text: str, reply_markup: InlineKeyb
         print(E)
 
 
-async def send_message_all_characters(characters: list[Character], text: str, reply_markup: InlineKeyboardMarkup = None):
+async def send_message_all_characters(characters: list[Character], text: str, reply_markup: InlineKeyboardMarkup = None, photo: FSInputFile = None):
     for character in characters:
-        await send_message(character, text, reply_markup)
+        await send_message(character, text, reply_markup, photo)
 
 
 class BlitzTeamSender:

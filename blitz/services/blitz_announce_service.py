@@ -1,5 +1,8 @@
 import asyncio
 
+from aiogram.types import FSInputFile
+
+from blitz.blitz_match.constans import END_BLITZ_PHOTO, BLITZ_STAGES_PATCH
 from blitz.services.blitz_team_service import BlitzTeamService
 from blitz.services.message_sender.blitz_sender import send_message_all_characters
 from database.models.blitz_team import BlitzTeam
@@ -15,16 +18,15 @@ class BlitzAnnounceService:
             raise ValueError("На жаль, пар для матчів не знайдено.")
 
         stage_map = {
-            16: "1/16 фіналу",
-            8: "1/8 фіналу",
-            4: "1/4 фіналу",
-            2: "1/2 фіналу",
-            1: "Фінал",
-            0: "Матч за 3-є місце"
+            16: ("1/16 фіналу", BLITZ_STAGES_PATCH[0]),
+            8: ("1/8 фіналу", BLITZ_STAGES_PATCH[0]),
+            4: ("1/4 фіналу", BLITZ_STAGES_PATCH[1]),
+            2: ("1/2 фіналу", BLITZ_STAGES_PATCH[2]),
+            1: ("Фінал", BLITZ_STAGES_PATCH[3]),
         }
         stage = stage_map.get(len(pairs), "Наступний раунд")
 
-        lines = [f"⚽️ <b>Анонс бліц-раунду ({stage})!</b> ⚽️", ""]
+        lines = [f"⚽️ <b>Анонс бліц-раунду ({stage[0]})!</b> ⚽️", ""]
         for idx, (team_a, team_b) in enumerate(pairs, start=1):
             lines.append(f"🔸 Матч {idx}: <b>{team_a.name}</b> vs <b>{team_b.name}</b>")
         lines.append("")
@@ -32,7 +34,7 @@ class BlitzAnnounceService:
         lines.append("Нехай переможе найсильніший! 💥")
 
         text = "\n".join(lines)
-        await send_message_all_characters(characters, text)
+        await send_message_all_characters(characters, text, photo=FSInputFile(stage[1]))
 
     @classmethod
     async def announce_end(cls, characters: list[Character], final_winner: BlitzTeam, final_looser: BlitzTeam) -> None:
@@ -49,7 +51,7 @@ class BlitzAnnounceService:
 
 ⚡ Усі інші учасники отримують +30 енергії! Дякуємо за гру — до наступного блиц-турніру! 💪
 """
-        await send_message_all_characters(characters, end_text)
+        await send_message_all_characters(characters, end_text, photo=FSInputFile(END_BLITZ_PHOTO))
 
     @classmethod
     async def announce_round_results(cls,
