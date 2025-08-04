@@ -61,7 +61,7 @@ class StartBlitzs:
 
 
 class StartBlitz:
-    def __init__(self, start_datetime: datetime, stages_of_final: int = 2):
+    def __init__(self, start_datetime: datetime, stages_of_final: int = 3):
         self.start_datetime = start_datetime.replace(microsecond=0)
         if stages_of_final <= 1:
             raise ValueError("count of final must be greater than 1")
@@ -100,7 +100,6 @@ class StartBlitz:
         characters: list[Character] = await BlitzService.get_characters_from_blitz_character(blitz_id)
         looser_team = []
         while len(teams) > 2:
-
             pair_teams = BlitzTeamService.pair_teams(teams)
             logger.info(f"pair_teams: {pair_teams} for stage {len(pair_teams)}")
             asyncio.create_task(BlitzAnnounceService.announce_matchups(characters, pair_teams))
@@ -117,7 +116,8 @@ class StartBlitz:
             winner_teams_stage = [winner for winner, _ in results_match]
             logger.info(f"winner_teams_stage: {winner_teams_stage}")
             logger.info(f"looser_teams_stage: {looser_team}")
-            asyncio.create_task(BlitzAnnounceService.announce_round_results(characters, winner_teams_stage, looser_teams_stage))
+            asyncio.create_task(
+                BlitzAnnounceService.announce_round_results(characters, winner_teams_stage, looser_teams_stage))
             looser_team.extend(looser_teams_stage)
             teams = winner_teams_stage
         pair_teams = [(teams[0], teams[1])]
@@ -143,19 +143,21 @@ class StartBlitz:
 
     async def start(self) -> BlitzStatus:
         blitz: Blitz = await BlitzService().get_or_create_blitz_by_start(self.start_datetime)
-
-        status = await BlitzReminder(
-            blitz=blitz,
-            remind_for_simple_users=2,
-            remind_for_vip_users=3,
-            necessary_count_users=self.necessary_users
-        ).remind()
-        if not status:
-            logger.warn("Блиц турнир отменен!")
-            return BlitzStatus.CANCELED
-        logger.info("🏁 Блиц начинается!")
-        await self._start_blitz(blitz.id)
-        logger.info("🏁 Блиц завершен!")
-        await BlitzService.remove_blitz_by_id(blitz.id)
-        logger.info("🏁 Блиц удален!")
-        return BlitzStatus.FINISH
+        try:
+            status = await BlitzReminder(
+                blitz=blitz,
+                remind_for_simple_users=2,
+                remind_for_vip_users=3,
+                necessary_count_users=self.necessary_users
+            ).remind()
+            if not status:
+                logger.warn("Блиц турнир отменен!")
+                return BlitzStatus.CANCELED
+            logger.info("🏁 Блиц начинается!")
+            await self._start_blitz(blitz.id)
+            logger.info("🏁 Блиц завершен!")
+            return BlitzStatus.FINISH
+        finally:
+            await BlitzService.remove_blitz_by_id(blitz.id)
+            await BlitzTeamService.remove_all_blitz_teams()
+            logger.info("🏁 Блиц удален!")

@@ -50,7 +50,7 @@ class BlitzAnnounceService:
 
 🥈 Команда <b>«{final_looser.name}»</b> посідає 2 місце та отримує маленький лутбокс — чудова гра від {ch_loose_first} і {ch_loose_second}! 👏
 
-⚡ Усі учасники отримують +30 енергії! Дякуємо за гру — до наступного блиц-турніру! 💪
+⚡ Усі учасники отримують +50 енергії! Дякуємо за гру — до наступного блиц-турніру! 💪
 """
         await send_message_all_characters(characters, end_text, photo_path=END_BLITZ_PHOTO)
 
@@ -84,14 +84,14 @@ class BlitzAnnounceService:
             lines.append("")
         lines.append(f"🔥 <b>Наступний етап: {next_stage}!</b> 🔥")
 
+        text = "\n".join(lines)
+        await send_message_all_characters(characters, text)
+
         # Нотифікація команд індивідуально
         for w in winners:
             await cls.notify_team_advancement(w, next_stage)
         for l in losers:
             await cls.notify_team_elimination(l)
-
-        text = "\n".join(lines)
-        await send_message_all_characters(characters, text)
 
     @classmethod
     async def notify_team_advancement(cls,

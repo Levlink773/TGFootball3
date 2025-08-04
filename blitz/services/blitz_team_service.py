@@ -1,8 +1,10 @@
 import random
+from typing import Any, Callable, Coroutine
 
-from sqlalchemy import select, func
+from sqlalchemy import select, func, delete
 from sqlalchemy.orm import selectinload
 
+from database.models.blitz import Blitz
 from database.models.blitz_character import BlitzCharacter
 from database.models.blitz_team import BlitzTeam
 from database.models.character import Character
@@ -94,4 +96,11 @@ class BlitzTeamService:
             total_score = result.scalar()
             return total_score or 0.0  # Если None — вернём 0.0
         return 0.0
+
+    @classmethod
+    async def remove_all_blitz_teams(cls) -> Callable[[], int] | None:
+        async for session in get_session():
+            async with session.begin():
+                result = await session.execute(delete(BlitzTeam))
+                return result.rowcount  # Количество удалённых записей
 
