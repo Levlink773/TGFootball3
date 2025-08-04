@@ -1,7 +1,7 @@
 import asyncio
 from datetime import datetime, timedelta
 
-from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, FSInputFile
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 from blitz.blitz_match.constans import START_BLITZ_PHOTO
 from blitz.services.blitz_service import BlitzService
@@ -26,7 +26,18 @@ START_TOURNAMENT = """
 ⏳ Через хвилину почнеться 1/8 фіналу – будьте готові до блискавичної боротьби й точних ударів!  
 Удачі всім і нехай сильніші здобудуть перемогу! 💥
             """
+MSG_VIP_USER = '''
+⏰ <b>БЛІЦ-ТУРНІР СТАРТУЄ СЬОГОДНІ О 15:00!</b> ⏰
 
+Не пропусти свій шанс — натискай на кнопку <b>«Зареєструватись 💪»</b> і покажіть, що ви не просто гравець — ви лідер, стратег і легенда турніру!💥 🏆
+'''
+MSG_SIMPLE_USER = '''
+🔔 БЛІЦ-ТУРНІР СЬОГОДНІ О 15:00 🔔
+
+⏳ Залишилось 20 хвилин до старту.
+🎯 Натискай <b>«Зареєструватись 💪»</b> та готуйся до блискавичних поєдинків! ⚽️
+Запис відкритий!
+'''
 
 class BlitzReminder:
     def __init__(self,
@@ -48,8 +59,7 @@ class BlitzReminder:
         ]
         if not filtered_characters:
             return
-        text = (
-            "🔔 «Сьогодні о 15:00 блиц-турнір! Встигни зареєструватися та перемогти!»" if required_vip else "🔔 «До старту блиц-турніру залишилось 20 хвилин. Запис відкритий!»")
+        text = MSG_VIP_USER if required_vip else MSG_SIMPLE_USER
         markup = InlineKeyboardMarkup(inline_keyboard=[
             [InlineKeyboardButton(text="Зареєструватись 💪",
                                   callback_data=BlitzRegisterCallback(blitz_id=blitz_id).pack())]
@@ -84,7 +94,7 @@ class BlitzReminder:
             await asyncio.sleep((today_start - now).total_seconds())
         characters = await BlitzService.get_characters_from_blitz_character(self.blitz_id)
         if len(characters) == self.necessary_count_users:
-            await send_message_all_characters(characters, START_TOURNAMENT, photo=FSInputFile(START_BLITZ_PHOTO))
+            await send_message_all_characters(characters, START_TOURNAMENT, photo_path=START_BLITZ_PHOTO)
         else:
             cancel_blitz_text = '''
 <b>На жаль, на цей бліц-турнір не з'явилось достатньої кількості гравці!</b>

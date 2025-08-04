@@ -17,28 +17,29 @@ async def blitz_register_filter(query: CallbackQuery,
                                 ):
     try:
         await BlitzService.add_character_to_blitz(callback_data.blitz_id, character)
+        text = "🎉 Ви успішно зареєструвалися на бліц-турнір! Очікуйте на початок в 15:00 та готуйтеся до боротьби ⚽️"
         await query.answer(
-            "🎉 Ви успішно зареєструвалися на бліц-турнір! Очікуйте на початок в 15:00 та готуйтеся до боротьби ⚽️",
+            text,
             show_alert=True,
         )
+        await query.message.edit_text(text)
     except BlitzCloseError as e:
+        text = "⌛️ Реєстрацію на бліц-турнір закрито. Чекайте завтра для наступної битви!"
         print(f"msg: {e}")
-        await query.answer(
-            "⌛️ Реєстрацію на бліц-турнір закрито. Чекайте завтра для наступної битви!",
-            show_alert=True,
-        )
+        await query.answer(text, show_alert=True)
+        await query.message.delete()
     except CharacterExistsInBlitzError as e:
         print(f"msg: {e}")
-        await query.answer(
-            "🔔 Ви вже зареєстровані на цей бліц-турнір. Чекайте початку турніру!",
-            show_alert=True,
-        )
+        text = "🔔 Ви вже зареєстровані на цей бліц-турнір. Чекайте початку турніру!"
+        await query.answer(text, show_alert=True)
+        await query.message.edit_text(text)
     except BlitzDoesNotExistError as e:
         print(f"msg: {e}")
         await query.answer(
             f"❓ Турнір з id {callback_data.blitz_id} не знайдено. Перевірте, будь ласка, коректність даних.",
             show_alert=True,
         )
+        await query.message.delete()
     except Exception as e:
         traceback.print_exc()
         print(f"msg: {e}")
@@ -46,3 +47,4 @@ async def blitz_register_filter(query: CallbackQuery,
             "⚠️ Упс! Сталася помилка при реєстрації на бліц-турнір. Спробуйте ще раз або зверніться до підтримки.",
             show_alert=True,
         )
+        await query.message.delete()

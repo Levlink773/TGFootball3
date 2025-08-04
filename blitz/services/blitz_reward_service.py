@@ -2,12 +2,14 @@ from abc import ABC, abstractmethod
 
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
+from blitz.blitz_match.constans import SMALL_BOX_BLITZ_PHOTO, MEDIUM_BOX_BLITZ_PHOTO
 from blitz.services.blitz_character_service import BlitzCharacterService
 from bot.callbacks.blitz_callback import BoxRewardCallback
 from database.models.blitz_team import BlitzTeam
 from database.models.character import Character
 from loader import bot
 from services.character_service import CharacterService
+from utils.photo_utils import get_photo, save_photo_id
 
 BONUS_ENERGY = 50
 
@@ -33,25 +35,32 @@ class RewardBlitzTeam(ABC):
 
 class RewardWinnerBlitzTeam(RewardBlitzTeam):
     def box_type(self):
-        return "середній", "medium"
+        return "середній", "medium", MEDIUM_BOX_BLITZ_PHOTO
 
     async def reward_blitz_character(self, character: Character):
-        name_box, callback_name_box = self.box_type()
+        name_box, callback_name_box, photo_path = self.box_type()
         callback_data = BoxRewardCallback(box_type=callback_name_box).pack()
         markup = InlineKeyboardMarkup(inline_keyboard=[
             [InlineKeyboardButton(text="Відкрити 🗝️", callback_data=callback_data)]
         ])
 
         # Новий український, драйвовий текст з HTML-підсвіткою
-        await bot.send_message(
+        is_save, photo = await get_photo(photo_path)
+        msg = await bot.send_photo(
             character.characters_user_id,
-            f"🎁 <b>Увага!</b> Ви отримали <b>{name_box} лутбокс</b> за блиц-турнір! "
+            photo=photo,
+            caption=f"🎁 <b>Увага!</b> Ви отримали <b>{name_box} лутбокс</b> за блиц-турнір! "
             "Відкрийте його, щоб дізнатися свою нагороду та зарядитися мотивацією! 💥",
             reply_markup=markup,
             parse_mode="HTML"
         )
         # Додаємо +50 енергії всім учасникам команди
         await RewardSimpleBlitzTeam(self.reward_blitz_team).reward_blitz_character(character)
+        if msg and not is_save:
+            await save_photo_id(
+                patch_to_photo=photo_path,
+                photo_id=msg.photo[0].file_id,
+            )
 
 
 
@@ -59,7 +68,7 @@ class RewardWinnerBlitzTeam(RewardBlitzTeam):
 class RewardPreWinnerBlitzTeam(RewardWinnerBlitzTeam):
 
     def box_type(self):
-        return "меленький", "small"
+        return "меленький", "small", SMALL_BOX_BLITZ_PHOTO
 
 
 class RewardSimpleBlitzTeam(RewardBlitzTeam):

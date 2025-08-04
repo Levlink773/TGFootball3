@@ -18,6 +18,7 @@ async def reward_blitz_medium_box(
         callback_data: BoxRewardCallback,
         character: Character
 ):
+    await query.message.delete()
     box_type = BOX_TYPE.get(callback_data.box_type, TypeBox.MEDIUM_BOX)
     open_box = OpenBoxService(
         type_box=box_type,

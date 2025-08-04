@@ -1,7 +1,5 @@
 import asyncio
 
-from aiogram.types import FSInputFile
-
 from blitz.blitz_match.constans import END_BLITZ_PHOTO, BLITZ_STAGES_PATCH
 from blitz.services.blitz_team_service import BlitzTeamService
 from blitz.services.message_sender.blitz_sender import send_message_all_characters
@@ -34,24 +32,28 @@ class BlitzAnnounceService:
         lines.append("Нехай переможе найсильніший! 💥")
 
         text = "\n".join(lines)
-        await send_message_all_characters(characters, text, photo=FSInputFile(stage[1]))
+        await send_message_all_characters(characters, text, photo_path=stage[1])
 
     @classmethod
     async def announce_end(cls, characters: list[Character], final_winner: BlitzTeam, final_looser: BlitzTeam) -> None:
-        result_winner, result_looser = await asyncio.gather(
+        res_winner, res_looser = await asyncio.gather(
             BlitzTeamService.get_characters_from_blitz_team(final_winner),
             BlitzTeamService.get_characters_from_blitz_team(final_looser)
         )
+        ch_win_first = res_winner[0].owner.user_name if res_winner[0].owner.user_name else res_winner[0].character_name
+        ch_win_second = res_winner[1].owner.user_name if res_winner[1].owner.user_name else res_winner[1].character_name
+        ch_loose_first = res_looser[0].owner.user_name if res_looser[0].owner.user_name else res_looser[0].character_name
+        ch_loose_second = res_looser[1].owner.user_name if res_looser[0].owner.user_name else res_looser[0].character_name
         end_text = f"""
 🏆 <b>Результати блиц-турніру!</b>
 
-🥇 Команда <b>{final_winner.name}</b> здобуває 1 місце та отримує середній лутбокс! Вітаємо {result_winner[0].owner.user_name} і {result_winner[1].owner.user_name} — справжні чемпіони! 🎉
+🥇 Команда <b>«{final_winner.name}»</b> здобуває 1 місце та отримує середній лутбокс! Вітаємо {ch_win_first} і {ch_win_second} — справжні чемпіони! 🎉
 
-🥈 Команда <b>{final_looser.name}</b> посідає 2 місце та отримує маленький лутбокс — чудова гра від {result_looser[0].owner.user_name} і {result_looser[1].owner.user_name}! 👏
+🥈 Команда <b>«{final_looser.name}»</b> посідає 2 місце та отримує маленький лутбокс — чудова гра від {ch_loose_first} і {ch_loose_second}! 👏
 
-⚡ Усі інші учасники отримують +30 енергії! Дякуємо за гру — до наступного блиц-турніру! 💪
+⚡ Усі учасники отримують +30 енергії! Дякуємо за гру — до наступного блиц-турніру! 💪
 """
-        await send_message_all_characters(characters, end_text, photo=FSInputFile(END_BLITZ_PHOTO))
+        await send_message_all_characters(characters, end_text, photo_path=END_BLITZ_PHOTO)
 
     @classmethod
     async def announce_round_results(cls,

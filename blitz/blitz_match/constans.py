@@ -3,10 +3,10 @@ from datetime import timedelta
 MAX_EVENTS = 7
 MIN_GAP = 20
 
-MIN_DONATE_ENERGY_TO_BONUS_KOEF = 600
+MIN_DONATE_ENERGY_TO_BONUS_KOEF = 200
 TIME_EVENT_DONATE_ENERGY = 30
-KOEF_DONATE_ENERGY = 0.4
-BASE_KOEF_ADD_POWER = 0.2
+KOEF_DONATE_ENERGY = 2
+BASE_KOEF_ADD_POWER = 1
 TIME_BLITZ_FIGHT = timedelta(minutes=5)
 
 DONE_ENERGY_PHOTOS = [
@@ -50,6 +50,9 @@ END_MATCH_PHOTOS_PATCH = [
 START_MATCH_PHOTO_PATCH = "blitz/blitz_match/photos/start_match_photo.jpg"
 START_BLITZ_PHOTO = "blitz/blitz_match/photos/start_blitz.png"
 END_BLITZ_PHOTO = "blitz/blitz_match/photos/end_blitz.png"
+TEAM_BLITZ_PHOTO = "blitz/blitz_match/photos/team.png"
+SMALL_BOX_BLITZ_PHOTO = "blitz/blitz_match/photos/small_blitz_box.jpg"
+MEDIUM_BOX_BLITZ_PHOTO = "blitz/blitz_match/photos/medium_blitz_box.jpg"
 BLITZ_STAGES_PATCH = [
     "blitz/blitz_match/photos/1v8.jpg",
     "blitz/blitz_match/photos/1v4.jpg",
