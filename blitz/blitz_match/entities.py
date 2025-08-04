@@ -5,6 +5,7 @@ from typing import Optional, Tuple
 from database.models.blitz_character import BlitzCharacter
 from database.models.blitz_team import BlitzTeam
 from database.models.character import Character
+from logging_config import logger
 from .utils import (
     calculate_bonus_donate_energy
 )
@@ -184,6 +185,7 @@ class BlitzMatchData:
     @property
     def power_first_team(self) -> int:
         base_power = self.first_team.team_power
+        logger.info(f"Donate energy ft: {self.first_team.episode_donate_energy}")
         donate_energy_bonus = calculate_bonus_donate_energy(
             donate_energy = self.first_team.episode_donate_energy,
             power_club = self.first_team.team_power,
@@ -198,6 +200,7 @@ class BlitzMatchData:
     @property
     def power_second_team(self) -> int:
         base_power = self.second_team.team_power
+        logger.info(f"Donate energy st: {self.second_team.episode_donate_energy}")
         donate_energy_bonus = calculate_bonus_donate_energy(
             donate_energy = self.second_team.episode_donate_energy,
             power_club = self.second_team.team_power,

@@ -24,11 +24,10 @@ class BlitzAnnounceService:
         }
         stage = stage_map.get(len(pairs), ("Наступний раунд", BLITZ_STAGES_PATCH[0]))
 
-        lines = [f"⚽️ <b>Анонс бліц-раунду ({stage[0]})!</b> ⚽️", ""]
+        lines = [f"⚽️ <b>Через хвилину починається бліц раунд ({stage[0]})!</b> ⚽️", ""]
         for idx, (team_a, team_b) in enumerate(pairs, start=1):
             lines.append(f"🔸 Матч {idx}: <b>{team_a.name}</b> vs <b>{team_b.name}</b>")
         lines.append("")
-        lines.append("⏳ У вас 60 секунд. Підготуйтеся до старту!")
         lines.append("Нехай переможе найсильніший! 💥")
 
         text = "\n".join(lines)
@@ -43,7 +42,7 @@ class BlitzAnnounceService:
         ch_win_first = res_winner[0].owner.user_name if res_winner[0].owner.user_name else res_winner[0].character_name
         ch_win_second = res_winner[1].owner.user_name if res_winner[1].owner.user_name else res_winner[1].character_name
         ch_loose_first = res_looser[0].owner.user_name if res_looser[0].owner.user_name else res_looser[0].character_name
-        ch_loose_second = res_looser[1].owner.user_name if res_looser[0].owner.user_name else res_looser[0].character_name
+        ch_loose_second = res_looser[1].owner.user_name if res_looser[1].owner.user_name else res_looser[1].character_name
         end_text = f"""
 🏆 <b>Результати блиц-турніру!</b>
 
@@ -99,7 +98,7 @@ class BlitzAnnounceService:
                                       team: BlitzTeam,
                                       next_stage: str):
         char_a, char_b = await BlitzTeamService.get_characters_from_blitz_team(team)
-        prep_text = 'раунду який вирішить долю вашої команди у цьому Бліц турнірі 🔥' if next_stage == 'ФІНАЛ 🏆' else 'наступного раунду'
+        prep_text = 'раунду, який вирішить долю вашої команди у цьому Бліц турнірі 🔥' if next_stage == 'ФІНАЛ 🏆' else 'наступного раунду'
         text = (
             f"🎉 Ваша команда <b>{team.name}</b> проходить у <b>{next_stage}</b>! 🎉\n"
             f"У вас є 60 секунд на підготовку до {prep_text}. ⏱️"

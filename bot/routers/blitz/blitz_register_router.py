@@ -22,7 +22,8 @@ async def blitz_register_filter(query: CallbackQuery,
             text,
             show_alert=True,
         )
-        await query.message.edit_text(text)
+        await query.message.delete()
+        await query.message.answer(text)
     except BlitzCloseError as e:
         text = "⌛️ Реєстрацію на бліц-турнір закрито. Чекайте завтра для наступної битви!"
         print(f"msg: {e}")
@@ -32,7 +33,8 @@ async def blitz_register_filter(query: CallbackQuery,
         print(f"msg: {e}")
         text = "🔔 Ви вже зареєстровані на цей бліц-турнір. Чекайте початку турніру!"
         await query.answer(text, show_alert=True)
-        await query.message.edit_text(text)
+        await query.message.delete()
+        await query.message.answer(text)
     except BlitzDoesNotExistError as e:
         print(f"msg: {e}")
         await query.answer(

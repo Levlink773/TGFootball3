@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
-from blitz.blitz_match.constans import START_BLITZ_PHOTO
+from blitz.blitz_match.constans import START_BLITZ_PHOTO, REGISTER_BLITZ_PHOTO
 from blitz.services.blitz_service import BlitzService
 from blitz.services.message_sender.blitz_sender import send_message_all_characters
 from bot.callbacks.blitz_callback import BlitzRegisterCallback
@@ -12,16 +12,16 @@ from database.models.character import Character
 from services.character_service import CharacterService
 
 START_TOURNAMENT = """
-🚀 <b>БЛІЦ-ТУРНІР РОЗПОЧАВСЯ!</b> 🚀
+🚀 <b>БЛІЦ-ТУРНІР РОЗПОЧИНАЄТЬСЯ!</b> 🚀
 
 📣 Ласкаво просимо на найшвидший і найзапекліший турнір дня! Сьогодні о 15:00 32 учасники (16 команд по 2 гравці) вийшли на поле, щоб вибороти звання чемпіона блиц-турніру.
 
 ⚙️ Механіка коротка, але яскрава:
-– 5 хвилин або до 7 вирішальних моментів  
+– 5 хвилин 7 вирішальних моментів  
 – 30 секунд на атаку  
-– Донат енергії ×5  
+– Донат енергії X5  
 
-🔥 Лічильник запущено: зараз формується список команд і незабаром ви дізнаєтеся своїх напарників.  
+Зараз формується список команд і незабаром ви дізнаєтеся своїх напарників.  
 
 ⏳ Через хвилину почнеться 1/8 фіналу – будьте готові до блискавичної боротьби й точних ударів!  
 Удачі всім і нехай сильніші здобудуть перемогу! 💥
@@ -64,7 +64,7 @@ class BlitzReminder:
             [InlineKeyboardButton(text="Зареєструватись 💪",
                                   callback_data=BlitzRegisterCallback(blitz_id=blitz_id).pack())]
         ])
-        await send_message_all_characters(filtered_characters, text, reply_markup=markup)
+        await send_message_all_characters(filtered_characters, text, reply_markup=markup, photo_path=REGISTER_BLITZ_PHOTO)
 
     async def remind(self) -> bool:
         now = datetime.now()
@@ -73,20 +73,22 @@ class BlitzReminder:
         vip_remind_time = today_start - timedelta(minutes=self.remind_for_vip_users)
         simple_remind_time = today_start - timedelta(minutes=self.remind_for_simple_users)
 
-        characters = await CharacterService.get_all_characters_where_end_training()
-
         if now < vip_remind_time:
             await asyncio.sleep((vip_remind_time - now).total_seconds())
+            characters = await CharacterService.get_all_characters_where_end_training()
             await self.__reminder_blitz_for_users(characters, True, self.blitz_id)
         elif now < today_start:
+            characters = await CharacterService.get_all_characters_where_end_training()
             await self.__reminder_blitz_for_users(characters, True, self.blitz_id)
 
         now = datetime.now()
 
         if now < simple_remind_time:
             await asyncio.sleep((simple_remind_time - now).total_seconds())
+            characters = await CharacterService.get_all_characters_where_end_training()
             await self.__reminder_blitz_for_users(characters, False, self.blitz_id)
         elif now < today_start:
+            characters = await CharacterService.get_all_characters_where_end_training()
             await self.__reminder_blitz_for_users(characters, False, self.blitz_id)
 
         now = datetime.now()
