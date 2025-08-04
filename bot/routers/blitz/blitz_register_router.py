@@ -4,7 +4,7 @@ from aiogram import Router
 from aiogram.types import CallbackQuery
 
 from blitz.services.blitz_service import BlitzService
-from blitz.exception import BlitzCloseError, CharacterExistsInBlitzError, BlitzDoesNotExistError
+from blitz.exception import BlitzCloseError, CharacterExistsInBlitzError, BlitzDoesNotExistError, MaxUsersInBlitzError
 from bot.callbacks.blitz_callback import BlitzRegisterCallback
 from database.models.character import Character
 
@@ -16,7 +16,7 @@ async def blitz_register_filter(query: CallbackQuery,
                                 character: Character,
                                 ):
     try:
-        await BlitzService.add_character_to_blitz(callback_data.blitz_id, character)
+        await BlitzService.add_character_to_blitz(callback_data.blitz_id, character, callback_data.max_characters)
         text = "🎉 Ви успішно зареєструвалися на бліц-турнір! Очікуйте на початок в 15:00 та готуйтеся до боротьби ⚽️"
         await query.answer(
             text,
@@ -32,6 +32,15 @@ async def blitz_register_filter(query: CallbackQuery,
     except CharacterExistsInBlitzError as e:
         print(f"msg: {e}")
         text = "🔔 Ви вже зареєстровані на цей бліц-турнір. Чекайте початку турніру!"
+        await query.answer(text, show_alert=True)
+        await query.message.delete()
+        await query.message.answer(text)
+    except MaxUsersInBlitzError as e:
+        print(f"msg: {e}")
+        text = (
+            "❌ На жаль, реєстрація завершена — кількість учасників у бліц-турнірі вже досягла максимуму. \n\n"
+            "📌 Слідкуйте за анонсами — новий турнір буде дуже скоро. Підготуйте свого гравця до наступного виклику! ⚔️⚽️"
+        )
         await query.answer(text, show_alert=True)
         await query.message.delete()
         await query.message.answer(text)

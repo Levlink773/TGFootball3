@@ -4,7 +4,7 @@ from sqlalchemy import select, delete
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import selectinload
 
-from blitz.exception import BlitzCloseError, CharacterExistsInBlitzError
+from blitz.exception import BlitzCloseError, CharacterExistsInBlitzError, MaxUsersInBlitzError
 from database.models.blitz import Blitz
 from database.models.blitz_character import BlitzCharacter
 from database.models.character import Character
@@ -34,10 +34,11 @@ class BlitzService:
                 return blitz
 
     @classmethod
-    async def add_character_to_blitz(cls, blitz_id: int, character: Character) -> BlitzCharacter | None:
-
+    async def add_character_to_blitz(cls, blitz_id: int, character: Character,
+                                     max_character: int) -> BlitzCharacter | None:
         async for session in get_session():
             async with session.begin():
+                # Получаем блиц
                 result = await session.execute(
                     select(Blitz).where(Blitz.id == blitz_id)
                 )
@@ -46,6 +47,8 @@ class BlitzService:
                     raise ValueError(f"Blitz with id {blitz_id} does not exist")
                 if not blitz.can_register:
                     raise BlitzCloseError(f"Blitz with id {blitz_id} is not registered")
+
+                # Проверка — уже есть такой персонаж в блице?
                 result = await session.execute(
                     select(BlitzCharacter).where(
                         BlitzCharacter.character_id == character.id,
@@ -54,8 +57,21 @@ class BlitzService:
                 )
                 existing: BlitzCharacter = result.scalar_one_or_none()
                 if existing:
-                    print(f"Blitz Character with id {existing.id} already exists!")
                     raise CharacterExistsInBlitzError(f"Blitz Character with id {existing.id} already exists!")
+
+                # Получаем текущее количество персонажей в блице
+                result = await session.execute(
+                    select(BlitzCharacter).where(
+                        BlitzCharacter.blitz_id == blitz_id
+                    )
+                )
+                current_characters = result.scalars().all()
+
+                if len(current_characters) >= max_character:
+                    raise MaxUsersInBlitzError(
+                        f"Blitz with id {blitz_id} already has {len(current_characters)} characters. Max is {max_character}.")
+
+                # Добавляем персонажа
                 blitz_character = BlitzCharacter(
                     character_id=character.id,
                     blitz_id=blitz_id

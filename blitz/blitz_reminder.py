@@ -62,7 +62,7 @@ class BlitzReminder:
         text = MSG_VIP_USER if required_vip else MSG_SIMPLE_USER
         markup = InlineKeyboardMarkup(inline_keyboard=[
             [InlineKeyboardButton(text="Зареєструватись 💪",
-                                  callback_data=BlitzRegisterCallback(blitz_id=blitz_id).pack())]
+                                  callback_data=BlitzRegisterCallback(blitz_id=blitz_id, max_characters=self.necessary_count_users).pack())]
         ])
         await send_message_all_characters(filtered_characters, text, reply_markup=markup, photo_path=REGISTER_BLITZ_PHOTO)
 
