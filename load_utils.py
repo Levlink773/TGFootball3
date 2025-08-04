@@ -1,6 +1,7 @@
 import asyncio
-from datetime import datetime
+from datetime import datetime, time
 
+from blitz.start_blitz import StartBlitzs
 from league.start_league import (
     StartDefaultLeague,
     SchedulerDefaultLeague
@@ -76,7 +77,8 @@ async def init_schedulers_league():
     #TODO: add scheduler for new club league
 
 async def start_utils():
-    
+
+    asyncio.create_task(StartBlitzs.start([time(hour=3, minute=1, second=0)])) # bltiz init
     await init_leagues()
     await init_schedulers_league()
     await energy_listener.start_listener()

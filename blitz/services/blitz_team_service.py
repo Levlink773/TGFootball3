@@ -39,7 +39,7 @@ class BlitzTeamService:
                 created_teams: list[BlitzTeam] = []
 
                 for i in range(team_count):
-                    team = BlitzTeam()
+                    team = BlitzTeam(name=f"Команда {i + 1}")
                     session.add(team)
                     await session.flush()
 
@@ -75,7 +75,9 @@ class BlitzTeamService:
     async def get_by_id(cls, team_id: int) -> BlitzTeam | None:
         async for session in get_session():
             async with session.begin():
-                result = await session.execute(select(BlitzTeam).where(BlitzTeam.id == team_id))
+                result = await session.execute(select(BlitzTeam)
+                                               .where(BlitzTeam.id == team_id)
+                                               .options(selectinload(BlitzTeam.characters)))
                 return result.scalar_one_or_none()
     @classmethod
     def pair_teams(cls, teams: list[BlitzTeam]) -> list[tuple[BlitzTeam, BlitzTeam]]:

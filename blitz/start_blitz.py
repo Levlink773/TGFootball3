@@ -23,7 +23,7 @@ from logging_config import logger
 class StartBlitzs:
     @staticmethod
     async def start(start_times: list[time]):
-        StartBlitzs.validate_start_times(start_times)
+        StartBlitzs._validate_start_times(start_times)
 
         while True:
             now = datetime.now()
@@ -41,7 +41,7 @@ class StartBlitzs:
             await asyncio.sleep(1)
 
     @staticmethod
-    def validate_start_times(start_times: list[time]):
+    def _validate_start_times(start_times: list[time]):
         minutes = [
             t.hour * 60 + t.minute
             for t in sorted(start_times)
@@ -61,7 +61,7 @@ class StartBlitzs:
 
 
 class StartBlitz:
-    def __init__(self, start_datetime: datetime, stages_of_final: int = 5):
+    def __init__(self, start_datetime: datetime, stages_of_final: int = 2):
         self.start_datetime = start_datetime.replace(microsecond=0)
         if stages_of_final <= 1:
             raise ValueError("count of final must be greater than 1")
@@ -128,23 +128,28 @@ class StartBlitz:
         final_winner, final_looser = await StartBlitz._start_blitz_match(pair_teams[0], 1)
         logger.info(f"final_winner: {final_winner}")
         bz_reward = BlitzRewardService.reward_blitz_team
+        asyncio.create_task(BlitzAnnounceService.announce_end(characters, final_winner, final_looser))
         await asyncio.gather(
             bz_reward(RewardWinnerBlitzTeam(final_winner)),
-            bz_reward(RewardPreWinnerBlitzTeam(final_winner)),
+            bz_reward(RewardPreWinnerBlitzTeam(final_looser)),
             *[
                 bz_reward(RewardSimpleBlitzTeam(lose_team))
                 for lose_team in looser_team
             ]
         )
         logger.info("Reward blitz match")
-        asyncio.create_task(BlitzAnnounceService.announce_end(characters, final_winner, final_looser))
         TeamBlitzMatchManager.clear_matches()
         return final_winner
 
     async def start(self) -> BlitzStatus:
         blitz: Blitz = await BlitzService().get_or_create_blitz_by_start(self.start_datetime)
 
-        status = await BlitzReminder(blitz, necessary_count_users=self.necessary_users).remind()
+        status = await BlitzReminder(
+            blitz=blitz,
+            remind_for_simple_users=2,
+            remind_for_vip_users=3,
+            necessary_count_users=self.necessary_users
+        ).remind()
         if not status:
             logger.warn("Блиц турнир отменен!")
             return BlitzStatus.CANCELED

@@ -4,12 +4,12 @@ import random
 from typing import AsyncGenerator
 from datetime import datetime, timedelta
 
-from match.constans import (
+from blitz.blitz_match.constans import (
     MAX_EVENTS, 
     MIN_GAP, 
     TIME_EVENT_DONATE_ENERGY
 )
-from match.enum import TypeGoalEvent
+from blitz.blitz_match.enum_blitz_match import TypeGoalEvent
 
 class GoalGenerator:
     def __init__(

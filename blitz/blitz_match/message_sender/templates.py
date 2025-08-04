@@ -194,11 +194,11 @@ class TemplatesMatch(Enum):
 
 🔸 <b>{name_first_team}</b>
 - Гравці: 
-{players_first_club}
+{players_first_team}
 
 🔸 <b>{name_second_team}</b>
 - Гравці: 
-{players_second_club}
+{players_second_team}
 
 🏆 Гра обіцяє бути швидкою та видовищною!
     """
@@ -209,11 +209,11 @@ class TemplatesMatch(Enum):
 ⚔️ У останньому двобої зустрічаються справжні титани:
 <b>{name_first_team}</b>
 - Гравці:
-{players_first_club}
+{players_first_team}
 
 <b>{name_second_team}</b>
 - Гравці:
-{players_second_club}
+{players_second_team}
 
 🏟️ Арена: «Сяйво Бліц-турніру»
 

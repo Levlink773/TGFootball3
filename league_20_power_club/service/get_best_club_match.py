@@ -42,7 +42,11 @@ class BestClubLeagueMatchService:
         random.shuffle(top_20_clubs)
         group_generator = generate_club_group(top_20_clubs)
         for group in LeagueBestClubRanking:
-            group_clubs = next(group_generator)
+            try:
+                group_clubs = next(group_generator)
+            except StopIteration:
+                # Генератор закончился — обработай это как нужно
+                group_clubs = None
             await self.create_matches(
                 group_clubs = group_clubs,
                 group       = group

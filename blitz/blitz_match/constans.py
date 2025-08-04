@@ -10,51 +10,51 @@ BASE_KOEF_ADD_POWER = 0.2
 TIME_BLITZ_FIGHT = timedelta(minutes=5)
 
 DONE_ENERGY_PHOTOS = [
-    "blitz_match/photos/done_energy.jpg",
-    "blitz_match/photos/done_energy_2.jpg",
-    "blitz_match/photos/done_energy_3.jpg",
+    "blitz/blitz_match/photos/done_energy.jpg",
+    "blitz/blitz_match/photos/done_energy_2.jpg",
+    "blitz/blitz_match/photos/done_energy_3.jpg",
 ]
 
 NO_GOAL_PHOTOS_PATCH = [
-    "blitz_match/photos/no_goal_1.jpg",
-    "blitz_match/photos/no_goal_2.jpg",
-    "blitz_match/photos/no_goal_3.jpg",
-    "blitz_match/photos/no_goal_4.jpg",
-    "blitz_match/photos/no_goal_5.jpg",
+    "blitz/blitz_match/photos/no_goal_1.jpg",
+    "blitz/blitz_match/photos/no_goal_2.jpg",
+    "blitz/blitz_match/photos/no_goal_3.jpg",
+    "blitz/blitz_match/photos/no_goal_4.jpg",
+    "blitz/blitz_match/photos/no_goal_5.jpg",
 ]
 
 GOAL_PHOTOS_PATCH = [
-    "blitz_match/photos/goal_1.jpg",
-    "blitz_match/photos/goal_2.jpg",
-    "blitz_match/photos/goal_3.jpg",
-    "blitz_match/photos/goal_4.jpg",
-    "blitz_match/photos/goal_5.jpg",
+    "blitz/blitz_match/photos/goal_1.jpg",
+    "blitz/blitz_match/photos/goal_2.jpg",
+    "blitz/blitz_match/photos/goal_3.jpg",
+    "blitz/blitz_match/photos/goal_4.jpg",
+    "blitz/blitz_match/photos/goal_5.jpg",
 ]
 
-MVP_PHOTO_PATCH = "blitz_match/photos/mvp.jpg"
+MVP_PHOTO_PATCH = "blitz/blitz_match/photos/mvp.jpg"
 DONATE_ENERGY_PATCH_PHOTOS = [
-    "blitz_match/photos/notification_send_energy_11.jpg",
-    "blitz_match/photos/notification_send_energy_22.jpg",
+    "blitz/blitz_match/photos/notification_send_energy_11.png",
+    "blitz/blitz_match/photos/notification_send_energy_22.png",
 ]
 SEND_INFO_CHARACTERS_PATCH_PHOTOS = [
-    "blitz_match/photos/send_info_character_1.jpg",
-    "blitz_match/photos/send_info_character_2.jpg",
-    "blitz_match/photos/send_info_character_3.jpg",
+    "blitz/blitz_match/photos/send_info_character_1.jpg",
+    "blitz/blitz_match/photos/send_info_character_2.jpg",
+    "blitz/blitz_match/photos/send_info_character_3.jpg",
 ]
 END_MATCH_PHOTOS_PATCH = [
-    "blitz_match/photos/end_match_1.jpg",
-    "blitz_match/photos/end_match_2.jpg",
-    "blitz_match/photos/end_match_3.jpg",
+    "blitz/blitz_match/photos/end_match_1.jpg",
+    "blitz/blitz_match/photos/end_match_2.jpg",
+    "blitz/blitz_match/photos/end_match_3.jpg",
 ]
 
-START_MATCH_PHOTO_PATCH = "blitz_match\photos\start_match_photo.jpg"
-START_BLITZ_PHOTO = "blitz_match\photos\img.png"
-END_BLITZ_PHOTO = "blitz_match\photos\img_1.png"
+START_MATCH_PHOTO_PATCH = "blitz/blitz_match/photos/start_match_photo.jpg"
+START_BLITZ_PHOTO = "blitz/blitz_match/photos/start_blitz.png"
+END_BLITZ_PHOTO = "blitz/blitz_match/photos/end_blitz.png"
 BLITZ_STAGES_PATCH = [
-    "blitz_match/photos/1v8.jpg",
-    "blitz_match/photos/1v4.jpg",
-    "blitz_match/photos/1v2.jpg",
-    "blitz_match/photos/final.jpg",
+    "blitz/blitz_match/photos/1v8.jpg",
+    "blitz/blitz_match/photos/1v4.jpg",
+    "blitz/blitz_match/photos/1v2.jpg",
+    "blitz/blitz_match/photos/final.jpg",
 ]
 STAGE_MAP = {
     16: "1/16 фіналу",

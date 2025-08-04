@@ -8,9 +8,9 @@ from blitz.exception import BlitzCloseError, CharacterExistsInBlitzError, BlitzD
 from bot.callbacks.blitz_callback import BlitzRegisterCallback
 from database.models.character import Character
 
-router = Router()
+blitz_register_router = Router()
 
-@router.callback_query(BlitzRegisterCallback.filter())
+@blitz_register_router.callback_query(BlitzRegisterCallback.filter())
 async def blitz_register_filter(query: CallbackQuery,
                                 callback_data: BlitzRegisterCallback,
                                 character: Character,
@@ -18,26 +18,31 @@ async def blitz_register_filter(query: CallbackQuery,
     try:
         await BlitzService.add_character_to_blitz(callback_data.blitz_id, character)
         await query.answer(
-            "🎉 Ви успішно зареєструвалися на бліц-турнір! Очікуйте на початок в 15:00 та готуйтеся до боротьби ⚽️"
+            "🎉 Ви успішно зареєструвалися на бліц-турнір! Очікуйте на початок в 15:00 та готуйтеся до боротьби ⚽️",
+            show_alert=True,
         )
     except BlitzCloseError as e:
         print(f"msg: {e}")
         await query.answer(
-            "⌛️ Реєстрацію на бліц-турнір закрито. Чекайте завтра для наступної битви!"
+            "⌛️ Реєстрацію на бліц-турнір закрито. Чекайте завтра для наступної битви!",
+            show_alert=True,
         )
     except CharacterExistsInBlitzError as e:
         print(f"msg: {e}")
         await query.answer(
-            "🔔 Ви вже зареєстровані на цей бліц-турнір. Чекайте початку турніру!"
+            "🔔 Ви вже зареєстровані на цей бліц-турнір. Чекайте початку турніру!",
+            show_alert=True,
         )
     except BlitzDoesNotExistError as e:
         print(f"msg: {e}")
         await query.answer(
-            f"❓ Турнір з id {callback_data.blitz_id} не знайдено. Перевірте, будь ласка, коректність даних."
+            f"❓ Турнір з id {callback_data.blitz_id} не знайдено. Перевірте, будь ласка, коректність даних.",
+            show_alert=True,
         )
     except Exception as e:
         traceback.print_exc()
         print(f"msg: {e}")
         await query.answer(
-            "⚠️ Упс! Сталася помилка при реєстрації на бліц-турнір. Спробуйте ще раз або зверніться до підтримки."
+            "⚠️ Упс! Сталася помилка при реєстрації на бліц-турнір. Спробуйте ще раз або зверніться до підтримки.",
+            show_alert=True,
         )

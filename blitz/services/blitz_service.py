@@ -79,7 +79,7 @@ class BlitzService:
                 )
                 if result.rowcount == 0:
                     raise ValueError(f"Blitz with ID {blitz_id} not found.")
-                return result.scalar_one_or_none()
+                return result.rowcount
 
     @classmethod
     async def get_blitz_character(cls, blitz_id: int) -> list[BlitzCharacter]:

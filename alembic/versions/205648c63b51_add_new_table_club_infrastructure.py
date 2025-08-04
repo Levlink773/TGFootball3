@@ -24,7 +24,7 @@ def upgrade() -> None:
     sa.Column('id', sa.BigInteger(), nullable=False),
     sa.Column('club_id', sa.BigInteger(), nullable=False),
     sa.Column('points', sa.Integer(), server_default=sa.text('0'), nullable=False),
-    sa.Column('last_update_points', sa.DateTime(), server_default=sa.text("TIMESTAMP '1970-01-01 00:00:00'"), nullable=False),
+    sa.Column('last_update_points', sa.DateTime(), nullable=False),
     sa.Column('training_base', sa.Enum('LEVEL_0', 'LEVEL_1', 'LEVEL_2', 'LEVEL_3', 'LEVEL_4', 'LEVEL_5', name='infrastructurelevel'), server_default=sa.text("'LEVEL_0'"), nullable=False),
     sa.Column('training_center', sa.Enum('LEVEL_0', 'LEVEL_1', 'LEVEL_2', 'LEVEL_3', 'LEVEL_4', 'LEVEL_5', name='infrastructurelevel'), server_default=sa.text("'LEVEL_0'"), nullable=False),
     sa.Column('premium_fond', sa.Enum('LEVEL_0', 'LEVEL_1', 'LEVEL_2', 'LEVEL_3', 'LEVEL_4', 'LEVEL_5', name='infrastructurelevel'), server_default=sa.text("'LEVEL_0'"), nullable=False),

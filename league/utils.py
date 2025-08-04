@@ -5,7 +5,7 @@ class LeagueService:
 
     @staticmethod
     def generate_round_robin_schedule(clubs: List['Club']) -> List[List[Tuple['Club', 'Club']]]:
-        num_clubs = len(clubs)
+        num_clubs = len(clubs) if clubs else 0
         if num_clubs % 2 != 0:
             clubs.append(None)
 

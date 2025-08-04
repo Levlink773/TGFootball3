@@ -1,4 +1,6 @@
 from aiogram import Router
+
+from .blitz.router import blitz_router
 from .commands.router import commands_router
 from .character.router import character_router
 from .gym.router import gym_main_router
@@ -30,6 +32,7 @@ main_router.include_routers(
     character_router,
     gym_main_router,
     club_router,
+    blitz_router, # blitz_router
     league_main_router,
     magazine_main_router,
     duel_main_router,

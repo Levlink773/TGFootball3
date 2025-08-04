@@ -38,8 +38,8 @@ def upgrade() -> None:
     sa.PrimaryKeyConstraint('id')
     )
     op.create_index(op.f('ix_character_join_training_id'), 'character_join_training', ['id'], unique=False)
-    op.drop_index('ix_change_position_payment_id', table_name='change_position_payment')
-    op.drop_table('change_position_payment')
+    # op.drop_index('ix_change_position_payment_id', table_name='change_position_payment')
+    # op.drop_table('change_position_payment')
     # ### end Alembic commands ###
 
 

@@ -33,16 +33,27 @@ class RewardBlitzTeam(ABC):
 
 class RewardWinnerBlitzTeam(RewardBlitzTeam):
     def box_type(self):
-        return "средний", "medium"
+        return "середній", "medium"
 
     async def reward_blitz_character(self, character: Character):
         name_box, callback_name_box = self.box_type()
         callback_data = BoxRewardCallback(box_type=callback_name_box).pack()
         markup = InlineKeyboardMarkup(inline_keyboard=[
-            [InlineKeyboardButton(text="Open", callback_data=callback_data)]
+            [InlineKeyboardButton(text="Відкрити 🗝️", callback_data=callback_data)]
         ])
-        await bot.send_message(character.characters_user_id, f"Вы получили {name_box} лутбокс", reply_markup=markup)
+
+        # Новий український, драйвовий текст з HTML-підсвіткою
+        await bot.send_message(
+            character.characters_user_id,
+            f"🎁 <b>Увага!</b> Ви отримали <b>{name_box} лутбокс</b> за блиц-турнір! "
+            "Відкрийте його, щоб дізнатися свою нагороду та зарядитися мотивацією! 💥",
+            reply_markup=markup,
+            parse_mode="HTML"
+        )
+        # Додаємо +50 енергії всім учасникам команди
         await RewardSimpleBlitzTeam(self.reward_blitz_team).reward_blitz_character(character)
+
+
 
 
 class RewardPreWinnerBlitzTeam(RewardWinnerBlitzTeam):
@@ -53,12 +64,18 @@ class RewardPreWinnerBlitzTeam(RewardWinnerBlitzTeam):
 
 class RewardSimpleBlitzTeam(RewardBlitzTeam):
     async def reward_blitz_character(self, character: Character):
-        text = "Вы получлил бонусные +50 енергии за блиц турнир"
+        # Збільшуємо енергію
         await CharacterService.edit_character_energy(
             character_id=character.id,
             amount_energy=BONUS_ENERGY,
         )
-        await bot.send_message(character.characters_user_id, text)
+        # Епічний фініш повідомлення про енергію
+        await bot.send_message(
+            character.characters_user_id,
+            "⚡ <b>+50 енергії</b> за участь у блиц-турнірі! Дякуємо, що були з нами — "
+            "поповнюйте запаси та повертайтесь до наступних батлів! 💪",
+            parse_mode="HTML"
+        )
 
 
 class BlitzRewardService:
