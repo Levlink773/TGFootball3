@@ -10,7 +10,7 @@ from database.models.blitz_team import BlitzTeam
 from database.models.character import Character
 from loader import bot
 from services.character_service import CharacterService
-from utils.photo_utils import get_photo, save_photo_id
+from utils.blitz_photo_utils import get_photo, save_photo_id
 
 BONUS_ENERGY = 50
 

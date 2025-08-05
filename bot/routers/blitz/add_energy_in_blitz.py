@@ -19,7 +19,7 @@ from blitz.blitz_match.constans import (
 )
 from services.character_service import CharacterService
 from utils.club_utils import send_message_characters_club
-from utils.photo_utils import get_photo, save_photo_id
+from utils.blitz_photo_utils import get_photo, save_photo_id
 
 add_energy_in_match_router = Router()
 

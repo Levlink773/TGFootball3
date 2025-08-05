@@ -6,7 +6,7 @@ from functools import wraps
 
 
 class RateLimiter:
-    rate_limit = 16
+    rate_limit = 32
     max_parallel_tasks = 3
     last_sent_time = time.time()
     semaphore = asyncio.Semaphore(max_parallel_tasks)

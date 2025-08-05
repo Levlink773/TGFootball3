@@ -1,5 +1,6 @@
 import traceback
 
+from aiogram.exceptions import TelegramForbiddenError
 from aiogram.types import InlineKeyboardMarkup
 
 from blitz.blitz_match.constans import TEAM_BLITZ_PHOTO
@@ -8,7 +9,8 @@ from blitz.services.message_sender.rate_limiter import rate_limiter_simple
 from database.models.blitz_team import BlitzTeam
 from database.models.character import Character
 from loader import bot
-from utils.photo_utils import get_photo, save_photo_id
+from logging_config import logger
+from utils.blitz_photo_utils import get_photo, save_photo_id
 
 
 @rate_limiter_simple
@@ -36,6 +38,8 @@ async def send_message(character: Character, text: str, reply_markup: InlineKeyb
             text=text,
             reply_markup=reply_markup
         )
+    except TelegramForbiddenError:
+        logger.error(f"User {character.characters_user_id} blocked the bot")
     except Exception as E:
         traceback.print_exc()
         print(E)

@@ -54,8 +54,8 @@ TEAM_BLITZ_PHOTO = "blitz/blitz_match/photos/team.png"
 SMALL_BOX_BLITZ_PHOTO = "blitz/blitz_match/photos/small_blitz_box.jpg"
 MEDIUM_BOX_BLITZ_PHOTO = "blitz/blitz_match/photos/medium_blitz_box.jpg"
 BLITZ_STAGES_PATCH = [
-    "blitz/blitz_match/photos/1v8.jpg",
-    "blitz/blitz_match/photos/1v4.jpg",
+    "blitz/blitz_match/photos/1v8.png",
+    "blitz/blitz_match/photos/1v4.png",
     "blitz/blitz_match/photos/1v2.jpg",
     "blitz/blitz_match/photos/final.jpg",
 ]

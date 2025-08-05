@@ -8,7 +8,7 @@ from bot.keyboards.blitz_keyboard import donate_energy_to_blitz_match
 from database.models.character import Character
 from loader import bot
 from logging_config import logger
-from utils.photo_utils import get_photo, save_photo_id
+from utils.blitz_photo_utils import get_photo, save_photo_id
 from utils.rate_limitter import rate_limiter
 from .render_scene import SceneRenderer
 from .templates import (
