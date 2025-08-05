@@ -4,6 +4,7 @@ from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 from blitz.blitz_match.constans import SMALL_BOX_BLITZ_PHOTO, MEDIUM_BOX_BLITZ_PHOTO
 from blitz.services.blitz_character_service import BlitzCharacterService
+from blitz.services.message_sender.blitz_sender import send_message
 from bot.callbacks.blitz_callback import BoxRewardCallback
 from database.models.blitz_team import BlitzTeam
 from database.models.character import Character
@@ -79,11 +80,10 @@ class RewardSimpleBlitzTeam(RewardBlitzTeam):
             amount_energy=BONUS_ENERGY,
         )
         # Епічний фініш повідомлення про енергію
-        await bot.send_message(
-            character.characters_user_id,
-            "⚡ <b>+50 енергії</b> за участь у блиц-турнірі! Дякуємо, що були з нами — "
+        await send_message(
+            character=character,
+            text="⚡ <b>+50 енергії</b> за участь у блиц-турнірі! Дякуємо, що були з нами — "
             "поповнюйте запаси та повертайтесь до наступних батлів! 💪",
-            parse_mode="HTML"
         )
 
 

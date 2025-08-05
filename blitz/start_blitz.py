@@ -102,7 +102,7 @@ class StartBlitz:
         while len(teams) > 2:
             pair_teams = BlitzTeamService.pair_teams(teams)
             logger.info(f"pair_teams: {pair_teams} for stage {len(pair_teams)}")
-            asyncio.create_task(BlitzAnnounceService.announce_matchups(characters, pair_teams))
+            asyncio.create_task(BlitzAnnounceService.announce_matchups(pair_teams))
             await asyncio.sleep(60)
             tasks = [
                 StartBlitz._start_blitz_match((first, second), len(pair_teams))
@@ -117,12 +117,12 @@ class StartBlitz:
             logger.info(f"winner_teams_stage: {winner_teams_stage}")
             logger.info(f"looser_teams_stage: {looser_team}")
             asyncio.create_task(
-                BlitzAnnounceService.announce_round_results(characters, winner_teams_stage, looser_teams_stage))
+                BlitzAnnounceService.announce_round_results(winner_teams_stage, looser_teams_stage))
             looser_team.extend(looser_teams_stage)
             teams = winner_teams_stage
         pair_teams = [(teams[0], teams[1])]
         logger.info(f"pair_teams final: {pair_teams}")
-        asyncio.create_task(BlitzAnnounceService.announce_matchups(characters, pair_teams))
+        asyncio.create_task(BlitzAnnounceService.announce_matchups(pair_teams))
         await asyncio.sleep(60)
         logger.info("Blitz match final started")
         final_winner, final_looser = await StartBlitz._start_blitz_match(pair_teams[0], 1)

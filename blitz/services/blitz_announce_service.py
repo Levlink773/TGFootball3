@@ -11,7 +11,7 @@ class BlitzAnnounceService:
     PARSE_MODE = 'HTML'
 
     @classmethod
-    async def announce_matchups(cls, characters: list[Character], pairs: list[tuple[BlitzTeam, BlitzTeam]]):
+    async def announce_matchups(cls, pairs: list[tuple[BlitzTeam, BlitzTeam]]):
         if not pairs:
             raise ValueError("На жаль, пар для матчів не знайдено.")
 
@@ -31,7 +31,16 @@ class BlitzAnnounceService:
         lines.append("Нехай переможе найсильніший! 💥")
 
         text = "\n".join(lines)
-        await send_message_all_characters(characters, text, photo_path=stage[1])
+        # 👥 Собираем всех участников из команд
+        involved_characters = []
+        for team_a, team_b in pairs:
+            char_a1, char_a2 = await BlitzTeamService.get_characters_from_blitz_team(team_a)
+            char_b1, char_b2 = await BlitzTeamService.get_characters_from_blitz_team(team_b)
+            involved_characters.extend([char_a1, char_a2, char_b1, char_b2])
+
+        # 🧹 Убираем дубликаты по ID (если надо)
+        unique_characters = {char.id: char for char in involved_characters}.values()
+        await send_message_all_characters(list(unique_characters), text, photo_path=stage[1])
 
     @classmethod
     async def announce_end(cls, characters: list[Character], final_winner: BlitzTeam, final_looser: BlitzTeam) -> None:
@@ -55,10 +64,7 @@ class BlitzAnnounceService:
         await send_message_all_characters(characters, end_text, photo_path=END_BLITZ_PHOTO)
 
     @classmethod
-    async def announce_round_results(cls,
-                                     characters: list[Character],
-                                     winners: list[BlitzTeam],
-                                     losers: list[BlitzTeam]):
+    async def announce_round_results(cls, winners: list[BlitzTeam], losers: list[BlitzTeam]):
         if not winners and not losers:
             raise ValueError("Немає даних про результати раунду.")
 
@@ -82,10 +88,14 @@ class BlitzAnnounceService:
             for team in winners:
                 lines.append(f"- {team.name}")
             lines.append("")
-        lines.append(f"🔥 <b>Наступний етап: {next_stage}!</b> 🔥")
+        lines.append(f"🔥 <b>Наступний етап: {next_stage}</b> 🔥")
 
         text = "\n".join(lines)
-        await send_message_all_characters(characters, text)
+        involved_characters = []
+        for team in winners + losers:
+            char_a, char_b = await BlitzTeamService.get_characters_from_blitz_team(team)
+            involved_characters.extend([char_a, char_b])
+        await send_message_all_characters(involved_characters, text)
 
         # Нотифікація команд індивідуально
         for w in winners:
