@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, Callable, Coroutine
 
 from sqlalchemy import select, delete
 from sqlalchemy.exc import IntegrityError
@@ -95,6 +95,13 @@ class BlitzService:
                 )
                 if result.rowcount == 0:
                     raise ValueError(f"Blitz with ID {blitz_id} not found.")
+                return result.rowcount
+
+    @classmethod
+    async def remove_all_blitzes(cls) -> Callable[[], int] | None:
+        async for session in get_session():
+            async with session.begin():
+                result = await session.execute(delete(Blitz))
                 return result.rowcount
 
     @classmethod

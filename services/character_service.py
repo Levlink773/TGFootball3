@@ -29,12 +29,20 @@ class CharacterService:
 
     @classmethod
     async def get_all_characters_where_end_training(clc) -> list[Character]:
+        months_ago = datetime.now() - timedelta(days=30)
         async for session in get_session():
             stmt = (
                 select(Character)
                 .where(Character.is_bot == False)
                 .join(Character.owner)  # join по foreign key characters_user_id
                 .where(UserBot.status_register == STATUS_USER_REGISTER.END_TRAINING)
+                .join(ReminderCharacter)
+                .where(
+                    or_(
+                        ReminderCharacter.education_reward_date >= months_ago,
+                        ReminderCharacter.time_to_join_club >= months_ago
+                    )
+                )
                 .options(
                     selectinload(Character.owner),
                     selectinload(Character.club),

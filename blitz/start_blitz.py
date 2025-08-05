@@ -158,6 +158,6 @@ class StartBlitz:
             logger.info("🏁 Блиц завершен!")
             return BlitzStatus.FINISH
         finally:
-            await BlitzService.remove_blitz_by_id(blitz.id)
+            await BlitzService.remove_all_blitzes()
             await BlitzTeamService.remove_all_blitz_teams()
             logger.info("🏁 Блиц удален!")

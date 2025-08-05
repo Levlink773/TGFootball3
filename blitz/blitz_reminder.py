@@ -72,23 +72,19 @@ class BlitzReminder:
 
         vip_remind_time = today_start - timedelta(minutes=self.remind_for_vip_users)
         simple_remind_time = today_start - timedelta(minutes=self.remind_for_simple_users)
-
+        characters = await CharacterService.get_all_characters_where_end_training()
         if now < vip_remind_time:
             await asyncio.sleep((vip_remind_time - now).total_seconds())
-            characters = await CharacterService.get_all_characters_where_end_training()
             await self.__reminder_blitz_for_users(characters, True, self.blitz_id)
         elif now < today_start:
-            characters = await CharacterService.get_all_characters_where_end_training()
             await self.__reminder_blitz_for_users(characters, True, self.blitz_id)
 
         now = datetime.now()
 
         if now < simple_remind_time:
             await asyncio.sleep((simple_remind_time - now).total_seconds())
-            characters = await CharacterService.get_all_characters_where_end_training()
             await self.__reminder_blitz_for_users(characters, False, self.blitz_id)
         elif now < today_start:
-            characters = await CharacterService.get_all_characters_where_end_training()
             await self.__reminder_blitz_for_users(characters, False, self.blitz_id)
 
         now = datetime.now()
