@@ -78,7 +78,7 @@ async def init_schedulers_league():
 
 async def start_utils():
 
-    asyncio.create_task(StartBlitzs.start([time(hour=10, minute=24, second=0)])) # bltiz init
+    asyncio.create_task(StartBlitzs.start([time(hour=19, minute=0, second=0)])) # bltiz init
     await init_leagues()
     await init_schedulers_league()
     await energy_listener.start_listener()

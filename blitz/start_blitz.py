@@ -61,7 +61,7 @@ class StartBlitzs:
 
 
 class StartBlitz:
-    def __init__(self, start_datetime: datetime, stages_of_final: int = 3):
+    def __init__(self, start_datetime: datetime, stages_of_final: int = 5):
         self.start_datetime = start_datetime.replace(microsecond=0)
         if stages_of_final <= 1:
             raise ValueError("count of final must be greater than 1")
@@ -146,8 +146,8 @@ class StartBlitz:
         try:
             status = await BlitzReminder(
                 blitz=blitz,
-                remind_for_simple_users=2,
-                remind_for_vip_users=3,
+                remind_for_simple_users=20,
+                remind_for_vip_users=30,
                 necessary_count_users=self.necessary_users
             ).remind()
             if not status:
