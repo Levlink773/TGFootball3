@@ -249,7 +249,7 @@ class TemplatesMatch(Enum):
 {match_information}
 
 🏆 Дякуємо командам за видовищну гру та справжній дух суперництва!
-Переходимо до <b>{stages_of_blitz}</b> 🔥
+Переможець переходить до <b>{stages_of_blitz}</b> 🔥
     """
     TEMPLATE_END_CONSIDER_POWER = """
 🎉 Бліц-матч між командами <b>{name_first_team}</b> та <b>{name_second_team}</b> завершено! 
@@ -259,7 +259,7 @@ class TemplatesMatch(Enum):
 {match_information}
 
 🏆 Дякуємо командам за видовищну гру та справжній дух суперництва!
-Переходимо до <b>{stages_of_blitz}</b> 🔥
+Переможець переходить до <b>{stages_of_blitz}</b> 🔥
         """
     TEMPLATE_END_FINAL = """
 🎉 <b>ФІНАЛЬНИЙ БЛІЦ-МАТЧ ЗАВЕРШЕНО!</b> 🎉

@@ -59,14 +59,8 @@ class BlitzTeamSender:
             f"🤝 Ваша команда сформована, ви в команді «{team.name}»! Ваш напарник: <b>{f'@{character1.owner.user_name}' if character1.owner.user_name else character1.name}</b>."
             "⏱️ У вас є 1 хвилина на узгодження стратегії для бліц-турніру. Покажіть командний дух і здобудьте перемогу! 🏆"
         )
-        is_save, photo = await get_photo(TEAM_BLITZ_PHOTO)
-        msg_photo = await bot.send_photo(character1.characters_user_id, photo=photo, caption=text1)
-        msg_photo1 = await bot.send_photo(character2.characters_user_id, photo=photo, caption=text2)
-        if msg_photo and msg_photo1 and not is_save:
-            await save_photo_id(
-                patch_to_photo=TEAM_BLITZ_PHOTO,
-                photo_id=msg_photo.photo[0].file_id,
-            )
+        await send_message(character1, text1,  photo_path=TEAM_BLITZ_PHOTO)
+        await send_message(character2, text2, photo_path=TEAM_BLITZ_PHOTO)
 
     @classmethod
     async def send_teams_message(cls, teams: list[BlitzTeam]):

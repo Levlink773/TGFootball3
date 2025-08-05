@@ -128,7 +128,7 @@ class StartBlitz:
         final_winner, final_looser = await StartBlitz._start_blitz_match(pair_teams[0], 1)
         logger.info(f"final_winner: {final_winner}")
         bz_reward = BlitzRewardService.reward_blitz_team
-        asyncio.create_task(BlitzAnnounceService.announce_end(characters, final_winner, final_looser))
+        await BlitzAnnounceService.announce_end(characters, final_winner, final_looser)
         await asyncio.gather(
             bz_reward(RewardWinnerBlitzTeam(final_winner)),
             bz_reward(RewardPreWinnerBlitzTeam(final_looser)),
