@@ -35,6 +35,11 @@ class RewardBlitzTeam(ABC):
 
 
 class RewardWinnerBlitzTeam(RewardBlitzTeam):
+
+    def __init__(self, reward_blitz_team: BlitzTeam, reward_exp: int):
+        super().__init__(reward_blitz_team)
+        self.reward_exp = reward_exp
+
     def box_type(self):
         return "середній", "medium", MEDIUM_BOX_BLITZ_PHOTO
 
@@ -56,7 +61,7 @@ class RewardWinnerBlitzTeam(RewardBlitzTeam):
             parse_mode="HTML"
         )
         # Додаємо +50 енергії всім учасникам команди
-        await RewardSimpleBlitzTeam(self.reward_blitz_team).reward_blitz_character(character)
+        await RewardSimpleBlitzTeam(self.reward_blitz_team, self.reward_exp).reward_blitz_character(character)
         if msg and not is_save:
             await save_photo_id(
                 patch_to_photo=photo_path,
@@ -73,16 +78,21 @@ class RewardPreWinnerBlitzTeam(RewardWinnerBlitzTeam):
 
 
 class RewardSimpleBlitzTeam(RewardBlitzTeam):
+
+    def __init__(self, reward_blitz_team: BlitzTeam, reward_exp: int):
+        super().__init__(reward_blitz_team)
+        self.reward_exp = reward_exp
+
     async def reward_blitz_character(self, character: Character):
         # Збільшуємо енергію
         await CharacterService.edit_character_energy(
             character_id=character.id,
-            amount_energy=BONUS_ENERGY,
+            amount_energy=self.reward_exp,
         )
         # Епічний фініш повідомлення про енергію
         await send_message(
             character=character,
-            text="⚡ <b>+50 енергії</b> за участь у блиц-турнірі! Дякуємо, що були з нами — "
+            text=f"⚡ <b>+{self.reward_exp} енергії</b> за участь у блиц-турнірі! Дякуємо, що були з нами — "
             "поповнюйте запаси та повертайтесь до наступних батлів! 💪",
         )
 

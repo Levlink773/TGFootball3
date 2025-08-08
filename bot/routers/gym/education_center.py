@@ -1,3 +1,5 @@
+import asyncio
+
 from aiogram import Router, F
 from aiogram.types import Message, CallbackQuery
 
@@ -31,54 +33,62 @@ async def go_to_gym(message: Message):
         caption="Ласкаво просимо до навчального центру\nТут Ви можете отримати досвід задля покращення рівня гравця, та отримати монети за вдале навчання, кожні 12 годин! ", reply_markup=menu_education_cernter()
         )
     
+locks_by_character_id: dict[int, asyncio.Lock] = {}
+
 @education_center_router.callback_query(F.data == "get_rewards_education_center")
 async def get_rewards_education_cernter(query: CallbackQuery, character: Character):
-    
-    if not datetime.now() > character.reminder.education_reward_date:
-        time_to_get_reward = character.reminder.education_reward_date - datetime.now()
-        hours, remainder = divmod(time_to_get_reward.seconds, 3600)
-        minutes, _ = divmod(remainder, 60)        
+    lock = locks_by_character_id.setdefault(character.id, asyncio.Lock())
+    if lock.locked():
+        return await query.message.answer("<b>⏳ Обробка нагороди вже триває. Зачекайте...</b>")
+    async with lock:
+        if not datetime.now() > character.reminder.education_reward_date:
+            time_to_get_reward = character.reminder.education_reward_date - datetime.now()
+            hours, remainder = divmod(time_to_get_reward.seconds, 3600)
+            minutes, _ = divmod(remainder, 60)
+            return await query.message.answer(f"<b>Залишилося часу до отримання нагороди: {hours} год {minutes} хв</b>")
 
-        return query.message.answer(f"<b>Залишилося часу до отримання нагороди годин {hours} і {minutes} хвилин</b>")
-    
-    exp, coins, energy = await calculation_bonus(character)
+        exp, coins, energy = await calculation_bonus(character)
 
-    await CharacterService.edit_character_energy(
-        character_id = character.id,
-        amount_energy = energy
-    )
-    
-    await CharacterService.update_character_education_time(
-        character=character,
-        amount_add_time=DELTA_TIME_EDUCATION_REWARD
-    )
-    
-    await CharacterService.add_exp_character(
-        character_id=character.id,
-        amount_exp_add=exp
-    )
-    await CharacterService.update_money_character(
-        character_id=character.id,
-        amount_money_adjustment=coins
-    )
-    
-    scheduler_reward_education = EducationRewardReminderScheduler()
-    await scheduler_reward_education.add_job_remind(
-        character=character,
-        time_get_reward=datetime.now() + DELTA_TIME_EDUCATION_REWARD
-    ) 
-    await query.message.answer(
-        get_text_education_center_reward(
-            exp = exp,
-            coins=coins,
-            energy= energy,
-            delta_time_education_reward=DELTA_TIME_EDUCATION_REWARD
+        await CharacterService.edit_character_energy(
+            character_id = character.id,
+            amount_energy = energy
         )
-    )
-    user = await UserService.get_user(character.characters_user_id)
-    from bot.routers.register_user.routers.buy_first_equipment import buy_first_equipment_handler
-    if user.status_register == STATUS_USER_REGISTER.TRAINING_CENTER:
-        await buy_first_equipment_handler(character)
+
+        await CharacterService.update_character_education_time(
+            character=character,
+            amount_add_time=DELTA_TIME_EDUCATION_REWARD
+        )
+
+        await CharacterService.add_exp_character(
+            character_id=character.id,
+            amount_exp_add=exp
+        )
+
+        await CharacterService.update_money_character(
+            character_id=character.id,
+            amount_money_adjustment=coins
+        )
+
+        scheduler_reward_education = EducationRewardReminderScheduler()
+        await scheduler_reward_education.add_job_remind(
+            character=character,
+            time_get_reward=datetime.now() + DELTA_TIME_EDUCATION_REWARD
+        )
+
+        await query.message.answer(
+            get_text_education_center_reward(
+                exp=exp,
+                coins=coins,
+                energy=energy,
+                delta_time_education_reward=DELTA_TIME_EDUCATION_REWARD
+            )
+        )
+
+        user = await UserService.get_user(character.characters_user_id)
+
+        if user.status_register == STATUS_USER_REGISTER.TRAINING_CENTER:
+            from bot.routers.register_user.routers.buy_first_equipment import buy_first_equipment_handler
+            await buy_first_equipment_handler(character)
     
 async def calculation_bonus(character: Character) -> tuple[int, int, int]:
 

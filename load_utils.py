@@ -1,7 +1,7 @@
 import asyncio
 from datetime import datetime, time
 
-from blitz.start_blitz import StartBlitzs
+from blitz.start_blitz import StartBlitzs, BlitzData
 from league.start_league import (
     StartDefaultLeague,
     SchedulerDefaultLeague
@@ -78,7 +78,10 @@ async def init_schedulers_league():
 
 async def start_utils():
 
-    asyncio.create_task(StartBlitzs.start([time(hour=19, minute=0, second=0)])) # bltiz init
+    asyncio.create_task(StartBlitzs.start([
+        BlitzData(start_time=time(15, 0), stages_of_final=4, reward_exp=30),
+        BlitzData(start_time=time(19, 0), stages_of_final=5, path_register_image="blitz/blitz_match/photos/reg_blitz19.png")
+    ])) # bltiz init
     await init_leagues()
     await init_schedulers_league()
     await energy_listener.start_listener()

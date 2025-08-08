@@ -44,13 +44,15 @@ class BlitzReminder:
                  blitz: Blitz,
                  remind_for_simple_users: int = 20,
                  remind_for_vip_users: int = 30,
-                 necessary_count_users: int = 32
+                 necessary_count_users: int = 32,
+                 register_photo_path: str = REGISTER_BLITZ_PHOTO
                  ):
         self.blitz_start_at = blitz.start_at
         self.blitz_id = blitz.id
         self.remind_for_simple_users = remind_for_simple_users
         self.remind_for_vip_users = remind_for_vip_users
         self.necessary_count_users = necessary_count_users
+        self.register_photo_path = register_photo_path
 
     async def __reminder_blitz_for_users(self, characters: list[Character], required_vip: bool, blitz_id: int):
         filtered_characters = [
@@ -64,7 +66,7 @@ class BlitzReminder:
             [InlineKeyboardButton(text="Зареєструватись 💪",
                                   callback_data=BlitzRegisterCallback(blitz_id=blitz_id, max_characters=self.necessary_count_users).pack())]
         ])
-        await send_message_all_characters(filtered_characters, text, reply_markup=markup, photo_path=REGISTER_BLITZ_PHOTO)
+        await send_message_all_characters(filtered_characters, text, reply_markup=markup, photo_path=self.register_photo_path)
 
     async def remind(self) -> bool:
         now = datetime.now()

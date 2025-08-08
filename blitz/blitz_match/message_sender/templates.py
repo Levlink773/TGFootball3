@@ -228,8 +228,8 @@ class TemplatesMatch(Enum):
 ⚽️ <b>Вирішальний момент епізоду вже близько!</b> ⚽️  
 
 🔥 <b>Поточні шанси на гол:</b>  
-- ⚽️ Команда {name_first_team}: <b>{chance_first_team:.2f}%</b>  
-- ⚽️ Команда {name_second_team}: <b>{chance_second_team:.2f}%</b>  
+- ⚽️ Команда <b>{name_first_team}</b>: <b>{chance_first_team:.2f}%</b>  
+- ⚽️ Команда <b>{name_second_team}</b>: <b>{chance_second_team:.2f}%</b>  
 
 💥 <b>Це момент істини!</b>
 Ваша енергія може стати тим самим поштовхом, що змінить усе — підтримайте свою команду! 🚀

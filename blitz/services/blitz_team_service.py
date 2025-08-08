@@ -1,10 +1,9 @@
 import random
-from typing import Any, Callable, Coroutine
+from typing import Callable, Any, Coroutine
 
 from sqlalchemy import select, func, delete
 from sqlalchemy.orm import selectinload
 
-from database.models.blitz import Blitz
 from database.models.blitz_character import BlitzCharacter
 from database.models.blitz_team import BlitzTeam
 from database.models.character import Character
@@ -19,41 +18,45 @@ class BlitzTeamService:
     @classmethod
     async def create_teams(cls, team_count: int, blitz_id: int) -> list[BlitzTeam] | None:
         if not cls.is_power_of_two(team_count):
-            raise ValueError(f"Число команд ({team_count}) должно быть степенью двойки (2, 4, 8, 16, ...).")
+            raise ValueError(f"Число команд ({team_count}) повинно бути степенем двійки.")
 
         async for session in get_session():
             async with session.begin():
-                result = await session.execute(
-                    select(BlitzCharacter)
+                stmt = (
+                    select(BlitzCharacter, Character)
+                    .join(Character, Character.id == BlitzCharacter.character_id)
                     .where(BlitzCharacter.blitz_id == blitz_id)
-                    .options()  # при необходимости можно добавить selectinload(...)
                 )
-                characters = list(result.scalars().all())
+                result = await session.execute(stmt)
+                rows = list(result.all())
 
-                expected_players = team_count * 2
-                if len(characters) != expected_players:
+                expected = team_count * 2
+                if len(rows) != expected:
                     raise ValueError(
-                        f"В блице должно быть ровно {expected_players} персонажей, но найдено {len(characters)}."
+                        f"Очікується {expected} учасників, але знайдено {len(rows)}."
                     )
 
-                random.shuffle(characters)
+                # 2) Перемішуємо
+                random.shuffle(rows)
 
                 created_teams: list[BlitzTeam] = []
+                for idx in range(team_count):
+                    # беремо по два рядки
+                    bc1, char1 = rows[2 * idx]
+                    bc2, char2 = rows[2 * idx + 1]
 
-                for i in range(team_count):
-                    team = BlitzTeam(name=f"Команда {i + 1}")
+                    # формуємо ім'я команди з імен персонажів
+                    team_name = f'Команда {idx + 1} ("{char1.name}", "{char2.name})"'
+                    team = BlitzTeam(name=team_name)
                     session.add(team)
-                    await session.flush()
+                    await session.flush()  # щоб зʼявився team.id
 
-                    char1 = characters[i * 2]
-                    char2 = characters[i * 2 + 1]
-
-                    char1.team_id = team.id
-                    char2.team_id = team.id
-
+                    # призначаємо цих двох в нову команду
+                    bc1.team_id = team.id
+                    bc2.team_id = team.id
                     created_teams.append(team)
 
-                # Чтобы получить в ответе команды уже с загруженными персонажами:
+                # 3) Підтягуємо в teams поле characters
                 for team in created_teams:
                     await session.refresh(team, attribute_names=["characters"])
 
