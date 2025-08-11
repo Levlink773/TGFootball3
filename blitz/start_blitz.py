@@ -54,8 +54,7 @@ class StartBlitzs:
             logger.info(f"Планирую следующий блиц на {next_start_datetime} (стадий: {selected_blitz_data.stages_of_final})")
             await StartBlitz(
                 start_datetime=next_start_datetime,
-                stages_of_final=selected_blitz_data.stages_of_final,
-                reward_exp=selected_blitz_data.reward_exp
+                blitz_data=selected_blitz_data
             ).start()
             await asyncio.sleep(1)
 
@@ -90,9 +89,10 @@ class StartBlitzs:
 
 class StartBlitz:
     def __init__(self,
+                 start_datetime: datetime,
                  blitz_data: BlitzData,
                  ):
-        self.start_datetime = blitz_data.start_time.replace(microsecond=0)
+        self.start_datetime = start_datetime.replace(microsecond=0)
         if blitz_data.stages_of_final <= 1:
             raise ValueError("count of final must be greater than 1")
         self.stages_of_final = blitz_data.stages_of_final
@@ -149,7 +149,7 @@ class StartBlitz:
             logger.info(f"winner_teams_stage: {winner_teams_stage}")
             logger.info(f"looser_teams_stage: {looser_team}")
             asyncio.create_task(
-                BlitzAnnounceService.announce_round_results(winner_teams_stage, looser_teams_stage))
+                BlitzAnnounceService.announce_round_results(winner_teams_stage, looser_teams_stage, self.reward_exp))
             looser_team.extend(looser_teams_stage)
             teams = winner_teams_stage
         pair_teams = [(teams[0], teams[1])]
@@ -160,7 +160,7 @@ class StartBlitz:
         final_winner, final_looser = await StartBlitz._start_blitz_match(pair_teams[0], 1)
         logger.info(f"final_winner: {final_winner}")
         bz_reward = BlitzRewardService.reward_blitz_team
-        await BlitzAnnounceService.announce_end(characters, final_winner, final_looser)
+        await BlitzAnnounceService.announce_end(characters, final_winner, final_looser, self.reward_exp)
         await asyncio.gather(
             bz_reward(RewardWinnerBlitzTeam(final_winner, self.reward_exp)),
             bz_reward(RewardPreWinnerBlitzTeam(final_looser, self.reward_exp)),

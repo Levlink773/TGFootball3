@@ -1,6 +1,6 @@
 from typing import Any, Callable, Coroutine
 
-from sqlalchemy import select, delete
+from sqlalchemy import select, delete, func
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import selectinload
 
@@ -40,7 +40,7 @@ class BlitzService:
             async with session.begin():
                 # Получаем блиц
                 result = await session.execute(
-                    select(Blitz).where(Blitz.id == blitz_id)
+                    select(Blitz).where(Blitz.id == blitz_id).with_for_update()
                 )
                 blitz: Blitz = result.scalar_one_or_none()
                 if not blitz:
@@ -61,24 +61,22 @@ class BlitzService:
 
                 # Получаем текущее количество персонажей в блице
                 result = await session.execute(
-                    select(BlitzCharacter).where(
-                        BlitzCharacter.blitz_id == blitz_id
-                    )
+                    select(func.count()).select_from(BlitzCharacter).where(BlitzCharacter.blitz_id == blitz_id).with_for_update()
                 )
-                current_characters = result.scalars().all()
-
-                if len(current_characters) >= max_character:
+                current_count = result.scalar_one()
+                if current_count >= max_character:
                     raise MaxUsersInBlitzError(
-                        f"Blitz with id {blitz_id} already has {len(current_characters)} characters. Max is {max_character}.")
+                        f"Blitz with id {blitz_id} already has {current_count} characters. Max is {max_character}.")
 
                 # Добавляем персонажа
-                blitz_character = BlitzCharacter(
-                    character_id=character.id,
-                    blitz_id=blitz_id
-                )
-                session.add(blitz_character)
-                await session.flush()
-                return blitz_character
+                try:
+                    blitz_character = BlitzCharacter(character_id=character.id, blitz_id=blitz_id)
+                    session.add(blitz_character)
+                    await session.flush()
+                    return blitz_character
+                except IntegrityError as e:
+                    # второй уровень защиты от дубликата
+                    raise CharacterExistsInBlitzError(str(e)) from e
 
     @classmethod
     async def get_blitz_by_id(cls, blitz_id: int) -> Blitz | None:
