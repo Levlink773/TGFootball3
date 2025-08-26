@@ -12,12 +12,14 @@ from database.models.character import Character
 from logging_config import logger
 from services.character_service import CharacterService
 
+
 class BlitzTextGetter:
 
     def __init__(self, start_time: str, count_users: int):
         self.start_time = start_time
         self.count_users = count_users
         self.count_team = count_users // 2
+
     def start_tournament(self):
         return f"""
 🚀 <b>БЛІЦ-ТУРНІР РОЗПОЧИНАЄТЬСЯ!</b> 🚀
@@ -34,12 +36,14 @@ class BlitzTextGetter:
 ⏳ Через хвилину почнеться 1/8 фіналу – будьте готові до блискавичної боротьби й точних ударів!  
 Удачі всім і нехай сильніші здобудуть перемогу! 💥
             """
+
     def msg_vip_user(self):
         return f'''
 ⏰ <b>БЛІЦ-ТУРНІР СТАРТУЄ СЬОГОДНІ О {self.start_time}!</b> ⏰
 
 Не пропусти свій шанс — натискай на кнопку <b>«Зареєструватись 💪»</b> і покажіть, що ви не просто гравець — ви лідер, стратег і легенда турніру!💥 🏆
 '''
+
     def msg_simple_user(self):
         return f'''
 🔔 БЛІЦ-ТУРНІР СЬОГОДНІ О {self.start_time} 🔔
@@ -49,22 +53,53 @@ class BlitzTextGetter:
 Запис відкритий!
 '''
 
+
 class BlitzReminder:
     def __init__(self,
                  blitz: Blitz,
                  remind_for_simple_users: int = 20,
                  remind_for_vip_users: int = 30,
+                 remind_else_users: int = 15,
                  necessary_count_users: int = 32,
                  register_photo_path: str = REGISTER_BLITZ_PHOTO
                  ):
         self.blitz_start_at = blitz.start_at
         time_str = self.blitz_start_at.strftime("%H:%M")
         self.blitz_text_getter = BlitzTextGetter(time_str, necessary_count_users)
+        self.remind_else = remind_else_users
         self.blitz_id = blitz.id
         self.remind_for_simple_users = remind_for_simple_users
         self.remind_for_vip_users = remind_for_vip_users
         self.necessary_count_users = necessary_count_users
         self.register_photo_path = register_photo_path
+
+    async def __reminder_for_unregistered_users(self, blitz_id: int):
+        # Все персонажи, которые могут участвовать
+        all_characters = await CharacterService.get_all_characters_where_end_training()
+        # Уже зарегистрированные
+        registered_characters = await BlitzService.get_characters_from_blitz_character(blitz_id)
+        registered_ids = {c.id for c in registered_characters}
+
+        # Фильтруем только тех, кто еще не зарегался
+        unregistered_characters = [c for c in all_characters if c.id not in registered_ids]
+
+        if not unregistered_characters:
+            return
+
+        text = f'''
+⏳ <b>До старту блиц-турніру залишилось {self.remind_else} хвилин!</b>
+
+Не втрать шанс — турнір сьогодні о {self.blitz_text_getter.start_time}.
+Натискай <b>«Зареєструватись 💪»</b> прямо зараз, щоб встигнути приєднатись! ⚡️
+'''
+        markup = InlineKeyboardMarkup(inline_keyboard=[
+            [InlineKeyboardButton(text="Зареєструватись 💪",
+                                  callback_data=BlitzRegisterCallback(blitz_id=blitz_id,
+                                                                      max_characters=self.necessary_count_users).pack())]
+        ])
+
+        await send_message_all_characters(unregistered_characters, text, reply_markup=markup,
+                                          photo_path=self.register_photo_path)
 
     async def __reminder_blitz_for_users(self, characters: list[Character], required_vip: bool, blitz_id: int):
         filtered_characters = [
@@ -76,16 +111,22 @@ class BlitzReminder:
         text = self.blitz_text_getter.msg_vip_user() if required_vip else self.blitz_text_getter.msg_simple_user()
         markup = InlineKeyboardMarkup(inline_keyboard=[
             [InlineKeyboardButton(text="Зареєструватись 💪",
-                                  callback_data=BlitzRegisterCallback(blitz_id=blitz_id, max_characters=self.necessary_count_users).pack())]
+                                  callback_data=BlitzRegisterCallback(blitz_id=blitz_id,
+                                                                      max_characters=self.necessary_count_users).pack())]
         ])
-        await send_message_all_characters(filtered_characters, text, reply_markup=markup, photo_path=self.register_photo_path)
+        await send_message_all_characters(filtered_characters, text, reply_markup=markup,
+                                          photo_path=self.register_photo_path)
 
     async def remind(self) -> bool:
         now = datetime.now()
         today_start = self.blitz_start_at
         vip_remind_time = today_start - timedelta(minutes=self.remind_for_vip_users)
         simple_remind_time = today_start - timedelta(minutes=self.remind_for_simple_users)
+        else_remind_time = today_start - timedelta(minutes=self.remind_else)
+
         characters = await CharacterService.get_all_characters_where_end_training()
+
+        # VIP напоминание
         if now < vip_remind_time:
             await asyncio.sleep((vip_remind_time - now).total_seconds())
             await self.__reminder_blitz_for_users(characters, True, self.blitz_id)
@@ -94,11 +135,21 @@ class BlitzReminder:
 
         now = datetime.now()
 
+        # Simple users напоминание
         if now < simple_remind_time:
             await asyncio.sleep((simple_remind_time - now).total_seconds())
             await self.__reminder_blitz_for_users(characters, False, self.blitz_id)
         elif now < today_start:
             await self.__reminder_blitz_for_users(characters, False, self.blitz_id)
+
+        now = datetime.now()
+
+        # Напоминание всем, кто еще не зарегистрировался (за 15 минут)
+        if now < else_remind_time:
+            await asyncio.sleep((else_remind_time - now).total_seconds())
+            await self.__reminder_for_unregistered_users(self.blitz_id)
+        elif now < today_start:
+            await self.__reminder_for_unregistered_users(self.blitz_id)
 
         now = datetime.now()
         if now < today_start:
@@ -110,7 +161,8 @@ class BlitzReminder:
         if len(characters) >= self.necessary_count_users:
             characters = characters[:self.necessary_count_users]
             logger.info(f"Ch len 1: {len(characters)}")
-            await send_message_all_characters(characters, self.blitz_text_getter.start_tournament(), photo_path=START_BLITZ_PHOTO)
+            await send_message_all_characters(characters, self.blitz_text_getter.start_tournament(),
+                                              photo_path=START_BLITZ_PHOTO)
         else:
             cancel_blitz_text = f'''
 <b>На жаль, на цей бліц-турнір не з'явилось достатньої кількості гравці!</b>

@@ -178,8 +178,9 @@ class StartBlitz:
         try:
             status = await BlitzReminder(
                 blitz=blitz,
-                remind_for_simple_users=20,
-                remind_for_vip_users=30,
+                remind_for_simple_users=45,
+                remind_for_vip_users=60,
+                remind_else_users=15,
                 necessary_count_users=self.necessary_users,
                 register_photo_path=self.register_photo_path
             ).remind()

@@ -49,6 +49,22 @@ class Character(Base):
         cascade="all, delete-orphan", 
         lazy="selectin"
     )
+    statistics = relationship(
+        "Statistics",
+        back_populates="character",
+        lazy="selectin",
+        cascade="all, delete-orphan",
+    )
+    count_play_blitz = Column(BigInteger, default=0)
+    count_rich_semi_final_blitz = Column(BigInteger, default=0)
+    count_rich_final_looser_blitz = Column(BigInteger, default=0)
+    count_rich_final_winner_blitz = Column(BigInteger, default=0)
+    count_go_to_gym = Column(BigInteger, default=0)
+    count_goal_on_match = Column(BigInteger, default=0)
+    count_register_on_match = Column(BigInteger, default=0)
+    count_mvp_two_and_more = Column(BigInteger, default=0)
+    count_mvp_two_half_and_more = Column(BigInteger, default=0)
+    count_mvp_three_and_more = Column(BigInteger, default=0)
 
 
     t_shirt_id = Column(BigInteger, ForeignKey('items.id'))

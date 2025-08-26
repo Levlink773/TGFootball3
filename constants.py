@@ -223,5 +223,6 @@ lootboxes = {
 
 PRICE_CHANGE_POSITION = 150
 PRICE_TRAINING_KEY = 49
-
+EDUCATION_TASK_REWARD = FSInputFile('src/education_task_reward.png')
+EDUCATION_TASK = FSInputFile('src/education_task.png')
 TOTAL_POINTS_ADD_NEW_MEMBER = 300

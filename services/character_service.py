@@ -3,10 +3,11 @@ from sqlalchemy.orm import selectinload
 from database.models.character import Character
 from database.models.reminder_character import ReminderCharacter
 from database.models.item import Item
+from database.models.statistics import Statistics
 from database.models.user_bot import UserBot, STATUS_USER_REGISTER
 
 from database.session import get_session
-from sqlalchemy import select, update, or_
+from sqlalchemy import select, update, or_, delete
 from config import CONST_ENERGY, CONST_VIP_ENERGY
 from datetime import datetime, timedelta
 from enum import Enum
@@ -402,3 +403,28 @@ class CharacterService:
                 )
                 await session.execute(stmt)
                 await session.commit()
+
+    @classmethod
+    async def anulate_statistics(cls, char_id: int):
+        async for session in get_session():
+            async with session.begin():
+                try:
+                    stmt_select = select(Character).where(Character.id == char_id)
+                    result = await session.execute(stmt_select)
+                    char: Character = result.scalar_one_or_none()
+
+                    char.count_go_to_gym = 0
+                    char.count_play_blitz = 0
+                    char.count_rich_final_looser_blitz = 0
+                    char.count_rich_semi_final_blitz = 0
+                    char.count_rich_final_winner_blitz = 0
+                    char.count_goal_on_match = 0
+                    char.count_register_on_match = 0
+                    char.count_mvp_two_and_more = 0
+                    char.count_mvp_two_half_and_more = 0
+                    char.count_mvp_three_and_more = 0
+
+                    stmt = delete(Statistics).where(Statistics.character_id == char_id)
+                    await session.execute(stmt)
+                except Exception as e:
+                    raise e

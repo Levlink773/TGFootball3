@@ -98,9 +98,11 @@ def no_energy_keyboard():
     )
 
 def menu_education_cernter():
-    return(
+    return (
         InlineKeyboardBuilder()
-        .button(text = "🏆 Забрати нагороду з навчального центру", callback_data= "get_rewards_education_center")
+        .button(text="🏆 Забрати нагороду з навчального центру", callback_data="get_rewards_education_center")
+        .button(text="🏅 Завдання навчального центру", callback_data="get_tasks_education_center")
+        .adjust(1)
         .as_markup()
     )
     
@@ -128,5 +130,12 @@ def leave_from_gym_keyboard():
     return (
         InlineKeyboardBuilder()
         .button(text = "Точно вийти", callback_data="leave_gym")
+        .as_markup()
+    )
+def back_to_education_task_service():
+    return (
+        InlineKeyboardBuilder()
+        .button(text="⬅ Назад", callback_data="get_tasks_education_center")
+        .adjust(1)
         .as_markup()
     )
