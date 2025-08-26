@@ -12,14 +12,19 @@ from config import (
     BOT_TOKEN, 
     ADMINS, 
 )
+from logging_config import logger
+
 
 async def init_bot_command():
     commands = [
         BotCommand(command="send_message", description="Отправить сообщение всем пользователям")]
 
     for admin_id in ADMINS:
-        await bot.set_my_commands(commands,
+        try:
+            await bot.set_my_commands(commands,
                               scope=BotCommandScopeChat(chat_id=admin_id))
+        except Exception as e:
+            logger.warning(f"Warn: {e}")
   
 async def start():
     await init_bot_command()

@@ -1,7 +1,7 @@
 import asyncio
 
 from aiogram import Router, F
-from aiogram.types import Message, CallbackQuery
+from aiogram.types import Message, CallbackQuery, InputMediaPhoto
 
 from datetime import datetime
 
@@ -24,15 +24,30 @@ from utils.club_utils import get_text_education_center_reward
 
 
 education_center_router = Router()
-
+EDUCATION_TEXT = "Ласкаво просимо до навчального центру\nТут Ви можете отримати досвід задля покращення рівня гравця, та отримати монети за вдале навчання, кожні 12 годин! "
 @education_center_router.message(
     F.text.regexp(r"(✅\s*)?🏫 Навчальний центр(\s*✅)?")
 )
 async def go_to_gym(message: Message):
     await message.answer_photo(photo=EDUCATION_CENTER,
-        caption="Ласкаво просимо до навчального центру\nТут Ви можете отримати досвід задля покращення рівня гравця, та отримати монети за вдале навчання, кожні 12 годин! ", reply_markup=menu_education_cernter()
+        caption=EDUCATION_TEXT, reply_markup=menu_education_cernter()
         )
-    
+
+@education_center_router.callback_query(
+    F.data == "get_education_center",
+)
+async def go_to_gym(query: CallbackQuery):
+    try:
+        await query.message.edit_media(
+            media=InputMediaPhoto(media=EDUCATION_CENTER, caption=EDUCATION_TEXT),
+            reply_markup=menu_education_cernter()
+        )
+    except Exception as e:
+        await query.message.answer_photo(
+            photo=EDUCATION_CENTER,
+            caption=EDUCATION_TEXT,
+            reply_markup=menu_education_cernter()
+        )
 locks_by_character_id: dict[int, asyncio.Lock] = {}
 
 @education_center_router.callback_query(F.data == "get_rewards_education_center")

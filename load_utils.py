@@ -7,6 +7,7 @@ from league.start_league import (
     SchedulerDefaultLeague
 )
 from bot.club_infrastructure.distribute_points.starter_waiter_distribute_points import Waiterdistributer
+from schedulers.scheduler_anulate_statistics import AnulateStatisticsScheduler
 
 from schedulers.scheduler_energy import EnergyResetScheduler, EnergyApliedClubResetScheduler
 from schedulers.scheduler_education import EducationRewardReminderScheduler
@@ -19,6 +20,7 @@ from schedulers.scheduler_training import ReminderTraning
 from schedulers.scheduler_vip_pass import VipPassSchedulerService
 from schedulers.scheduler_reset_training_key import ResetTrainingKeyScheduler
 from schedulers.scheduler_notification_start_leagues import StartNotificationScheduler
+from schedulers.task_reminder_scheduler import EducationCenterReminderText, ReminderEducationCenter
 
 from training.timers.starter_taimers import SchedulerRegisterTraining
 
@@ -101,6 +103,8 @@ async def start_utils():
     await scheduler_reset_training_key.start()
     await scheduler_training.start()
     await scheduler_notification_start_league.start()
+    await scheduler_notification_task.start()
+    await scheduler_anulate.start()
     
     # await end_duel_season.wait_to_end_season_duel()
     # asyncio.create_task(core_duel._waiting_users())
@@ -134,3 +138,5 @@ scheduler_training = SchedulerRegisterTraining()
 scheduler_distribute= Waiterdistributer()
 scheduler_new_legue = SchedulerNewClubLeague()
 scheduler_notification_start_league = StartNotificationScheduler()
+scheduler_notification_task = ReminderEducationCenter()
+scheduler_anulate = AnulateStatisticsScheduler()

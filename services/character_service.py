@@ -1,3 +1,6 @@
+import random
+from typing import List
+
 from sqlalchemy.orm import selectinload
 
 from database.models.character import Character
@@ -15,6 +18,8 @@ from enum import Enum
 from constants import PositionCharacter
 
 from logging_config import logger
+from stats.stat_enum import StatisticsType
+from stats.tier import TIER_LIST
 
 
 class CharacterService:
@@ -428,3 +433,202 @@ class CharacterService:
                     await session.execute(stmt)
                 except Exception as e:
                     raise e
+
+    @classmethod
+    async def add_count_play_blitz_user(cls, char_id: int, amount: int):
+        async for session in get_session():
+            async with session.begin():
+                stmt_select = select(Character).where(Character.id == char_id)
+                result = await session.execute(stmt_select)
+                char: Character = result.scalar_one()
+                if char.count_play_blitz:
+                    char.count_play_blitz += amount
+                else:
+                    char.count_play_blitz = amount
+                session.add(char)
+                await session.commit()
+
+    @classmethod
+    async def add_count_go_to_gym(cls, char_id: int, amount: int):
+        async for session in get_session():
+            async with session.begin():
+                stmt_select = select(Character).where(Character.id == char_id)
+                result = await session.execute(stmt_select)
+                char: Character = result.scalar_one()
+                if char.count_go_to_gym:
+                   char.count_go_to_gym += amount
+                else:
+                    char.count_go_to_gym = amount
+
+                session.add(char)
+                await session.commit()
+
+    @classmethod
+    async def add_count_register_on_match(cls, char_id: int, amount: int):
+        async for session in get_session():
+            async with session.begin():
+                stmt_select = select(Character).where(Character.id == char_id)
+                result = await session.execute(stmt_select)
+                char: Character = result.scalar_one()
+                if char.count_register_on_match:
+                    char.count_register_on_match += amount
+                else:
+                    char.count_register_on_match = amount
+
+                session.add(char)
+                await session.commit()
+
+    @classmethod
+    async def add_count_rich_final_winner_blitz(cls, char_id: int, amount: int):
+        async for session in get_session():
+            async with session.begin():
+                stmt_select = select(Character).where(Character.id == char_id)
+                result = await session.execute(stmt_select)
+                char: Character = result.scalar_one()
+                if char.count_rich_final_winner_blitz:
+                    char.count_rich_final_winner_blitz += amount
+                else:
+                    char.count_rich_final_winner_blitz = amount
+
+                session.add(char)
+                await session.commit()
+
+    @classmethod
+    async def add_count_mvp_three_and_more(cls, char_id: int, amount: int):
+        async for session in get_session():
+            async with session.begin():
+                stmt_select = select(Character).where(Character.id == char_id)
+                result = await session.execute(stmt_select)
+                char: Character = result.scalar_one()
+                if char.count_mvp_three_and_more:
+                    char.count_mvp_three_and_more += amount
+                else:
+                    char.count_mvp_three_and_more = amount
+
+                session.add(char)
+                await session.commit()
+
+    @classmethod
+    async def add_count_mvp_two_half_and_more(cls, char_id: int, amount: int):
+        async for session in get_session():
+            async with session.begin():
+                stmt_select = select(Character).where(Character.id == char_id)
+                result = await session.execute(stmt_select)
+                char: Character = result.scalar_one()
+                if char.count_mvp_two_half_and_more:
+                    char.count_mvp_two_half_and_more += amount
+                else:
+                    char.count_mvp_two_half_and_more = amount
+
+                session.add(char)
+                await session.commit()
+
+    @classmethod
+    async def add_count_mvp_two_and_more(cls, char_id: int, amount: int):
+        async for session in get_session():
+            async with session.begin():
+                stmt_select = select(Character).where(Character.id == char_id)
+                result = await session.execute(stmt_select)
+                char: Character = result.scalar_one()
+                if char.count_mvp_two_and_more:
+                    char.count_mvp_two_and_more += amount
+                else:
+                    char.count_mvp_two_and_more = amount
+
+                session.add(char)
+                await session.commit()
+
+    @classmethod
+    async def add_count_rich_final_looser_blitz(cls, char_id: int, amount: int):
+        async for session in get_session():
+            async with session.begin():
+                stmt_select = select(Character).where(Character.id == char_id)
+                result = await session.execute(stmt_select)
+                char: Character = result.scalar_one()
+                if char.count_rich_final_looser_blitz:
+                    char.count_rich_final_looser_blitz += amount
+                else:
+                    char.count_rich_final_looser_blitz = amount
+                session.add(char)
+                await session.commit()
+
+    @classmethod
+    async def add_count_rich_semi_final_blitz(cls, char_id: int, amount: int):
+        async for session in get_session():
+            async with session.begin():
+                stmt_select = select(Character).where(Character.id == char_id)
+                result = await session.execute(stmt_select)
+                char: Character = result.scalar_one()
+                if char.count_rich_semi_final_blitz:
+                    char.count_rich_semi_final_blitz += amount
+                else:
+                    char.count_rich_semi_final_blitz = amount
+                session.add(char)
+                await session.commit()
+
+    @classmethod
+    async def add_count_goal(cls, char_id: int, amount: int):
+        async for session in get_session():
+            async with session.begin():
+                stmt_select = select(Character).where(Character.id == char_id)
+                result = await session.execute(stmt_select)
+                char: Character = result.scalar_one()
+                if char.count_go_to_goal:
+                    char.count_goal_on_match += amount
+                else:
+                    char.count_go_to_goal = amount
+                session.add(char)
+                await session.commit()
+
+    @classmethod
+    async def edit_tier_cipher(cls, char_id: int, tier_cip: str):
+        async for session in get_session():
+            async with session.begin():
+                stmt_select = select(Character).where(Character.id == char_id)
+                result = await session.execute(stmt_select)
+                char: Character = result.scalar_one()
+
+                char.tier_cipher = tier_cip
+
+                session.add(char)
+                await session.commit()
+
+    @staticmethod
+    async def generate_new_tier_cipher(char_id: int) -> None:
+        """Сгенерировать новый cipher и сохранить в БД."""
+        async for session in get_session():
+            stmt_select = select(Character).where(Character.id == char_id)
+            result = await session.execute(stmt_select)
+            char: Character = result.scalar_one()
+
+            choices = []
+            for tier in TIER_LIST:
+                stats_list = tier[1]
+                idx = random.randint(1, len(stats_list))  # индексы с 1
+                choices.append(str(idx))
+            char.tier_cipher = ",".join(choices)
+
+            session.add(char)
+            await session.commit()
+
+    @staticmethod
+    def decrypt_tier_cipher(cipher: str) -> List[StatisticsType]:
+        """
+        Декодировать cipher (например, "1,3,2") в список StatisticsType.
+        """
+        if not cipher:
+            return []
+
+        parts = cipher.split(",")
+        result: List[StatisticsType] = []
+
+        for tier_idx, choice_str in enumerate(parts):
+            try:
+                choice = int(choice_str)
+                stats_list = TIER_LIST[tier_idx][1]  # список заданий конкретного tier
+                if 1 <= choice <= len(stats_list):
+                    result.append(stats_list[choice - 1])
+            except Exception as e:
+                print(f"Ошибка при расшифровке tier_cipher: {e}")
+
+        return result

@@ -1,4 +1,5 @@
 import asyncio
+import traceback
 from asyncio import Task
 
 from datetime import datetime, timedelta
@@ -111,10 +112,11 @@ class Gym:
                     type_characteristic=self.type_characteristic,
                     amount_add_points=self.training_points
                 )
-                
+            await CharacterService.add_count_go_to_gym(self.character.id, 1)
             await self.send_end_training_message()
             await GymCharacterManager.remove_gym_task(self.character.id)
         except Exception as e:
+            traceback.print_exc()
             logger.error(f"Ошибка при выполнении тренировки: {e}")
         finally:
             await RemniderCharacterService.anulate_character_training_status(self.character.id)

@@ -210,3 +210,43 @@ class MatchCharacterService:
                 )
                 result = await session.execute(stmt)
                 return result.unique().scalars().all()
+
+    @classmethod
+    async def update_mvp_counters(cls, match_id: str, club_ids: list[int]):
+        """
+        Проходим по всем игрокам матча и увеличиваем счетчики MVP по диапазонам:
+        - 2.0 <= count_score < 2.5 → count_mvp_two_and_more += 1
+        - 2.5 <= count_score < 3.0 → count_mvp_two_half_and_more += 1
+        - count_score >= 3.0 → count_mvp_three_and_more += 1
+        """
+        async for session in get_session():
+            async with session.begin():
+                # Берем всех участников матча
+                stmt = select(MatchCharacter).where(
+                    MatchCharacter.match_id == match_id,
+                    MatchCharacter.club_id.in_(club_ids)
+                )
+                result = await session.execute(stmt)
+                players: list[MatchCharacter] = list(result.scalars().all())
+
+                for player in players:
+                    # Получаем Character
+                    stmt_char = select(Character).where(Character.id == player.character_id)
+                    result_char = await session.execute(stmt_char)
+                    character: Character = result_char.scalar_one_or_none()
+
+                    if not character:
+                        continue
+
+                    score = player.count_score
+
+                    # Проверяем диапазоны и увеличиваем счетчики
+                    if 2.0 <= score < 2.5:
+                        character.count_mvp_two_and_more += 1
+                    elif 2.5 <= score < 3.0:
+                        character.count_mvp_two_half_and_more += 1
+                    elif score >= 3.0:
+                        character.count_mvp_three_and_more += 1
+
+                    # Сохраняем изменения
+                    session.add(character)

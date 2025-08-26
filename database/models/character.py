@@ -55,6 +55,7 @@ class Character(Base):
         lazy="selectin",
         cascade="all, delete-orphan",
     )
+    tier_cipher = Column(String(255), nullable=True)
     count_play_blitz = Column(BigInteger, default=0)
     count_rich_semi_final_blitz = Column(BigInteger, default=0)
     count_rich_final_looser_blitz = Column(BigInteger, default=0)

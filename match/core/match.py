@@ -129,6 +129,7 @@ class Match:
             match_id = self.match_data.match_id,
             character_id = character_goal.id,
         )
+        await CharacterService.add_count_goal(character_goal.id, 1)
         await LeagueService.increment_goal(
             match_id=self.match_data.match_id,
             club_id=goal_club.club_id
@@ -152,6 +153,10 @@ class Match:
     async def destribute_mvp_match(self):
         first_character = None
         second_character = None
+        await MatchCharacterService.update_mvp_counters(
+            self.match_data.match_id,
+            [self.match_data.first_club_id, self.match_data.second_club_id]
+        )
         
         mvp_first_club = await MatchCharacterService.get_match_mvp(
             match_id=self.match_data.match_id,

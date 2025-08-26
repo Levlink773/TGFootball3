@@ -1,4 +1,6 @@
 from aiogram import Router
+
+from .education_task import education_task_router
 from .gym_handler import gym_router
 from .donate_club_energy_handler import donate_club_energy_router
 from .education_center import education_center_router
@@ -9,5 +11,6 @@ gym_main_router.include_routers(
     gym_router,
     donate_club_energy_router,
     education_center_router,
+    education_task_router,
     training_base_router
 )

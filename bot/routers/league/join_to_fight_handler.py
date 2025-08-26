@@ -74,6 +74,7 @@ async def join_to_match(query: CallbackQuery, callback_data: JoinToFight, charac
         group_id = match_data.group_id,
         character_id = character.id,
     )
+    await CharacterService.add_count_register_on_match(character.id, 1)
     await query.message.answer(text = "✅ <b>Ваш персонаж був доданий на матч</b>")
     await query.message.edit_reply_markup(reply_markup=None)
 

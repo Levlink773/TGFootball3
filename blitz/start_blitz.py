@@ -12,7 +12,7 @@ from blitz.blitz_reminder import BlitzReminder
 from blitz.enum_blitz import BlitzStatus
 from blitz.services.blitz_announce_service import BlitzAnnounceService
 from blitz.services.blitz_reward_service import BlitzRewardService, RewardWinnerBlitzTeam, RewardPreWinnerBlitzTeam, \
-    RewardSimpleBlitzTeam
+    RewardSimpleBlitzTeam, RewardRatingBlitzTeam
 from blitz.services.blitz_service import BlitzService
 from blitz.services.blitz_team_service import BlitzTeamService
 from blitz.services.message_sender.blitz_sender import BlitzTeamSender
@@ -131,7 +131,10 @@ class StartBlitz:
         logger.info("Teams sended")
         characters: list[Character] = await BlitzService.get_characters_from_blitz_character(blitz_id)
         looser_team = []
+        semifinal_teams = []
         while len(teams) > 2:
+            if len(teams) == 4:
+                semifinal_teams = teams.copy()
             pair_teams = BlitzTeamService.pair_teams(teams)
             logger.info(f"pair_teams: {pair_teams} for stage {len(pair_teams)}")
             asyncio.create_task(BlitzAnnounceService.announce_matchups(pair_teams))
@@ -158,6 +161,10 @@ class StartBlitz:
         await asyncio.sleep(60)
         logger.info("Blitz match final started")
         final_winner, final_looser = await StartBlitz._start_blitz_match(pair_teams[0], 1)
+        pure_semifinal_losers = [
+            team for team in semifinal_teams
+            if team.id not in {final_winner.id, final_looser.id}
+        ]
         logger.info(f"final_winner: {final_winner}")
         bz_reward = BlitzRewardService.reward_blitz_team
         await BlitzAnnounceService.announce_end(characters, final_winner, final_looser, self.reward_exp)
@@ -167,6 +174,12 @@ class StartBlitz:
             *[
                 bz_reward(RewardSimpleBlitzTeam(lose_team, self.reward_exp))
                 for lose_team in looser_team
+            ]
+        )
+        await asyncio.gather(
+            *[
+                bz_reward(RewardRatingBlitzTeam(semi_team))
+                for semi_team in pure_semifinal_losers
             ]
         )
         logger.info("Reward blitz match")

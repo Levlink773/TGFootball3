@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 
 from database.models.blitz_team import BlitzTeam
 from database.models.character import Character
+from services.character_service import CharacterService
 from .goal_generator import GoalGenerator
 from ..constans import TIME_EVENT_DONATE_ENERGY, TIME_BLITZ_FIGHT
 from ..entities import BlitzMatchData, MatchTeamBlitz
@@ -118,6 +119,7 @@ class BlitzMatch:
         await BlitzCharacterService.add_goal_to_character(
             character_id=character_goal.id,
         )
+        await CharacterService.add_count_goal(character_goal.id, 1)
 
         if assist_character:
             await self._add_event(

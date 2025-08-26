@@ -20,6 +20,7 @@ class AnulateStatisticsScheduler:
         self.scheduler.start()
 
     async def _start(self):
+        # запускаем в 03:00
         self.scheduler.add_job(
             func=self.anulate_statistics,
             trigger=CronTrigger(hour=3),
@@ -29,4 +30,7 @@ class AnulateStatisticsScheduler:
     async def anulate_statistics(self):
         characters: list[Character] = await CharacterService.get_all_characters_where_end_training()
         for ch in characters:
+            # обнуляем статистику
             await CharacterService.anulate_statistics(ch.id)
+            # генерируем новый tier_cipher
+            await CharacterService.generate_new_tier_cipher(ch.id)

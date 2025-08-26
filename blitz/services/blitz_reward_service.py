@@ -27,6 +27,7 @@ class RewardBlitzTeam(ABC):
     async def reward_blitz(self):
         characters = await self.get_blitz_characters()
         for character in characters:
+            await CharacterService.add_count_play_blitz_user(character.id,1)
             await self.reward_blitz_character(character)
 
     @abstractmethod
@@ -40,11 +41,12 @@ class RewardWinnerBlitzTeam(RewardBlitzTeam):
         super().__init__(reward_blitz_team)
         self.reward_exp = reward_exp
 
-    def box_type(self):
+    async def box_type(self, character: Character):
+        await CharacterService.add_count_rich_final_winner_blitz(character.id, 1)
         return "середній", "medium", MEDIUM_BOX_BLITZ_PHOTO
 
     async def reward_blitz_character(self, character: Character):
-        name_box, callback_name_box, photo_path = self.box_type()
+        name_box, callback_name_box, photo_path = await self.box_type(character)
         callback_data = BoxRewardCallback(box_type=callback_name_box).pack()
         markup = InlineKeyboardMarkup(inline_keyboard=[
             [InlineKeyboardButton(text="Відкрити 🗝️", callback_data=callback_data)]
@@ -73,7 +75,8 @@ class RewardWinnerBlitzTeam(RewardBlitzTeam):
 
 class RewardPreWinnerBlitzTeam(RewardWinnerBlitzTeam):
 
-    def box_type(self):
+    async def box_type(self, character: Character):
+        await CharacterService.add_count_rich_final_looser_blitz(character.id, 1)
         return "меленький", "small", SMALL_BOX_BLITZ_PHOTO
 
 
@@ -94,6 +97,14 @@ class RewardSimpleBlitzTeam(RewardBlitzTeam):
             character=character,
             text=f"⚡ <b>+{self.reward_exp} енергії</b> за участь у блиц-турнірі! Дякуємо, що були з нами — "
             "поповнюйте запаси та повертайтесь до наступних батлів! 💪",
+        )
+class RewardRatingBlitzTeam(RewardBlitzTeam):
+
+    async def reward_blitz_character(self, char: Character):
+        # Збільшуємо рейтинг
+        await CharacterService.add_count_rich_semi_final_blitz(
+            char_id=char.id,
+            amount=1
         )
 
 
