@@ -24,9 +24,11 @@ async def _build_tasks_message_and_kb(character: Character) -> Tuple[str, Inline
         await CharacterService.edit_tier_cipher(character.id, character.tier_cipher)
 
     tier_blocks = []
-
+    max_task = 3 if character.vip_pass_is_active else 2
+    i = 0
     # 2) Для каждого Tier берём РОВНО ОДНУ задачу по индексу из cipher
     for tier_pos, (tier_name, stat_types) in enumerate(TIER_LIST):
+        i += 1
         chosen_stat_type = _safe_pick(stat_types, indices[tier_pos])
 
         # стандартные три корзины
@@ -75,7 +77,8 @@ async def _build_tasks_message_and_kb(character: Character) -> Tuple[str, Inline
             blocks.append("✅ <b>Виконані завдання</b>\n\n" + "\n\n".join(done_with_reward_lines))
         if done_without_reward_lines:
             blocks.append("🎁 <b>Готові до отримання нагороди</b>\n\n" + "\n\n".join(done_without_reward_lines))
-
+        if i > max_task:
+            break
         tier_blocks.append(f"\n\n<b>{tier_name}</b>\n\n" + ("\n\n".join(blocks) if blocks else "Немає доступних завдань у цьому розділі."))
 
     # 4) Кнопки

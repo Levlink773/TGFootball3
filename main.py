@@ -10,18 +10,20 @@ from webhook_api.handlers.energy_handler import MonoResultEnergy
 from webhook_api.handlers.box_handler import MonoResultBox
 from webhook_api.handlers.change_position_handler import MonoResultChangePosition
 from webhook_api.handlers.money_handler import MonoResultMoney
+from webhook_api.handlers.proxy_handler import ProxyEndpoint
 from webhook_api.handlers.vip_pass_handler import MonoResultVipPass
 from webhook_api.handlers.key_handler import MonoResultBuyTrainingKey
 
 from config import (
-    WEBAPP_HOST, 
-    WEBAPP_PORT, 
-    CALLBACK_URL_WEBHOOK_ENERGY, 
+    WEBAPP_HOST,
+    WEBAPP_PORT,
+    CALLBACK_URL_WEBHOOK_ENERGY,
     CALLBACK_URL_WEBHOOK_BOX,
     CALLBACK_URL_WEBHOOK_CHANGE_POSITION,
     CALLBACK_URL_WEBHOOK_MONEY,
     CALLBACK_URL_WEBHOOK_VIP_PASS,
-    CALLBACK_URL_WEBHOOK_BUY_TRAINING_KEY
+    CALLBACK_URL_WEBHOOK_BUY_TRAINING_KEY, CALLBACK_URL_WEBHOOK_ENERGY_BLITZ, CALLBACK_URL_WEBHOOK_BOX_BLITZ,
+    CALLBACK_URL_WEBHOOK_VIP_PASS_BLITZ, CALLBACK_URL_WEBHOOK_MONEY_BLITZ
 )
 
 dp.include_router(main_router)
@@ -46,6 +48,11 @@ def add_patch_payments():
     app.router.add_post("/" + CALLBACK_URL_WEBHOOK_MONEY.split("/")[-1], MonoResultMoney.router)
     app.router.add_post("/" + CALLBACK_URL_WEBHOOK_VIP_PASS.split("/")[-1], MonoResultVipPass.router)
     app.router.add_post("/" + CALLBACK_URL_WEBHOOK_BUY_TRAINING_KEY.split("/")[-1], MonoResultBuyTrainingKey.router)
+    # Football Blitz proxy
+    app.router.add_post("/" + CALLBACK_URL_WEBHOOK_ENERGY_BLITZ.split("/")[-1], ProxyEndpoint.router)
+    app.router.add_post("/" + CALLBACK_URL_WEBHOOK_BOX_BLITZ.split("/")[-1], ProxyEndpoint.router)
+    app.router.add_post("/" + CALLBACK_URL_WEBHOOK_VIP_PASS_BLITZ.split("/")[-1], ProxyEndpoint.router)
+    app.router.add_post("/" + CALLBACK_URL_WEBHOOK_MONEY_BLITZ.split("/")[-1], ProxyEndpoint.router)
 
     
 async def main():

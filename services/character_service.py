@@ -573,10 +573,10 @@ class CharacterService:
                 stmt_select = select(Character).where(Character.id == char_id)
                 result = await session.execute(stmt_select)
                 char: Character = result.scalar_one()
-                if char.count_go_to_goal:
+                if char.count_goal_on_match:
                     char.count_goal_on_match += amount
                 else:
-                    char.count_go_to_goal = amount
+                    char.count_goal_on_match = amount
                 session.add(char)
                 await session.commit()
 

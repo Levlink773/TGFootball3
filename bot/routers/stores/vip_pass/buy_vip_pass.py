@@ -106,6 +106,6 @@ async def selected_type_vip_pass(
     await PaymentServise.create_vip_pass_payment(
         order_id = payment.order_id,
         type_vip_pass = callback_data.type_vip_pass
-    )    
+    )
 
 

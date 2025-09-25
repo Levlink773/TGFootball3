@@ -29,7 +29,7 @@ AVAILABLE_BUTTONS_BY_STATUS = {
 def main_menu(user: UserBot):
     keyboard = ReplyKeyboardBuilder()
     if not user.characters:
-        keyboard.button(text="⚽️ Створити персонажа")
+        keyboard.button(text="СТВОРИТИ ПЕРСОНАЖА")
     else:
         available_buttons = AVAILABLE_BUTTONS_BY_STATUS.get(user.status_register, [])
         for button_text in ALL_MAIN_BUTTONS:

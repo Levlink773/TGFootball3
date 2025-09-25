@@ -5,17 +5,17 @@ from typing import List
 from stats.stat_enum import StatisticsType
 
 TIER_LIST: List[tuple[str, List[StatisticsType]]] = [
-    ("🔹 Tier 1", [
+    ("🔹 Завдання 1", [
         StatisticsType.CONDUCT_3_TRAINING,
         StatisticsType.CONDUCT_5_TRAINING,
         StatisticsType.CONDUCT_7_TRAINING,
     ]),
-    ("🔸 Tier 2", [
+    ("🔸 Завдання 2", [
         StatisticsType.PLAY_BLITZ,              # если нужно именно "Прийняти участь у Бліц"
         StatisticsType.PLAY_2_BLITZ,
         StatisticsType.GOAL_IN_MATCH,
     ]),
-    ("🔶 Tier 3", [
+    ("🔶 Завдання 3", [
         StatisticsType.REGISTER_ON_MATCH,
         StatisticsType.MVP_TWO,
         StatisticsType.MVP_TWO_HALF,
