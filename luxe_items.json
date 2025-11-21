@@ -110,5 +110,61 @@
             "speed": 38,
             "endurance": 34
         }
+    },
+    {
+        "id": 1005,
+        "name": "Футболка Легенда Ліги [S]",
+        "category": "T_SHIRT",
+        "level_required": 4,
+        "price": 3267,
+        "stats": {
+            "technique": 90,
+            "kicks": 90,
+            "ball_selection": 90,
+            "speed": 90,
+            "endurance": 90
+        }
+    },
+    {
+        "id": 1006,
+        "name": "Шорти Легенда Ліги [S]",
+        "category": "SHORTS",
+        "level_required": 4,
+        "price": 2450,
+        "stats": {
+            "technique": 90,
+            "kicks": 90,
+            "ball_selection": 73,
+            "speed": 73,
+            "endurance": 73
+        }
+    },
+    {
+        "id": 1007,
+        "name": "Гетри Легенда Ліги [S]",
+        "category": "GAITERS",
+        "level_required": 4,
+        "price": 2178,
+        "stats": {
+            "technique": 30,
+            "kicks": 90,
+            "ball_selection": 90,
+            "speed": 48,
+            "endurance": 60
+        }
+    },
+    {
+        "id": 1008,
+        "name": "Бутси Легенда Ліги [S]",
+        "category": "BOOTS",
+        "level_required": 4,
+        "price": 2875,
+        "stats": {
+            "technique": 120,
+            "kicks": 90,
+            "ball_selection": 73,
+            "speed": 48,
+            "endurance": 43
+        }
     }
 ]

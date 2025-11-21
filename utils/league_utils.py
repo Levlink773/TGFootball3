@@ -363,4 +363,26 @@ async def get_text_new_club_league(club: Club):
         count_characters_first_club  = len(characters_in_match),
         count_characters_second_club = len(enemy_characters_in_match)
     )
-     
+
+def get_energy_multiplier(level: int) -> float:
+    """Повертає множник енергії для заданого рівня.
+       Для рівнів 1..5 використовує явний мапінг.
+       Для level > 5 продовжує прогресію +0.1 на кожний додатковий рівень.
+    """
+    if level < 1:
+        level = 1
+
+    base_map = {
+        1: 1.0,
+        2: 1.1,
+        3: 1.3,
+        4: 1.4,
+        5: 1.5,
+    }
+
+    if level in base_map:
+        return base_map[level]
+
+    # Продовження прогресії: від рівня 5 додаємо +0.1 за кожний рівень
+    extra_levels = level - 5
+    return base_map[5] + 0.1 * extra_levels

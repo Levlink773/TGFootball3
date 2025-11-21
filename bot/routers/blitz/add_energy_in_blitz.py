@@ -17,9 +17,11 @@ from blitz.blitz_match.constans import (
     KOEF_DONATE_ENERGY,
     DONE_ENERGY_PHOTOS
 )
+from logging_config import logger
 from services.character_service import CharacterService
 from utils.club_utils import send_message_characters_club
 from utils.blitz_photo_utils import get_photo, save_photo_id
+from utils.league_utils import get_energy_multiplier
 
 add_energy_in_match_router = Router()
 
@@ -106,13 +108,17 @@ async def donate_epizode_energy(
     old_chance_team = match_data.get_chance_teams()
     old_first_club_chance = old_chance_team[0] * 100
     old_second_club_chance = old_chance_team[1] * 100
+    lvl = character.level
+    logger.warn(f"CH LVL IN: {lvl}")
+    energy_multiplier = get_energy_multiplier(lvl)
+    logger.warn(f"EN MULT: {energy_multiplier}")
 
     if character.id in match_data.first_team.charactets_match_ids:
-        match_data.first_team.episode_donate_energy += energy
+        match_data.first_team.episode_donate_energy += energy * energy_multiplier
         my_team = match_data.first_team
 
     elif character.id in match_data.second_team.charactets_match_ids:
-        match_data.second_team.episode_donate_energy += energy
+        match_data.second_team.episode_donate_energy += energy * energy_multiplier
         my_team = match_data.second_team
     else:
         return

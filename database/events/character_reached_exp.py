@@ -13,8 +13,8 @@ semaphore = asyncio.Semaphore(1)
 
 class ExpEventListener(BaseEventListener):
     TEXT_TEMPLATE  = "EXP"
-    ENERGY_REFERAL = 150
-    MONEY_REFERAL  = 20
+    ENERGY_REFERAL = 300
+    MONEY_REFERAL  = 300
     REFERAL_EXP = 20
     
     _bot: Bot = bot

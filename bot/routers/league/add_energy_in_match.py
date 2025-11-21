@@ -6,6 +6,7 @@ from aiogram.types import  Message, CallbackQuery
 from aiogram.fsm.context import FSMContext
 
 from database.models.character import Character
+from logging_config import logger
 
 from services.character_service import CharacterService
 
@@ -13,6 +14,7 @@ from bot.filters.donate_energy_filter import CheckTimeDonateEnergyMatch
 from bot.callbacks.league_callbacks import EpizodeDonateEnergyToMatch
 from bot.states.league_match_state import DonateEnergyInMatch
 from bot.keyboards.gym_keyboard import no_energy_keyboard
+from utils.league_utils import get_energy_multiplier
 
 from utils.photo_utils import get_photo, save_photo_id
 from match.core.manager import ClubMatchManager
@@ -115,13 +117,16 @@ async def donate_epizode_energy(
     old_chance_club  = match_data.get_chance_clubs()
     old_first_club_chance = old_chance_club[0]*100
     old_second_club_chance = old_chance_club[1]*100
-    
+    lvl = character.level
+    logger.warn(f"CH LVL IN: {lvl}")
+    energy_multiplier = get_energy_multiplier(lvl)
+    logger.warn(f"EN MULT: {energy_multiplier}")
     if character.id in match_data.first_club.charactets_match_ids:
-        match_data.first_club.epiіsode_donate_energy += energy
+        match_data.first_club.epiіsode_donate_energy += energy * energy_multiplier
         my_club = match_data.first_club
         
     elif character.id in match_data.second_club.charactets_match_ids:
-        match_data.second_club.epiіsode_donate_energy += energy
+        match_data.second_club.epiіsode_donate_energy += energy  * energy_multiplier
         my_club = match_data.second_club
     else:
         return
