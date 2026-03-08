@@ -57,8 +57,6 @@ def add_patch_payments():
     
 async def main():
     await start_utils()
-    from match.test import test
-    asyncio.create_task(test())
     await asyncio.gather(
         start_weebhook(),
         start_polling()

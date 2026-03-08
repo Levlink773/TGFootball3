@@ -1,13 +1,28 @@
 from logging.config import fileConfig
+import os
+from urllib.parse import quote
 
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
+from dotenv import load_dotenv
 
 from alembic import context
+
+load_dotenv()
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
+
+# Override sqlalchemy.url from environment variables if available
+db_login = os.getenv("DB_LOGIN")
+db_password = os.getenv("DB_PASSWORD")
+db_host = os.getenv("DB_HOST")
+db_port = os.getenv("DB_PORT")
+db_name = os.getenv("DB_NAME")
+if db_login and db_host and db_name:
+    url = f"mysql+pymysql://{quote(db_login)}:{quote(db_password or '')}@{db_host}:{db_port or '3306'}/{quote(db_name)}"
+    config.set_main_option("sqlalchemy.url", url)
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.

@@ -85,8 +85,8 @@ class LeagueService(BaseLeagueService):
                     select(LeagueFight)
                     .where(
                         LeagueFight.group_id == group_id,
-                        LeagueFight.time_to_start >= cls.first_day_month,
-                        LeagueFight.time_to_start < cls.start_next_month
+                        LeagueFight.time_to_start >= cls.first_day_month(),
+                        LeagueFight.time_to_start < cls.start_next_month()
                     )
                     .order_by(LeagueFight.time_to_start.asc())
                 )
@@ -98,7 +98,7 @@ class LeagueService(BaseLeagueService):
         cls,
         club_id: int
     ) -> Optional[list[LeagueFight]]:
-        print(cls.first_day_month)
+        print(cls.first_day_month())
         async for session in get_session():
             async with session.begin():
                 stmt = (
@@ -108,7 +108,7 @@ class LeagueService(BaseLeagueService):
                             LeagueFight.first_club_id == club_id,
                             LeagueFight.second_club_id == club_id
                         ),
-                        LeagueFight.time_to_start >= cls.first_day_month,
+                        LeagueFight.time_to_start >= cls.first_day_month(),
                         LeagueFight.type_league == cls.type_league
                     )
                     .order_by(LeagueFight.time_to_start.asc())
@@ -127,8 +127,8 @@ class LeagueService(BaseLeagueService):
                             LeagueFight.first_club_id == club_id,
                             LeagueFight.second_club_id == club_id
                         ),
-                        LeagueFight.time_to_start >= cls.first_day_month,
-                        LeagueFight.time_to_start < cls.start_next_month
+                        LeagueFight.time_to_start >= cls.first_day_month(),
+                        LeagueFight.time_to_start < cls.start_next_month()
                     )
                     .limit(1)
                 )
@@ -150,8 +150,8 @@ class LeagueService(BaseLeagueService):
                             LeagueFight.first_club_id == club_id,
                             LeagueFight.second_club_id == club_id
                         ),
-                        LeagueFight.time_to_start >= cls.first_day_month,
-                        LeagueFight.time_to_start < cls.start_next_month,
+                        LeagueFight.time_to_start >= cls.first_day_month(),
+                        LeagueFight.time_to_start < cls.start_next_month(),
                         LeagueFight.type_league == type_league
                     )
                     .limit(1)
@@ -228,8 +228,8 @@ class LeagueService(BaseLeagueService):
                     league_fights = await session.execute(
                         select(LeagueFight)
                         .where(
-                            LeagueFight.time_to_start >= cls.start_day_last_month,
-                            LeagueFight.time_to_start < cls.end_day_last_month,
+                            LeagueFight.time_to_start >= cls.start_day_last_month(),
+                            LeagueFight.time_to_start < cls.end_day_last_month(),
                         )
                         .order_by(LeagueFight.time_to_start.asc())
                     )
@@ -253,8 +253,8 @@ class LeagueService(BaseLeagueService):
                             ).label("rank")
                         )
                         .where(
-                            LeagueFight.time_to_start >= cls.first_day_month,
-                            LeagueFight.time_to_start < cls.start_next_month
+                            LeagueFight.time_to_start >= cls.first_day_month(),
+                            LeagueFight.time_to_start < cls.start_next_month()
                         )
                         .subquery()
                     )
@@ -313,8 +313,8 @@ class LeagueService(BaseLeagueService):
                     select(LeagueFight.group_id)
                     .where(
                         LeagueFight.type_league == type_league,
-                        LeagueFight.time_to_start >= cls.first_day_month,
-                        LeagueFight.time_to_start < cls.start_next_month
+                        LeagueFight.time_to_start >= cls.first_day_month(),
+                        LeagueFight.time_to_start < cls.start_next_month()
                     )
                     .distinct()
                 )

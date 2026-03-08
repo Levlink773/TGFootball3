@@ -21,6 +21,8 @@ class Waiterdistributer:
     async def start(self) -> None:
         all_groups_started = await LeagueService.get_latest_fights_from_current_month()
         top_20_groups = []
+        if not all_groups_started:
+            return
         for group in all_groups_started:
             if group.type_league == TypeLeague.TOP_20_CLUB_LEAGUE:
                 top_20_groups.append(group)

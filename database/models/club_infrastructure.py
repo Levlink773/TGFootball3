@@ -32,7 +32,7 @@ class ClubInfrastructure(Base):
     )
 
     last_update_points: Mapped[datetime] = mapped_column(
-        default = datetime(1970, 1, 1), server_default=text('TIMESTAMP \'1970-01-01 00:00:00\'')
+        default = datetime(1970, 1, 1), server_default=text("'2000-01-01 00:00:00'")
     )
 
     training_base: Mapped[InfrastructureLevel] = mapped_column(

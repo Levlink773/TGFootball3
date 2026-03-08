@@ -37,28 +37,23 @@ class BaseLeagueService(ABC):
         raise NotImplementedError("This method should be overridden in subclasses")
 
     @classmethod
-    @property
     def first_day_month(cls) -> datetime:
         return datetime.now().date().replace(day=1)
-    
 
     @classmethod
-    @property
     def start_next_month(cls) -> datetime:
         return (
-            cls.first_day_month + timedelta(days=32)
+            cls.first_day_month() + timedelta(days=32)
         ).replace(day=1)
-        
+
     @classmethod
-    @property
     def start_day_last_month(cls) -> datetime:
         return (
-            cls.first_day_month - timedelta(days=1)
+            cls.first_day_month() - timedelta(days=1)
         ).replace(day=1)
-        
+
     @classmethod
-    @property
     def end_day_last_month(cls) -> datetime:
         return (
-            cls.first_day_month - timedelta(days=1)
+            cls.first_day_month() - timedelta(days=1)
         )
