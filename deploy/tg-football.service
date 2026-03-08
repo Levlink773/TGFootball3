@@ -1,0 +1,16 @@
+[Unit]
+Description=TG Football Telegram Bot
+After=network.target mysql.service
+
+[Service]
+Type=simple
+User=tgfootball
+Group=tgfootball
+WorkingDirectory=/opt/tg-football
+ExecStart=/opt/tg-football/venv/bin/python main.py
+Restart=always
+RestartSec=5
+EnvironmentFile=/opt/tg-football/.env
+
+[Install]
+WantedBy=multi-user.target
