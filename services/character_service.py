@@ -83,6 +83,19 @@ class CharacterService:
                 return all_characters_not_bot
 
     @classmethod
+    async def get_all_characters_not_bot(cls) -> list[Character]:
+        # Hall-of-fame boards: ALL real players, no recent-activity gate.
+        # get_all_users_not_bot() is scoped to users active in the last 60 days
+        # (correct for notifications/newsletters, which share it) — a fame board
+        # should rank the whole real playerbase, not just recently-active ones.
+        async for session in get_session():
+            async with session.begin():
+                result = await session.execute(
+                    select(Character).where(Character.is_bot == False)
+                )
+                return result.unique().scalars().all()
+
+    @classmethod
     async def get_character(cls, character_user_id: int) -> Character:
         async for session in get_session():
             async with session.begin():
