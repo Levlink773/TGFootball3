@@ -3,6 +3,7 @@ import datetime
 from sqlalchemy import Column, BigInteger, String, DateTime, ForeignKey, Integer, Boolean, text
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import relationship, Mapped
+from sqlalchemy.orm.exc import DetachedInstanceError
 
 from config import PositionCharacter, Gender, CONST_ENERGY, POSITION_DECLENSIONS, POSITION_COEFFICIENTS
 from database.models.reminder_character import ReminderCharacter
@@ -35,7 +36,7 @@ class Character(Base):
     gender          = Column(String(255))
     
     created_at      = Column(DateTime, default=datetime.datetime.now)
-    is_bot          = Column(Boolean, default=False)
+    is_bot          = Column(Boolean, default=False, server_default="0", nullable=False)
     
     referal_user_id            = Column(BigInteger, nullable=True)  
     referral_award_is_received = Column(Boolean, default=False, server_default="0", nullable=False)
@@ -99,9 +100,12 @@ class Character(Base):
 
     @property
     def koef_club_power(self) -> float:
-        if not self.club:
+        try:
+            if not self.club:
+                return 1.0
+            return self.club.koef_energy
+        except DetachedInstanceError:
             return 1.0
-        return self.club.koef_energy
 
     @property
     def gender_enum(self):
@@ -174,23 +178,23 @@ class Character(Base):
     
     @property
     def effective_technique(self):
-        return (self.technique * POSITION_COEFFICIENTS[self.position_enum].get("technique",1))  + self.item_stats['technique']
+        return ((self.technique or 0) * POSITION_COEFFICIENTS[self.position_enum].get("technique", 1)) + self.item_stats['technique']
 
     @property
     def effective_kicks(self):
-        return (self.kicks * POSITION_COEFFICIENTS[self.position_enum].get("kicks",1)) + self.item_stats['kicks']
+        return ((self.kicks or 0) * POSITION_COEFFICIENTS[self.position_enum].get("kicks", 1)) + self.item_stats['kicks']
 
     @property
     def effective_ball_selection(self):
-        return ( self.ball_selection * POSITION_COEFFICIENTS[self.position_enum].get("ball_selection",1)) + self.item_stats['ball_selection']
+        return ((self.ball_selection or 0) * POSITION_COEFFICIENTS[self.position_enum].get("ball_selection", 1)) + self.item_stats['ball_selection']
 
     @property
     def effective_speed(self):
-        return (self.speed * POSITION_COEFFICIENTS[self.position_enum].get("speed",1)) + self.item_stats['speed']
+        return ((self.speed or 0) * POSITION_COEFFICIENTS[self.position_enum].get("speed", 1)) + self.item_stats['speed']
 
     @property
     def effective_endurance(self):
-        return (self.endurance * POSITION_COEFFICIENTS[self.position_enum].get("endurance",1)) + self.item_stats['endurance']
+        return ((self.endurance or 0) * POSITION_COEFFICIENTS[self.position_enum].get("endurance", 1)) + self.item_stats['endurance']
 
     @property
     def full_power(self) -> int:
