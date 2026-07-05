@@ -86,11 +86,23 @@ class CharacterService:
     async def get_character(cls, character_user_id: int) -> Character:
         async for session in get_session():
             async with session.begin():
+                # One character per user is enforced by a UNIQUE constraint on
+                # characters_user_id. The order_by + limit(1) is a safety net so a
+                # stray duplicate can NEVER crash rendering again — previously this
+                # used scalar_one_or_none() which raised MultipleResultsFound and
+                # took down every club view (create team / Моя команда / club list).
                 result = await session.execute(
-                    select(Character).where(Character.characters_user_id == character_user_id)
+                    select(Character)
+                    .where(Character.characters_user_id == character_user_id)
+                    .order_by(
+                        Character.club_id.isnot(None).desc(),
+                        Character.exp.desc(),
+                        Character.money.desc(),
+                        Character.id.asc(),
+                    )
+                    .limit(1)
                 )
-                current_character = result.scalar_one_or_none()
-                return current_character
+                return result.scalars().first()
 
     @classmethod
     async def get_character_by_id(cls, character_id: int) -> Character:
@@ -109,13 +121,28 @@ class CharacterService:
 
         async for session in get_session():
             async with session.begin():
-                try:
-                    session.add(character_obj)
-                except:
-                    pass
-                merged_obj = await session.merge(character_obj)
-                await session.commit()
-                return merged_obj
+                # get-or-create: never insert a second character for a user_id.
+                # This, plus the DB UNIQUE constraint on characters_user_id, is the
+                # root-cause fix for the duplicate-character pileup. Rows without a
+                # user_id (bots/orphans) are exempt — UNIQUE allows multiple NULLs.
+                uid = character_obj.characters_user_id
+                if uid is not None:
+                    existing = await session.execute(
+                        select(Character)
+                        .where(Character.characters_user_id == uid)
+                        .order_by(
+                            Character.club_id.isnot(None).desc(),
+                            Character.exp.desc(),
+                            Character.id.asc(),
+                        )
+                        .limit(1)
+                    )
+                    found = existing.scalars().first()
+                    if found is not None:
+                        return found
+                session.add(character_obj)
+                await session.flush()
+                return character_obj
 
     @classmethod
     async def update_character_characteristic(cls, character_id: int, type_characteristic: str,
@@ -170,7 +197,7 @@ class CharacterService:
             async with session.begin():
                 character = await session.get(Character, character_id)
                 if character:
-                    character.current_energy += amount_energy
+                    character.current_energy = (character.current_energy or 0) + amount_energy
                     await session.flush()
 
     @classmethod
