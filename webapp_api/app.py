@@ -10,6 +10,11 @@ from database.base_acces import get_base
 get_base()  # register ALL models so string-name relationships resolve
 
 from webapp_api.routers.player import player_router
+from webapp_api.routers.leagues import leagues_router
+from webapp_api.routers.matches import matches_router
+from webapp_api.routers.hall_of_fame import hall_of_fame_router
+from webapp_api.routers.training import training_router
+from webapp_api.routers.shop import shop_router
 
 app = FastAPI(title="TG Football Mini App API", docs_url=None, redoc_url=None)
 
@@ -22,6 +27,11 @@ app.add_middleware(
 )
 
 app.include_router(player_router, prefix="/api")
+app.include_router(leagues_router, prefix="/api")
+app.include_router(matches_router, prefix="/api")
+app.include_router(hall_of_fame_router, prefix="/api")
+app.include_router(training_router, prefix="/api")
+app.include_router(shop_router, prefix="/api")
 
 
 @app.get("/api/health")
