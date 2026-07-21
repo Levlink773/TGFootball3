@@ -18,7 +18,7 @@ from utils.gym_utils import get_text_training_facilities
 donate_club_energy_router = Router()
 
 
-@donate_club_energy_router.message(F.text == "💪🏻 Посилення команди")
+@donate_club_energy_router.message(F.text.regexp(r"^(✅\s*)?💪🏻 Посилення команди(\s*✅)?$"))
 async def training_facilities_handler(message: Message, character: Character, state: FSMContext):
 
     if not character.club_id:

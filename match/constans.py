@@ -44,4 +44,4 @@ END_MATCH_PHOTOS_PATCH = [
     "match/photos/end_match_3.jpg",
 ]
 
-START_MATCH_PHOTO_PATCH = "match\photos\start_match_photo.jpg"
+START_MATCH_PHOTO_PATCH = "match/photos/start_match_photo.jpg"

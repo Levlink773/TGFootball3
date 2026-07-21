@@ -23,7 +23,7 @@ my_club_router = Router()
 
 
 @my_club_router.message(
-    F.text.regexp(r"(✅\s*)?👥 Команда(\s*✅)?")
+    F.text.regexp(r"^(✅\s*)?👥 Команда(\s*✅)?$")
 )
 async def get_my_club_handler(message: Message, character: Character):
     await message.answer("Вітаю в меню команди",reply_markup=main_menu_club(character))

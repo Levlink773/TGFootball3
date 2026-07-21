@@ -10,19 +10,21 @@ from services.user_service import UserService
 
 from loader import dp
 
-async def get_user(user_bot: User) -> tuple[UserBot, bool]:
-    try:
-        user = await UserService.get_user(user_id=user_bot.id)
-        if not user:
-            await UserService.create_user(
-                user_id = user_bot.id,
-                user_name = user_bot.username,
-                user_full_name = user_bot.full_name,
-            )
+async def get_user(user_bot: User) -> UserBot | None:
+    for attempt in (1, 2):
+        try:
             user = await UserService.get_user(user_id=user_bot.id)
-        return user
-    except Exception as E:
-        logging.error(E)
+            if not user:
+                await UserService.create_user(
+                    user_id = user_bot.id,
+                    user_name = user_bot.username,
+                    user_full_name = user_bot.full_name,
+                )
+                user = await UserService.get_user(user_id=user_bot.id)
+            return user
+        except Exception:
+            logging.exception("get_user failed (attempt %s) for user_id=%s", attempt, user_bot.id)
+    return None
 
 
 @dp.error()
@@ -39,8 +41,16 @@ async def message_middleware(
     data: Dict[str, Any]
 ) -> Any:
     user  = await get_user(event.from_user)
-    
-    
+    if user is None:
+        try:
+            if isinstance(event, CallbackQuery):
+                await event.answer("⚠️ Сервер тимчасово недоступний, спробуйте ще раз", show_alert=True)
+            else:
+                await event.answer("⚠️ Сервер тимчасово недоступний, спробуйте ще раз")
+        except Exception:
+            pass
+        return
+
     character = user.characters[0] if user.characters else []
     data.update({"user":user, "character":character})
     result = await handler(event, data)

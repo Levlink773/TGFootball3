@@ -47,7 +47,7 @@ async def start_command_handler(
             )
         
         
-    video_start = FSInputFile("src\start_video.MP4",filename="video_start") if not VIDEO_ID else VIDEO_ID
+    video_start = FSInputFile("src/start_video.MP4",filename="video_start") if not VIDEO_ID else VIDEO_ID
 
     await state.clear()
     bot_name = await message.bot.get_my_name()
