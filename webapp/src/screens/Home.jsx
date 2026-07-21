@@ -1,14 +1,29 @@
+import { useEffect, useState } from 'react'
 import { getMatches, getPlayer } from '../api'
 import { useApi } from '../hooks'
-import { Card, Loading, ErrorBox } from '../ui'
+import { Card, Loading, ErrorBox, NextBar, CtaButton, EnergyBar } from '../ui'
+import { IconCalendar, IconBolt, IconUser, IconDumbbell, IconChat, IconClose } from '../icons'
+
+// game community chat, same link the bot sends to new members
+const CHAT_URL = import.meta.env.VITE_GAME_CHAT_URL || 'https://t.me/tgfootballchat'
+const TUTORIAL_KEY = 'tgf_tutorial_done'
 
 function fmtTime(iso) {
   return new Date(iso).toLocaleString('uk-UA', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
 }
 
+function fmtClock(iso) {
+  return new Date(iso).toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit' })
+}
+
 export default function Home({ goTo }) {
   const player = useApi(getPlayer)
   const matches = useApi(getMatches)
+  const [showTutorial, setShowTutorial] = useState(() => !localStorage.getItem(TUTORIAL_KEY))
+
+  useEffect(() => {
+    if (!showTutorial) localStorage.setItem(TUTORIAL_KEY, '1')
+  }, [showTutorial])
 
   if (player.loading || matches.loading) return <Loading />
   if (player.error) return <ErrorBox error={player.error} onRetry={player.reload} />
@@ -16,60 +31,96 @@ export default function Home({ goTo }) {
 
   const nextMatch = matches.data.leagues.map((l) => l.next_match).find(Boolean)
   const blitz = matches.data.blitz.next
+  const energyMax = player.data.vip_active ? 300 : 150
 
   return (
-    <div className="p-4 space-y-4">
-      <div className="text-center py-3">
-        <div className="h-display text-3xl text-gold glow-gold">TG FOOTBALL</div>
-        <div className="text-muted text-sm mt-1">
-          Привіт, {player.data.name}! ⚡ {player.data.energy} · 💰 {player.data.money}
-        </div>
+    <div className="p-4 space-y-4 relative">
+      <div className="text-center pt-1 pb-2">
+        <div className="h-display text-4xl text-gold glow-gold leading-none">TG Football</div>
+        <div className="text-muted text-sm mt-1.5">Привіт, {player.data.name}!</div>
       </div>
 
-      <Card accent="gold" className="cursor-pointer" onClick={() => goTo('matches')}>
-        <div onClick={() => goTo('matches')}>
-          <div className="h-display text-lg text-gold mb-1">⚽ Наступний матч</div>
-          {nextMatch ? (
-            <div className="flex justify-between items-center">
-              <span>vs {nextMatch.opponent_club_name || '—'}</span>
-              <span className="text-neon h-display">{fmtTime(nextMatch.time_to_start)}</span>
-            </div>
-          ) : (
-            <div className="text-muted text-sm">Немає запланованих матчів — зазирни у вкладку Матчі</div>
-          )}
+      {/* Next league match — frame 1 bottom bar */}
+      <Card accent="gold">
+        <div className="flex items-center gap-3">
+          <IconCalendar size={26} className="text-gold shrink-0" />
+          <div className="flex-1">
+            <div className="h-display text-sm text-white/80 leading-none">Наступний матч</div>
+            {nextMatch ? (
+              <div className="h-display text-3xl text-gold glow-gold leading-tight">
+                {fmtClock(nextMatch.time_to_start)}
+              </div>
+            ) : (
+              <div className="text-muted text-xs mt-1">Немає запланованих матчів</div>
+            )}
+          </div>
+          <CtaButton onClick={() => goTo('matches')}>
+            {nextMatch ? 'Готуватися до матчу ›' : 'До матчів ›'}
+          </CtaButton>
         </div>
+        {nextMatch && (
+          <div className="text-muted text-xs mt-2 pl-9">
+            vs {nextMatch.opponent_club_name || '—'} · {fmtTime(nextMatch.time_to_start)}
+          </div>
+        )}
       </Card>
 
-      <Card accent="neon">
-        <div onClick={() => goTo('matches')}>
-          <div className="h-display text-lg text-neon mb-1">⚡ Бліц</div>
-          {blitz ? (
-            <div className="flex justify-between items-center">
-              <span className="text-sm">
-                {blitz.registered ? '✅ Ти зареєстрований' : 'Реєстрація відкрита'}
-              </span>
-              <span className="h-display text-neon glow-neon">{fmtTime(blitz.start_at)}</span>
-            </div>
-          ) : (
-            <div className="text-muted text-sm">Щодня о {matches.data.blitz.schedule.map((s) => s.time).join(' та ')}</div>
-          )}
-        </div>
-      </Card>
+      {/* Blitz */}
+      <NextBar
+        icon={<IconBolt size={22} />}
+        label={blitz ? (blitz.registered ? 'Бліц · ти в грі ✓' : 'Бліц · реєстрація') : 'Бліц щодня'}
+        time={blitz ? fmtClock(blitz.start_at) : matches.data.blitz.schedule.map((s) => s.time).join(' · ')}
+        onClick={() => goTo('matches')}
+      />
 
-      <div className="grid grid-cols-2 gap-3">
-        <Card className="text-center" >
-          <button className="w-full" onClick={() => goTo('player')}>
-            <div className="text-2xl mb-1">🏃</div>
-            <div className="h-display text-sm">Гравець</div>
-          </button>
+      <EnergyBar value={player.data.energy} max={energyMax} />
+
+      <div className="grid grid-cols-3 gap-3">
+        <Card className="text-center py-3 cursor-pointer" onClick={() => goTo('player')}>
+          <IconUser size={24} className="text-neon mx-auto mb-1" />
+          <div className="h-display text-sm">Гравець</div>
         </Card>
-        <Card className="text-center">
-          <button className="w-full" onClick={() => goTo('training')}>
-            <div className="text-2xl mb-1">🏋️</div>
-            <div className="h-display text-sm">Тренування</div>
-          </button>
+        <Card className="text-center py-3 cursor-pointer" onClick={() => goTo('training')}>
+          <IconDumbbell size={24} className="text-neon mx-auto mb-1" />
+          <div className="h-display text-sm">Трен-ня</div>
         </Card>
+        {CHAT_URL ? (
+          <Card className="text-center py-3 cursor-pointer" onClick={() => {
+            const tg = window.Telegram?.WebApp
+            tg?.openTelegramLink ? tg.openTelegramLink(CHAT_URL) : window.open(CHAT_URL, '_blank')
+          }}>
+            <IconChat size={24} className="text-gold mx-auto mb-1" />
+            <div className="h-display text-sm">Чат гри</div>
+          </Card>
+        ) : (
+          <Card className="text-center py-3 opacity-40">
+            <IconChat size={24} className="text-muted mx-auto mb-1" />
+            <div className="h-display text-sm text-muted">Чат</div>
+          </Card>
+        )}
       </div>
+
+      {/* First-visit tutorial overlay */}
+      {showTutorial && (
+        <div className="absolute inset-x-4 top-24 z-20">
+          <div className="bg-card border border-gold ring-glow-gold rounded-2xl p-4 relative">
+            <button
+              onClick={() => setShowTutorial(false)}
+              className="absolute top-2 right-2 text-muted"
+              aria-label="Закрити підказку"
+            >
+              <IconClose size={18} />
+            </button>
+            <div className="h-display text-lg text-gold glow-gold mb-1">Як грати?</div>
+            <ol className="text-sm text-white/85 space-y-1 list-decimal list-inside">
+              <li>Реєструйся на матч у вкладці <b>Матчі</b> ⚽</li>
+              <li>Прокачуй силу у <b>Тренуваннях</b> 🏋️</li>
+              <li>Слідкуй за своїм клубом у <b>Лізі</b> 🏆</li>
+            </ol>
+            <div className="text-gold text-2xl text-center mt-2 animate-bounce">↓</div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

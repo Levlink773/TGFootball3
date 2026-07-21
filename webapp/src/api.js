@@ -34,3 +34,17 @@ export const getShop = () => api('/shop')
 export const registerMatch = (matchId) =>
   api('/match/register', { method: 'POST', body: JSON.stringify({ match_id: matchId }) })
 export const registerBlitz = () => api('/blitz/register', { method: 'POST' })
+export const createInvoice = (product_type, product_key) =>
+  api('/shop/invoice', { method: 'POST', body: JSON.stringify({ product_type, product_key }) })
+export const buyItem = (item_id, luxe = false) =>
+  api('/shop/buy-item', { method: 'POST', body: JSON.stringify({ item_id, luxe }) })
+export const getSettings = () => api('/settings')
+export const updateSettings = (bot_buttons_enabled) =>
+  api('/settings', { method: 'POST', body: JSON.stringify({ bot_buttons_enabled }) })
+
+// Open a Monobank invoice URL outside the webview
+export function openInvoice(url) {
+  const tg = window.Telegram?.WebApp
+  if (tg?.openLink) tg.openLink(url)
+  else window.open(url, '_blank')
+}

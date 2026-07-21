@@ -1,80 +1,129 @@
 import { useState } from 'react'
-import { getShop } from '../api'
+import { getShop, createInvoice, buyItem, openInvoice } from '../api'
 import { useApi } from '../hooks'
-import { Card, Loading, ErrorBox } from '../ui'
+import { Card, Loading, ErrorBox, CtaButton, PillTabs } from '../ui'
+import { IconShirt, IconBox, IconBolt, IconCoin, IconStar } from '../icons'
 
 const TABS = [
-  { key: 'items', label: '👕 Речі' },
-  { key: 'boxes', label: '📦 Бокси' },
-  { key: 'energy', label: '⚡ Енергія' },
-  { key: 'coins', label: '💰 Монети' },
-  { key: 'vip', label: '⭐ VIP' },
+  { key: 'items', label: 'Речі', icon: <IconShirt size={16} /> },
+  { key: 'boxes', label: 'Бокси', icon: <IconBox size={16} /> },
+  { key: 'energy', label: 'Енергія', icon: <IconBolt size={16} /> },
+  { key: 'coins', label: 'Монети', icon: <IconCoin size={16} /> },
+  { key: 'vip', label: 'VIP', icon: <IconStar size={16} /> },
 ]
 
+const POSITIONS = ['Нападник', 'Півзахисник', 'Захисник', 'Воротар']
+
 function Price({ children }) {
-  return <span className="h-display text-gold glow-gold whitespace-nowrap">{children}</span>
+  return <span className="h-display text-lg text-gold glow-gold whitespace-nowrap">{children}</span>
 }
 
 export default function Shop() {
   const { data, error, loading, reload } = useApi(getShop)
-  const [tab, setTab] = useState('items')
+  const [tabIdx, setTabIdx] = useState(0)
+  const [busy, setBusy] = useState(null)
+  const [message, setMessage] = useState(null)
+  const [pickPosition, setPickPosition] = useState(false)
 
   if (loading) return <Loading />
   if (error) return <ErrorBox error={error} onRetry={reload} />
 
+  const tab = TABS[tabIdx].key
   const ownedIds = new Set(data.me.owned_items.map((i) => i.id))
+
+  const pay = async (key, product_type, product_key) => {
+    setBusy(key)
+    setMessage(null)
+    try {
+      const { url } = await createInvoice(product_type, product_key)
+      openInvoice(url)
+      setMessage('Рахунок відкрито. Після оплати баланс оновиться автоматично.')
+    } catch (e) {
+      setMessage(e.message)
+    } finally {
+      setBusy(null)
+    }
+  }
+
+  const purchaseItem = async (item, luxe) => {
+    const key = `item-${luxe ? 'luxe' : 'std'}-${item.id}`
+    setBusy(key)
+    setMessage(null)
+    try {
+      await buyItem(item.id, luxe)
+      setMessage(`Куплено: ${item.name} ✓`)
+      reload()
+    } catch (e) {
+      setMessage(e.message)
+    } finally {
+      setBusy(null)
+    }
+  }
+
+  const ItemRow = ({ item, luxe }) => {
+    const key = `item-${luxe ? 'luxe' : 'std'}-${item.id}`
+    const owned = !luxe && ownedIds.has(item.id)
+    const affordable = data.me.money >= item.price && data.me.level >= item.level_required
+    return (
+      <Card className="flex justify-between items-center gap-3 py-3">
+        <div className="min-w-0">
+          <div className="h-display text-base truncate">{item.name}</div>
+          <div className="text-muted text-xs">
+            Рівень {item.level_required}+ · +{Object.values(item.stats).reduce((a, b) => a + b, 0)} до статів
+            {owned && <span className="text-neon"> · у тебе є</span>}
+          </div>
+        </div>
+        <div className="flex items-center gap-2 shrink-0">
+          <Price>{item.price} 💰</Price>
+          <CtaButton
+            color="gold"
+            disabled={busy === key || !affordable}
+            onClick={() => purchaseItem(item, luxe)}
+          >
+            {busy === key ? '…' : 'Купити'}
+          </CtaButton>
+        </div>
+      </Card>
+    )
+  }
 
   return (
     <div className="p-4 space-y-4">
       <div className="flex justify-between items-center">
-        <div className="h-display text-xl text-gold glow-gold">🛒 Магазин</div>
+        <div className="h-display text-2xl text-gold glow-gold">Магазин</div>
         <div className="text-sm text-muted">⚡ {data.me.energy} · 💰 {data.me.money}</div>
       </div>
 
-      <div className="flex gap-2 overflow-x-auto pb-1">
-        {TABS.map((t) => (
-          <button
-            key={t.key}
-            onClick={() => setTab(t.key)}
-            className={`h-display whitespace-nowrap text-sm rounded-lg px-3 py-2 border ${
-              tab === t.key
-                ? 'text-gold border-gold/70 shadow-[0_0_12px_rgba(255,215,0,0.25)]'
-                : 'text-muted border-white/10'
-            }`}
-          >
-            {t.label}
-          </button>
-        ))}
-      </div>
+      <PillTabs tabs={TABS} active={tabIdx} onSelect={setTabIdx} />
+
+      {message && (
+        <div className="text-sm text-gold border border-gold/40 ring-glow-gold rounded-xl p-3">{message}</div>
+      )}
 
       {tab === 'items' && (
         <div className="space-y-2">
-          {data.items.map((item) => (
-            <Card key={item.id} className="flex justify-between items-center py-3">
-              <div>
-                <div className="h-display text-sm">{item.name}</div>
-                <div className="text-muted text-xs">
-                  Рівень {item.level_required}+ · {Object.values(item.stats).reduce((a, b) => a + b, 0)} до статів
-                  {ownedIds.has(item.id) && <span className="text-neon"> · у тебе є</span>}
-                </div>
-              </div>
-              <Price>{item.price} 💰</Price>
-            </Card>
-          ))}
+          {data.items.map((item) => <ItemRow key={`s${item.id}`} item={item} luxe={false} />)}
+          <div className="h-display text-lg text-neon glow-neon pt-2">Ексклюзив</div>
+          {data.luxe_items.map((item) => <ItemRow key={`l${item.id}`} item={item} luxe={true} />)}
         </div>
       )}
 
       {tab === 'boxes' && (
         <div className="space-y-2">
           {data.boxes.map((box) => (
-            <Card key={box.key} className="flex justify-between items-center py-3">
+            <Card key={box.key} className="flex justify-between items-center gap-3 py-3">
               <div>
-                <div className="h-display text-sm">{box.name_lootbox}</div>
+                <div className="h-display text-base">{box.name_lootbox}</div>
                 <div className="text-muted text-xs">
                   ⚡ {box.min_energy}–{box.max_energy} · 💰 {box.min_money}–{box.max_money} · 📈 {box.min_exp}–{box.max_exp} XP
                 </div>
               </div>
-              <Price>{box.price} грн</Price>
+              <div className="flex items-center gap-2 shrink-0">
+                <Price>{box.price} грн</Price>
+                <CtaButton disabled={busy === box.key} onClick={() => pay(box.key, 'box', box.key)}>
+                  {busy === box.key ? '…' : 'Купити'}
+                </CtaButton>
+              </div>
             </Card>
           ))}
         </div>
@@ -85,7 +134,14 @@ export default function Shop() {
           {data.energy.map((pack) => (
             <Card key={pack.amount} className="text-center py-4">
               <div className="h-display text-2xl text-neon glow-neon mb-1">⚡ {pack.amount}</div>
-              <Price>{pack.price_uah} грн</Price>
+              <div className="mb-2"><Price>{pack.price_uah} грн</Price></div>
+              <CtaButton
+                className="w-full"
+                disabled={busy === `en-${pack.amount}`}
+                onClick={() => pay(`en-${pack.amount}`, 'energy', pack.amount)}
+              >
+                {busy === `en-${pack.amount}` ? '…' : 'Купити'}
+              </CtaButton>
             </Card>
           ))}
         </div>
@@ -96,7 +152,15 @@ export default function Shop() {
           {data.coins.map((pack) => (
             <Card key={pack.key} className="text-center py-4">
               <div className="h-display text-2xl text-gold glow-gold mb-1">💰 {pack.coins}</div>
-              <Price>{pack.price_uah} грн</Price>
+              <div className="mb-2"><Price>{pack.price_uah} грн</Price></div>
+              <CtaButton
+                color="gold"
+                className="w-full"
+                disabled={busy === pack.key}
+                onClick={() => pay(pack.key, 'coins', pack.key)}
+              >
+                {busy === pack.key ? '…' : 'Купити'}
+              </CtaButton>
             </Card>
           ))}
         </div>
@@ -105,24 +169,57 @@ export default function Shop() {
       {tab === 'vip' && (
         <div className="space-y-2">
           {data.vip.map((pack) => (
-            <Card key={pack.key} accent="gold" className="flex justify-between items-center py-3">
-              <div className="h-display text-sm">⭐ VIP на {pack.duration_days} днів</div>
-              <Price>{pack.price_uah} грн</Price>
+            <Card key={pack.key} accent="gold" className="flex justify-between items-center gap-3 py-3">
+              <div className="h-display text-base">⭐ VIP на {pack.duration_days} днів</div>
+              <div className="flex items-center gap-2 shrink-0">
+                <Price>{pack.price_uah} грн</Price>
+                <CtaButton color="gold" disabled={busy === pack.key} onClick={() => pay(pack.key, 'vip', pack.key)}>
+                  {busy === pack.key ? '…' : 'Купити'}
+                </CtaButton>
+              </div>
             </Card>
           ))}
-          <Card className="flex justify-between items-center py-3">
-            <div className="h-display text-sm">🔄 Зміна позиції</div>
-            <Price>{data.change_position_price} грн</Price>
+
+          <Card className="py-3">
+            <div className="flex justify-between items-center gap-3">
+              <div className="h-display text-base">🔄 Зміна позиції</div>
+              <div className="flex items-center gap-2 shrink-0">
+                <Price>{data.change_position_price} грн</Price>
+                <CtaButton disabled={!!busy} onClick={() => setPickPosition((v) => !v)}>
+                  Обрати
+                </CtaButton>
+              </div>
+            </div>
+            {pickPosition && (
+              <div className="grid grid-cols-2 gap-2 mt-3">
+                {POSITIONS.map((pos) => (
+                  <button
+                    key={pos}
+                    disabled={busy === `pos-${pos}`}
+                    onClick={() => pay(`pos-${pos}`, 'change_position', pos)}
+                    className="h-display text-sm border border-neon/50 text-neon rounded-xl px-3 py-2 disabled:opacity-40"
+                  >
+                    {busy === `pos-${pos}` ? '…' : pos}
+                  </button>
+                ))}
+              </div>
+            )}
           </Card>
-          <Card className="flex justify-between items-center py-3">
-            <div className="h-display text-sm">🔑 Ключ тренування</div>
-            <Price>{data.training_key_price_uah} грн</Price>
+
+          <Card className="flex justify-between items-center gap-3 py-3">
+            <div className="h-display text-base">🔑 Ключ тренування</div>
+            <div className="flex items-center gap-2 shrink-0">
+              <Price>{data.training_key_price_uah} грн</Price>
+              <CtaButton disabled={busy === 'key'} onClick={() => pay('key', 'training_key')}>
+                {busy === 'key' ? '…' : 'Купити'}
+              </CtaButton>
+            </div>
           </Card>
         </div>
       )}
 
       <div className="text-muted text-xs text-center pb-2">
-        Оплата — Monobank, як у боті. Покупки в застосунку підключимо на наступному етапі.
+        Оплата — Monobank. Рахунок відкривається у браузері, покупка зараховується автоматично.
       </div>
     </div>
   )

@@ -2,12 +2,12 @@
 
 @theme {
   --color-pitch: #0d0f13;
-  --color-card: #171a21;
-  --color-card2: #1d212b;
+  --color-card: #14171e;
+  --color-card2: #1b1f29;
   --color-gold: #ffd700;
   --color-neon: #00ffff;
   --color-muted: #8b93a3;
-  --font-display: "Arial Narrow", "Helvetica Neue", sans-serif;
+  --font-display: "Barlow Condensed", "Arial Narrow", sans-serif;
 }
 
 html, body, #root {
@@ -30,5 +30,28 @@ body {
   letter-spacing: 0.02em;
 }
 
-.glow-gold { text-shadow: 0 0 12px rgba(255, 215, 0, 0.45); }
-.glow-neon { text-shadow: 0 0 12px rgba(0, 255, 255, 0.45); }
+.glow-gold { text-shadow: 0 0 14px rgba(255, 215, 0, 0.5); }
+.glow-neon { text-shadow: 0 0 14px rgba(0, 255, 255, 0.5); }
+
+/* card border glows */
+.ring-glow-gold { box-shadow: 0 0 18px rgba(255, 215, 0, 0.18), inset 0 0 12px rgba(255, 215, 0, 0.05); }
+.ring-glow-neon { box-shadow: 0 0 18px rgba(0, 255, 255, 0.18), inset 0 0 12px rgba(0, 255, 255, 0.05); }
+
+/* cyan stat bar with glow */
+.bar-neon {
+  background: linear-gradient(90deg, #00e5ff, #00ffff);
+  box-shadow: 0 0 10px rgba(0, 255, 255, 0.7);
+}
+
+/* chevron strip: »»» */
+.chevrons-r {
+  background-image: repeating-linear-gradient(
+    115deg,
+    transparent 0 6px,
+    currentColor 6px 9px,
+    transparent 9px 15px
+  );
+}
+
+/* zebra rows for league table */
+.zebra > *:nth-child(even) { background: rgba(255, 255, 255, 0.03); }

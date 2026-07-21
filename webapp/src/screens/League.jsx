@@ -1,42 +1,44 @@
 import { useState } from 'react'
-import { getLeagues } from '../api'
+import { getLeagues, getPlayer } from '../api'
 import { useApi } from '../hooks'
-import { Card, Loading, ErrorBox } from '../ui'
+import { Card, Loading, ErrorBox, PillTabs, NextBar, InitialsBadge } from '../ui'
+import { IconTrophy, IconStar, IconBall, IconShield } from '../icons'
+
+const LEAGUE_ICONS = [IconTrophy, IconShield, IconStar, IconBall]
 
 export default function League() {
   const { data, error, loading, reload } = useApi(getLeagues)
+  const player = useApi(getPlayer)
   const [active, setActive] = useState(0)
 
   if (loading) return <Loading />
   if (error) return <ErrorBox error={error} onRetry={reload} />
 
   const league = data.leagues[active]
+  const myClubId = player.data?.club?.id
 
   return (
     <div className="p-4 space-y-4">
-      <div className="flex gap-2 overflow-x-auto pb-1">
-        {data.leagues.map((l, i) => (
-          <button
-            key={l.type}
-            onClick={() => setActive(i)}
-            className={`h-display whitespace-nowrap text-sm rounded-lg px-3 py-2 border ${
-              i === active
-                ? 'text-gold border-gold/70 shadow-[0_0_12px_rgba(255,215,0,0.25)]'
-                : 'text-muted border-white/10'
-            }`}
-          >
-            {l.name}
-          </button>
-        ))}
-      </div>
+      <PillTabs
+        tabs={data.leagues.map((l, i) => {
+          const Icon = LEAGUE_ICONS[i % LEAGUE_ICONS.length]
+          // league names come with emoji prefixes from the bot — SVG icon replaces them
+          return { key: l.type, label: l.name.replace(/^[^\p{L}]+/u, ''), icon: <Icon size={16} /> }
+        })}
+        active={active}
+        onSelect={setActive}
+      />
 
       <div className="flex justify-between items-center">
-        <span className={`text-xs px-2 py-0.5 rounded-full border ${
-          league.is_active ? 'text-neon border-neon/50' : 'text-muted border-white/10'
+        <div>
+          <div className="h-display text-2xl text-gold glow-gold leading-none">{league.name}</div>
+          <span className="block w-10 h-0.5 bg-neon shadow-[0_0_8px_rgba(0,255,255,0.8)] mt-1.5" />
+        </div>
+        <span className={`h-display text-xs px-2.5 py-1 rounded-full border ${
+          league.is_active ? 'text-neon border-neon/60 ring-glow-neon' : 'text-muted border-white/10'
         }`}>
-          {league.is_active ? 'Триває зараз' : `Іде ${league.day_start}–${league.day_end} числа`}
+          {league.is_active ? 'Триває зараз' : `${league.day_start}–${league.day_end} числа`}
         </span>
-        <span className="text-muted text-xs">Матчі о {league.match_hour}:00</span>
       </div>
 
       <Card className="p-0 overflow-hidden">
@@ -45,28 +47,43 @@ export default function League() {
         ) : (
           <table className="w-full text-sm">
             <thead>
-              <tr className="text-muted text-xs uppercase">
-                <th className="text-left py-2 pl-3 w-8">#</th>
-                <th className="text-left py-2">Клуб</th>
-                <th className="text-right py-2">РГ</th>
-                <th className="text-right py-2 pr-3">Очки</th>
+              <tr className="text-muted text-[11px] uppercase tracking-wider">
+                <th className="text-left py-2.5 pl-3 w-8">#</th>
+                <th className="text-left py-2.5" colSpan={2}>Клуб</th>
+                <th className="text-right py-2.5">Різниця</th>
+                <th className="text-right py-2.5 pr-3">Очки</th>
               </tr>
             </thead>
-            <tbody>
-              {league.standings.map((row, i) => (
-                <tr key={row.club_id} className="border-t border-white/5">
-                  <td className="py-2.5 pl-3 text-muted">{i + 1}</td>
-                  <td className="py-2.5 h-display">{row.club_name}</td>
-                  <td className={`py-2.5 text-right ${row.goal_difference >= 0 ? 'text-neon' : 'text-red-400'}`}>
-                    {row.goal_difference >= 0 ? '+' : ''}{row.goal_difference}
-                  </td>
-                  <td className="py-2.5 pr-3 text-right h-display text-lg text-gold glow-gold">{row.points}</td>
-                </tr>
-              ))}
+            <tbody className="zebra">
+              {league.standings.map((row, i) => {
+                const mine = myClubId != null && row.club_id === myClubId
+                return (
+                  <tr
+                    key={row.club_id}
+                    className={`border-t border-white/5 ${
+                      mine ? 'outline outline-1 -outline-offset-1 outline-neon bg-neon/10' : ''
+                    }`}
+                  >
+                    <td className="py-2.5 pl-3 h-display text-lg text-white/80">{i + 1}</td>
+                    <td className="py-1.5 w-11"><InitialsBadge name={row.club_name} active={mine} /></td>
+                    <td className={`py-2.5 h-display text-base ${mine ? 'text-neon' : ''}`}>{row.club_name}</td>
+                    <td className={`py-2.5 text-right h-display ${row.goal_difference >= 0 ? 'text-neon' : 'text-red-400'}`}>
+                      {row.goal_difference >= 0 ? '+' : ''}{row.goal_difference}
+                    </td>
+                    <td className="py-2.5 pr-3 text-right h-display text-2xl text-gold glow-gold">{row.points}</td>
+                  </tr>
+                )
+              })}
             </tbody>
           </table>
         )}
       </Card>
+
+      <NextBar
+        icon={<IconBall size={22} />}
+        label="Наступний тур"
+        time={`${String(league.match_hour).padStart(2, '0')}:00`}
+      />
     </div>
   )
 }

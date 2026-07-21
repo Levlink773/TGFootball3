@@ -1,25 +1,26 @@
 import { useState } from 'react'
 import { getMatches, registerMatch, registerBlitz } from '../api'
 import { useApi } from '../hooks'
-import { Card, SectionTitle, Loading, ErrorBox } from '../ui'
+import { Card, Loading, ErrorBox, CtaButton } from '../ui'
+import { IconBolt, IconTrophy } from '../icons'
 
 function fmtTime(iso) {
   const d = new Date(iso)
   return d.toLocaleString('uk-UA', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
 }
 
-function RegisterButton({ registered, busy, onClick, disabled }) {
+function fmtClock(iso) {
+  return new Date(iso).toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit' })
+}
+
+function RegisterButton({ registered, busy, onClick, disabled, color }) {
   if (registered) {
-    return <span className="text-neon text-sm">✅ Зареєстрований</span>
+    return <span className="h-display text-neon glow-neon text-sm whitespace-nowrap">✓ У грі</span>
   }
   return (
-    <button
-      onClick={onClick}
-      disabled={busy || disabled}
-      className="h-display text-sm bg-gold text-black rounded-lg px-4 py-2 disabled:opacity-40"
-    >
+    <CtaButton onClick={onClick} disabled={busy || disabled} color={color}>
       {busy ? '…' : 'Реєстрація'}
-    </button>
+    </CtaButton>
   )
 }
 
@@ -47,21 +48,25 @@ export default function Matches() {
   return (
     <div className="p-4 space-y-4">
       {message && (
-        <div className="text-sm text-gold border border-gold/40 rounded-lg p-3">{message}</div>
+        <div className="text-sm text-gold border border-gold/40 ring-glow-gold rounded-xl p-3">{message}</div>
       )}
 
+      {/* Blitz — cyan hero card */}
       <Card accent="neon">
-        <SectionTitle accent="neon">⚡ Бліц-турніри</SectionTitle>
-        <div className="text-muted text-sm mb-2">
+        <div className="flex items-center gap-2 mb-2">
+          <IconBolt size={22} className="text-gold" />
+          <span className="h-display text-xl text-neon glow-neon">Бліц-турніри</span>
+        </div>
+        <div className="text-muted text-sm mb-3">
           Щодня: {data.blitz.schedule.map((s) => s.time).join(' та ')}
         </div>
         {data.blitz.next ? (
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-3">
             <div>
-              <div className="h-display text-xl text-neon glow-neon">
-                {fmtTime(data.blitz.next.start_at)}
+              <div className="h-display text-4xl text-neon glow-neon leading-none">
+                {fmtClock(data.blitz.next.start_at)}
               </div>
-              <div className="text-muted text-xs">
+              <div className="text-muted text-xs mt-1">
                 Гравців: {data.blitz.next.participants}/{data.blitz.next.max_players}
               </div>
             </div>
@@ -80,22 +85,26 @@ export default function Matches() {
       {data.leagues.map((league) => (
         <Card key={league.type}>
           <div className="flex justify-between items-center mb-2">
-            <div className="h-display text-lg text-gold">{league.name}</div>
-            <span className={`text-xs px-2 py-0.5 rounded-full border ${
-              league.is_active ? 'text-neon border-neon/50' : 'text-muted border-white/10'
+            <div className="flex items-center gap-2">
+              <IconTrophy size={18} className="text-gold" />
+              <span className="h-display text-lg text-gold">{league.name}</span>
+            </div>
+            <span className={`h-display text-xs px-2.5 py-1 rounded-full border ${
+              league.is_active ? 'text-neon border-neon/60' : 'text-muted border-white/10'
             }`}>
               {league.is_active ? 'Активна' : `${league.day_start}–${league.day_end} числа`}
             </span>
           </div>
           {league.next_match ? (
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between gap-3">
               <div>
-                <div className="text-sm">
-                  vs <span className="font-semibold">{league.next_match.opponent_club_name || '—'}</span>
+                <div className="h-display text-base">
+                  vs {league.next_match.opponent_club_name || '—'}
                 </div>
-                <div className="text-muted text-xs">{fmtTime(league.next_match.time_to_start)}</div>
+                <div className="text-neon text-xs h-display mt-0.5">{fmtTime(league.next_match.time_to_start)}</div>
               </div>
               <RegisterButton
+                color="gold"
                 registered={league.next_match.registered}
                 busy={busy === league.type}
                 onClick={() => act(league.type, () => registerMatch(league.next_match.match_id))}
