@@ -1,0 +1,15 @@
+# Mini App API sidecar — /etc/systemd/system/footballgame-api.service
+# systemctl daemon-reload && systemctl enable --now footballgame-api
+[Unit]
+Description=TG Football Mini App API (FastAPI sidecar :3004)
+After=network.target mysql.service redis-server.service
+
+[Service]
+Type=simple
+WorkingDirectory=/root/footballgame
+ExecStart=/root/footballgame/venv/bin/uvicorn webapp_api.app:app --host 127.0.0.1 --port 3004
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
