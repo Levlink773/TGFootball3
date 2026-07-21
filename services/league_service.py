@@ -38,13 +38,11 @@ class LeagueFightService:
             async with session.begin():
                 try:
                     session.add(league_fight)
-                    merged_obj = await session.merge(league_fight)
-                    await session.commit()
-                    return merged_obj
+                    # session.begin() commits on clean exit; no explicit commit/merge.
+                    return league_fight
                 except SQLAlchemyError as e:
-                    # await session.rollback()
                     print(f"Ошибка при создании битвы: {e}")
-                    return None
+                    raise
                 
     # @classmethod
     # async def get_league_fights_current_month(cls) -> list[LeagueFight]:

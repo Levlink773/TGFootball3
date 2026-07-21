@@ -76,7 +76,6 @@ async def init_schedulers_league():
     await scheduler_best_league.start_scheduler()
     await scheduler_best_20_club_league.start_scheduler()
     await scheduler_new_legue.start_scheduler()
-    #TODO: add scheduler for new club league
 
 async def start_utils():
 
@@ -97,13 +96,13 @@ async def start_utils():
     await gym_reminder.start_iniatialization_gym()
     await end_beast_league.wait_to_end_season_best_league()
     await league_ranking_update.start()
-    await reminder_buy_energy.start()
-    await reminder_go_to_training.start()
+    # await reminder_buy_energy.start()  # DISABLED 2026-06-30: promo broadcast off per client
+    # await reminder_go_to_training.start()  # DISABLED 2026-06-30: promo broadcast off per client
     await reminder_vip_pass.start_timers()
     await scheduler_reset_training_key.start()
     await scheduler_training.start()
     await scheduler_notification_start_league.start()
-    await scheduler_notification_task.start()
+    # await scheduler_notification_task.start()  # DISABLED 2026-06-30: promo broadcast off per client
     await scheduler_anulate.start()
     
     # await end_duel_season.wait_to_end_season_duel()

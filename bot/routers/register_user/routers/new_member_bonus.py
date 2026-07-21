@@ -46,9 +46,9 @@ async def get_new_member_bonus_handler(
         character_id=character.id,
         stats=stats
     )
-    # await query.message.answer(
-    #     text = text_bonus
-    # )
+    await query.message.answer(
+        text=text_bonus
+    )
     
 async def get_text_bonus_new_member(
     character_id: int,

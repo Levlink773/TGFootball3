@@ -24,7 +24,9 @@ class AnulateStatisticsScheduler:
         self.scheduler.add_job(
             func=self.anulate_statistics,
             trigger=CronTrigger(hour=3),
-            misfire_grace_time=10
+            misfire_grace_time=10,
+            id='anulate_statistics',
+            replace_existing=True,
         )
 
     async def anulate_statistics(self):

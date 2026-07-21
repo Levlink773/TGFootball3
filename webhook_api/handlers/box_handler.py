@@ -19,6 +19,7 @@ class MonoResultBox(EndPoint):
     schema = MonoResultSchema
     data: MonoResultSchema
     method = HTTPMethod.POST
+    verify_signature = True
     bot = Bot(token=BOT_TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
     
     TEXT_TEMPLATE = """
@@ -33,15 +34,14 @@ class MonoResultBox(EndPoint):
         )
         
         if not payment:
-            return
-        
+            return self.OK()
+
         if self.data.status != "success":
-            return
-        
+            return self.OK()
+
         if payment.payment.status:
-            return
-        
-        
+            return self.OK()
+
         character = await CharacterService.get_character(payment.payment.user_id)
         
         name_box = lootboxes[payment.type_box]['name_lootbox']
@@ -55,6 +55,11 @@ class MonoResultBox(EndPoint):
             bot = self.bot
         )
         await PaymentServise.change_payment_status(order_id=self.data.invoiceId)
-        await asyncio.sleep(30)
-        asyncio.create_task(open_box.open_box())
+
+        # Open the box after a 30s delay without holding the webhook connection open.
+        async def _delayed_open():
+            await asyncio.sleep(30)
+            await open_box.open_box()
+
+        asyncio.create_task(_delayed_open())
         return self.OK()

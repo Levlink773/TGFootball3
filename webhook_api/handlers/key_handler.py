@@ -33,10 +33,11 @@ class MonoResultBuyTrainingKey(EndPoint):
     schema = MonoResultSchema
     data: MonoResultSchema
     method = HTTPMethod.POST
+    verify_signature = True
     bot = Bot(token=BOT_TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
 
 
-    
+
     async def handle_request(self) -> Response:
         payment: KeyPayment = await PaymentServise.get_payment(
             order_id=self.data.invoiceId,
@@ -44,14 +45,14 @@ class MonoResultBuyTrainingKey(EndPoint):
         )
         
         if not payment:
-            return
-        
+            return self.OK()
+
         if self.data.status != "success":
-            return
-        
+            return self.OK()
+
         if payment.payment.status:
-            return
-        
+            return self.OK()
+
         character = await CharacterService.get_character(payment.payment.user_id)
         await CharacterService.add_trainin_key(
             character_id = character.id,

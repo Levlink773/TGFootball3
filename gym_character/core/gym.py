@@ -60,6 +60,8 @@ class Gym:
 
     @property
     def delta_time_training(self) -> int:
+        if not self.club_infrastructure:
+            return self.time_training.total_seconds()
         reduction_procent = INFRASTRUCTURE_BONUSES[InfrastructureType.SPORTS_MEDICINE].get(
             level = self.club_infrastructure.get_infrastructure_level(InfrastructureType.SPORTS_MEDICINE)
         )

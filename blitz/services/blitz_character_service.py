@@ -20,11 +20,14 @@ class BlitzCharacterService:
         async for session in get_session():
             async with session.begin():
                 blitz_character = await session.execute(
-                    select(BlitzCharacter).where(BlitzCharacter.character_id == character_id)
+                    select(BlitzCharacter)
+                    .where(BlitzCharacter.character_id == character_id)
+                    .limit(1)
                 )
                 blitz_character = blitz_character.scalar_one_or_none()
+                if blitz_character is None:
+                    return
                 blitz_character.goals_count += 1
-                await session.commit()
 
     @classmethod
     async def add_score_to_character(

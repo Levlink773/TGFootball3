@@ -25,7 +25,7 @@ class SelectStat(CallbackData, prefix = "select_stat"):
     count_stat: int
     
 
-class SelectAngleTrainingDuel(CallbackData, prefix = "select_angle"):
+class SelectAngleTrainingDuel(CallbackData, prefix = "training_angle"):
     angle: PositionAngle
     end_time_health: int
     duel_id: str

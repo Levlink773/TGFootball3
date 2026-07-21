@@ -18,7 +18,8 @@ class StarterTrainingTimers:
     async def start_trainings_timers(self) -> None:
         for time_register in self._time_rigster_training:
             await self._start_taimer(time_register)
-        self.scheduler.start()
+        if not self.scheduler.running:
+            self.scheduler.start()
         
     async def _start_taimer(self, time_register: str) -> None: 
         time_register: datetime = self._get_time_prerigster(time_register)   

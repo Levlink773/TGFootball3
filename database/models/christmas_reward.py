@@ -16,7 +16,7 @@ class ChristmasReward(Base):
     __tablename__ = 'christmas_reward'
     
     id = Column(Integer, primary_key=True, index=True)
-    user_id  = Column(BigInteger, ForeignKey('users.user_id'), nullable=False)
+    user_id  = Column(BigInteger, ForeignKey('users.user_id', ondelete='CASCADE'), nullable=False)
     time_get = Column(DateTime, nullable=True)
 
     @property

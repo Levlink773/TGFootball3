@@ -24,6 +24,7 @@ class MonoResultVipPass(EndPoint):
     schema = MonoResultSchema
     data: MonoResultSchema
     method = HTTPMethod.POST
+    verify_signature = True
     bot = Bot(token=BOT_TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
 
     type_payment = VipPassPayment
@@ -50,14 +51,14 @@ class MonoResultVipPass(EndPoint):
             )
         
         if not payment:
-            return
-        
+            return self.OK()
+
         if self.data.status != "success":
-            return
-        
+            return self.OK()
+
         if payment.payment.status:
-            return
-        
+            return self.OK()
+
         duration = vip_passes.get(payment.type_vip_pass).duration
         
         

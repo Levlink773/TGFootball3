@@ -188,11 +188,12 @@ class LeagueService(BaseLeagueService):
                         return None
 
                     session.add(league_fight_obj)
-                    await session.commit()
+                    # session.begin() commits on clean exit.
                     return league_fight_obj
-                
+
                 except Exception as e:
-                    return None
+                    print(f"Ошибка при инкременте голу: {e}")
+                    raise
                 
     @classmethod
     async def get_league_fight(cls, match_id: str) -> LeagueFight:
@@ -294,13 +295,11 @@ class LeagueService(BaseLeagueService):
             async with session.begin():
                 try:
                     session.add(league_fight)
-                    merged_obj = await session.merge(league_fight)
-                    await session.commit()
-                    return merged_obj
+                    # session.begin() commits on clean exit; no explicit commit/merge.
+                    return league_fight
                 except Exception as e:
-                    # await session.rollback()
                     print(f"Ошибка при создании битвы: {e}")
-                    return None
+                    raise
                 
     @classmethod
     async def get_group_ids_by_league(

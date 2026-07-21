@@ -124,12 +124,6 @@ def select_items_for_buy(
     )
     return keyboard.adjust(1).as_markup()
     
-def buy_item():
-    return (InlineKeyboardBuilder()
-            .button(text = "🏷 Купити річ", callback_data="buy_select_item")
-            .as_markup()
-            )
-
 #===================BOXES
 def select_box():
     return (InlineKeyboardBuilder()

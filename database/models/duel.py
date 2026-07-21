@@ -17,10 +17,10 @@ class Duel(Base):
     
     duel_id = Column(String(255), nullable=False)
     
-    user_1_id = Column(BigInteger, ForeignKey('characters.id'))  
+    user_1_id = Column(BigInteger, ForeignKey('characters.id', ondelete='CASCADE'))  
     user_1:Mapped["Character"]   = relationship("Character", foreign_keys=[user_1_id], lazy="selectin")
     
-    user_2_id = Column(BigInteger, ForeignKey('characters.id'))  
+    user_2_id = Column(BigInteger, ForeignKey('characters.id', ondelete='CASCADE'))  
     user_2:Mapped["Character"]   = relationship("Character", foreign_keys=[user_2_id], lazy="selectin")
     
     point_user_1 =  Column(Integer, default=0, server_default="0", insert_default=0, nullable=False)

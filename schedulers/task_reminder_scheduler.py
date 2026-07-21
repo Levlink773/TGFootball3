@@ -60,7 +60,9 @@ class ReminderEducationCenter:
         self.scheduler.add_job(
             func=self.reminder_education_center,
             trigger=random_trigger,
-            misfire_grace_time=10
+            misfire_grace_time=10,
+            id='education_reminder',
+            replace_existing=True,
         )
 
     async def reminder_education_center(self):

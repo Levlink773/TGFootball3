@@ -28,8 +28,8 @@ class LeagueFight(Base):
     group_id         = Column(String(255), nullable=False)
     time_to_start    = Column(DateTime)
   
-    first_club_id    = Column(BigInteger, ForeignKey('clubs.id'), nullable=False)
-    second_club_id   = Column(BigInteger, ForeignKey('clubs.id'), nullable=False)
+    first_club_id    = Column(BigInteger, ForeignKey('clubs.id', ondelete='RESTRICT'), nullable=False)
+    second_club_id   = Column(BigInteger, ForeignKey('clubs.id', ondelete='RESTRICT'), nullable=False)
     
     first_club:Mapped["Club"]   = relationship("Club", foreign_keys=[first_club_id], lazy="subquery")
     second_club:Mapped["Club"]  = relationship("Club", foreign_keys=[second_club_id], lazy="subquery")

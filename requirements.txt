@@ -20,3 +20,4 @@ python-dotenv==1.0.1
 SQLAlchemy==2.0.32
 typing_extensions==4.12.2
 yarl==1.9.4
+cryptography==44.0.0

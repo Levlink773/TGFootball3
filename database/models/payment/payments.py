@@ -19,7 +19,7 @@ class Payment(Base):
     
     id                   = Column(BigInteger, primary_key=True, index=True)
     order_id             = Column(String(100), nullable=False, unique=True)
-    user_id              = Column(BigInteger, ForeignKey("users.user_id"), nullable=False)
+    user_id              = Column(BigInteger, ForeignKey("users.user_id", ondelete='CASCADE'), nullable=False)
     price                = Column(Integer, nullable=False)
     
     created_time_payment = Column(DateTime, default=datetime.now, nullable=False)

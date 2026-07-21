@@ -71,12 +71,12 @@ class BestClubLeague:
         self.scheduler_best_league.add_job(
             func = user_sender.send_messages_to_users,
             trigger = DateTrigger(time_send_join_match_text),
-            misfire_grace_time = 10
+            misfire_grace_time = 1800
         )
         self.scheduler_best_league.add_job(
             func    = match_.start_match,
             trigger = DateTrigger(time_start_match),
-            misfire_grace_time = 10
+            misfire_grace_time = 3600
         )
         
 class SchedulerBestClubtLeague:
@@ -87,6 +87,6 @@ class SchedulerBestClubtLeague:
         self.scheduler.add_job(
             func=BestClubLeague().start_best_league,
             trigger=CronTrigger(day=START_DAY_BEST_LEAGUE, hour=8, minute=0),
-            misfire_grace_time=10
+            misfire_grace_time=3600
         )
         self.scheduler.start()

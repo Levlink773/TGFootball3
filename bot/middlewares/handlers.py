@@ -41,7 +41,7 @@ async def message_middleware(
     user  = await get_user(event.from_user)
     
     
-    character = user.characters[0] if user.characters else []
+    character = user.characters[0] if user.characters else None
     data.update({"user":user, "character":character})
     result = await handler(event, data)
     if isinstance(event, CallbackQuery):

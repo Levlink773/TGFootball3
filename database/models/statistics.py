@@ -8,6 +8,6 @@ from stats.stat_enum import StatisticsType
 class Statistics(Base):
     __tablename__ = 'stats'
     id = Column(BigInteger, primary_key=True)
-    character_id = Column(BigInteger, ForeignKey('characters.id'), nullable=False)
+    character_id = Column(BigInteger, ForeignKey('characters.id', ondelete='CASCADE'), nullable=False)
     stat_type = Column(Enum(StatisticsType), nullable=False)
     character = relationship("Character", back_populates="statistics", lazy="selectin")

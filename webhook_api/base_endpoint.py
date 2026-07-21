@@ -5,6 +5,7 @@ from enum import Enum
 from typing import Optional
 
 from logging_config import logger
+from webhook_api.monobank_signature import MonobankSignatureVerifier
 
 class HTTPMethod(Enum):
     GET = "GET"
@@ -22,10 +23,14 @@ class ResponseAnswer:
 
 class EndPoint(ABC, ResponseAnswer):
     request: Request
-    
+
     schema: BaseModel
     method: HTTPMethod
-    
+
+    # When True, the X-Sign header is verified against Monobank's public key
+    # before the body is parsed or the handler runs.
+    verify_signature: bool = False
+
     data: dict = None
     
     def __init__(self, request: Request) -> None:
@@ -56,9 +61,16 @@ class EndPoint(ABC, ResponseAnswer):
     @classmethod
     async def router(cls, request: Request) -> Response:
         obj = cls(request)
-        
+
         if not obj.method_is_valid:
             return obj.BAD(error = "Not valid method")
-        
+
+        if cls.verify_signature:
+            body = await request.read()
+            x_sign = request.headers.get("X-Sign")
+            if not await MonobankSignatureVerifier.verify(x_sign, body):
+                logger.error("Rejected webhook with invalid Monobank signature")
+                return obj.BAD(error="Invalid signature", status=403)
+
         obj.data = await obj.get_data()
         return await obj.handle_request()

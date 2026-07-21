@@ -52,10 +52,14 @@ class StartBlitzs:
                     selected_blitz_data = bd
 
             logger.info(f"Планирую следующий блиц на {next_start_datetime} (стадий: {selected_blitz_data.stages_of_final})")
-            await StartBlitz(
-                start_datetime=next_start_datetime,
-                blitz_data=selected_blitz_data
-            ).start()
+            try:
+                await StartBlitz(
+                    start_datetime=next_start_datetime,
+                    blitz_data=selected_blitz_data
+                ).start()
+            except Exception as e:
+                logger.error(f"Blitz run failed, continuing loop: {e}", exc_info=True)
+                await asyncio.sleep(60)
             await asyncio.sleep(1)
 
     @staticmethod
