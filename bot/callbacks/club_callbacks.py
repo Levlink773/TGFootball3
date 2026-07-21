@@ -9,11 +9,6 @@ class SelectClubToView(CallbackData, prefix="view_club"):
 class JoinToClub(CallbackData, prefix = "join_to_club"):
     club_id: int
     
-# NOTE: LeaveThisClub is never imported or used anywhere.
-# The keyboard (bot/keyboards/club_keyboard.py:59) emits the raw string "leave_club"
-# and the handler (bot/routers/club/my_club.py:85) matches via F.data == "leave_club".
-# The button works correctly at runtime via the raw string.
-# Dead class left in place; migrate keyboard + handler to use LeaveThisClub() if desired.
 class LeaveThisClub(CallbackData, prefix = "leave_club"):
     club_id: int
     

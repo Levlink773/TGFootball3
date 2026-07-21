@@ -76,9 +76,7 @@ class SchedulerSesonBeastLeague:
         club_map = {club.id : club for club in clubs}
         for index, (club_id, count_points) in enumerate(group_league, start=1):
             club = club_map.get(club_id)
-            if not club:
-                continue
-            place_emoji = self.place_emojis.get(index, f"{index}️⃣")
+            place_emoji = self.place_emojis.get(index, f"{index}️⃣") 
             text += f"{place_emoji} <b>{index}-е місце</b>: {club.name_club} з <code>{count_points}</code> очками.\n"
 
         

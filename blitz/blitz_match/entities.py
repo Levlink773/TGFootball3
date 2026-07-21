@@ -28,14 +28,10 @@ class MatchTeamBlitz:
 
     async def init_data(self):
         self.team: BlitzTeam = await BlitzTeamService.get_by_id(team_id=self.team_id)
-        if self.team is None:
-            logger.warning(f"MatchTeamBlitz.init_data: team {self.team_id} not found, skipping character load")
-            return
         blitzs_characters: list[BlitzCharacter] = self.team.characters
         for blitz_character in blitzs_characters:
             character = await BlitzCharacterService.get_character_from_blitz_character(blitz_character)
-            if character:
-                self.characters_in_match.add(character)
+            self.characters_in_match.add(character)
 
 
     @property
@@ -176,15 +172,15 @@ class BlitzMatchData:
         elif self.second_team.goals > self.first_team.goals:
             return self.second_team, False
         else:
-            first_team_score = await BlitzTeamService.get_score_team(self.first_team.team_id)
+            first_team_score = await BlitzTeamService.get_score_team(self.first_team.team.id)
             first_team_power = self.power_first_team + first_team_score
-            second_team_score = await BlitzTeamService.get_score_team(self.second_team.team_id)
+            second_team_score = await BlitzTeamService.get_score_team(self.second_team.team.id)
             second_team_power = self.power_second_team + second_team_score
             if first_team_power > second_team_power:
                 return self.first_team, True
             elif second_team_power > first_team_power:
                 return self.second_team, True
-            return random.choice([self.first_team, self.second_team]), True
+            return random.choices([self.first_team, self.second_team]), True
 
     @property
     def power_first_team(self) -> int:

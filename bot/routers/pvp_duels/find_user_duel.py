@@ -13,6 +13,7 @@ find_user_duel_router = Router()
 
 @find_user_duel_router.message(F.text == "🥅 ПВП-пенальті")
 async def find_user_duel_handler(message: Message, character: Character):
+    return
     if character.reminder.character_in_duel:
         if not DuelManager.character_in_duel(character):
             await RemniderCharacterService.edit_status_duel_character(

@@ -81,8 +81,6 @@ class MatchClub:
             character = await CharacterService.get_character_by_id(
                 character_id=match_character.character_id
             )
-            if not character:
-                continue
             if character.club_id != self.club_id:
                 continue
             self.characters_in_match.add(character)
@@ -104,7 +102,7 @@ class MatchClub:
     
     @property
     def stadium_name(self) -> str:
-        if not self.club or not self.club.custom_name_stadion:
+        if not self.club.custom_name_stadion:
             return "Unknown Stadium"
         return self.club.custom_name_stadion
     
@@ -241,9 +239,6 @@ class MatchData:
         Get the chance of clubs to score a goal.
         :return: Tuple of chances for the first and second clubs
         """
-        if self.total_power == 0:
-            return 0.5, 0.5
-
         first_club_chance = self.power_first_club / self.total_power
         second_club_chance = self.power_second_club / self.total_power
 
@@ -252,12 +247,10 @@ class MatchData:
 
         return first_club_chance, second_club_chance
 
-
+    
     def get_goal_club(self) -> MatchClub:
-        if self.total_power == 0:
-            return random.choice(self.all_clubs)
         values = [
-            self.power_first_club,
+            self.power_first_club, 
             self.power_second_club
         ]
         return random.choices(self.all_clubs, weights=values, k=1)[0]

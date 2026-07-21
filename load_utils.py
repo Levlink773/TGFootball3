@@ -76,6 +76,7 @@ async def init_schedulers_league():
     await scheduler_best_league.start_scheduler()
     await scheduler_best_20_club_league.start_scheduler()
     await scheduler_new_legue.start_scheduler()
+    #TODO: add scheduler for new club league
 
 async def start_utils():
 

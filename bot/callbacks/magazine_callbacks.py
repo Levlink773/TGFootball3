@@ -24,3 +24,5 @@ class ByLuxeItems(CallbackData, prefix = "buyLuxeItem"):
 class SelectBox(CallbackData, prefix = "select_box"):
     type_box: TypeBox
     
+class BuyBox(CallbackData, prefix = "buy_box"):
+    type_box: TypeBox

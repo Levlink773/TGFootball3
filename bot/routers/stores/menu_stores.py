@@ -44,11 +44,6 @@ async def magazine_handler(
     )
     
 
-@menu_magazine_router.callback_query(F.data == "block")
-async def locked_store_item_handler(query: CallbackQuery):
-    await query.answer("🔒 Завершіть навчання, щоб відкрити цей розділ", show_alert=True)
-
-
 @menu_magazine_router.callback_query(F.data == "store_items")
 async def magazine_handler(
     query: CallbackQuery,

@@ -53,7 +53,7 @@ class UpdateLeagueRating:
     async def _update_rank_league(self, club: Club):
         index_rang_club = LEAGUES.index(club.league)
         if index_rang_club == len(LEAGUES) - 1:
-            return
+           new_rang_league =  LEAGUES[-1]
         new_rang_league = LEAGUES[index_rang_club + 1]
         await ClubService.update_rang_league(
             club_id = club.id,

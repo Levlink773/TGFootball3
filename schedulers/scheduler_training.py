@@ -59,9 +59,7 @@ class ReminderTraning:
         self.scheduler.add_job(
             func    = self.training_reminder,
             trigger = random_trigger,
-            misfire_grace_time = 10,
-            id = "training_reminder",
-            replace_existing = True
+            misfire_grace_time = 10
         )
         
     async def training_reminder(self):

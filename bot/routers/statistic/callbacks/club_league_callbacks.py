@@ -1,6 +1,6 @@
 from aiogram.filters.callback_data import CallbackData
 
-class SelectClubLeagueStatistic(CallbackData, prefix="club_league_stat"):
+class SelectClubLeagueStatistic(CallbackData, prefix="select_gender"):
     league: str
     
 

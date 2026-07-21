@@ -17,7 +17,7 @@ class DuelManager:
         
     @classmethod
     def delete_pool_duel(cls, duel_id: str):
-        cls.active_duels.pop(duel_id, None)
+        cls.active_duels.__delitem__(duel_id)
         
     @classmethod
     def get_duel_by_id(cls, duel_id: str) -> DuelUser:

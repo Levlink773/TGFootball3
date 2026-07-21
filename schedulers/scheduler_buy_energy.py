@@ -48,9 +48,7 @@ class ReminderBuyEnergy:
         self.scheduler.add_job(
             func    = self.reminder_buy_energy,
             trigger = random_trigger,
-            misfire_grace_time = 10,
-            id = "buy_energy_reminder",
-            replace_existing = True
+            misfire_grace_time = 10
         )
         
     async def reminder_buy_energy(self):
