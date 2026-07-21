@@ -19,6 +19,7 @@ async def get_player(auth: WebAppInitData = Depends(auth_user)):
         "position": character.position,
         "gender": character.gender,
         "exp": character.exp,
+        "level": character.level,
         "money": character.money,
         "energy": character.current_energy,
         "stats": {

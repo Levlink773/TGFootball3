@@ -15,13 +15,17 @@ from webapp_api.routers.matches import matches_router
 from webapp_api.routers.hall_of_fame import hall_of_fame_router
 from webapp_api.routers.training import training_router
 from webapp_api.routers.shop import shop_router
+from webapp_api.routers.settings import settings_router
 
 app = FastAPI(title="TG Football Mini App API", docs_url=None, redoc_url=None)
 
-# ponytail: origins list gets the real app domain at deploy; localhost for dev
+import os
+_origins = ["http://localhost:5173"]
+if os.getenv("WEBAPP_ORIGIN"):  # e.g. https://app.football-blitz.online at deploy
+    _origins.append(os.getenv("WEBAPP_ORIGIN"))
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
+    allow_origins=_origins,
     allow_methods=["GET", "POST"],
     allow_headers=["Authorization", "Content-Type"],
 )
@@ -32,6 +36,7 @@ app.include_router(matches_router, prefix="/api")
 app.include_router(hall_of_fame_router, prefix="/api")
 app.include_router(training_router, prefix="/api")
 app.include_router(shop_router, prefix="/api")
+app.include_router(settings_router, prefix="/api")
 
 
 @app.get("/api/health")
