@@ -7,7 +7,8 @@ import League from './screens/League'
 import HallOfFame from './screens/HallOfFame'
 import Shop from './screens/Shop'
 import Settings from './screens/Settings'
-import { getPlayer } from './api'
+import Tutorial from './components/Tutorial'
+import { getPlayer, getTutorial } from './api'
 import { useApi } from './hooks'
 import { IconUser, IconBall, IconDumbbell, IconTrophy, IconStar, IconCart, IconGear, IconCoin, IconPlus } from './icons'
 
@@ -32,8 +33,16 @@ const SCREENS = {
 
 export default function App() {
   const [tab, setTab] = useState('home')
+  const [highlight, setHighlight] = useState(null)
+  const [showTutorial, setShowTutorial] = useState(false)
   const player = useApi(getPlayer)
   const Screen = SCREENS[tab]
+
+  // Server-driven onboarding: show once per account until /tutorial/complete succeeds.
+  useEffect(() => {
+    if (localStorage.getItem('tgf_tutorial_done')) return
+    getTutorial().then((t) => { if (!t.completed) setShowTutorial(true) }).catch(() => {})
+  }, [])
 
   useEffect(() => {
     const tg = window.Telegram?.WebApp
@@ -87,17 +96,22 @@ export default function App() {
         <Screen goTo={setTab} />
       </main>
 
+      {showTutorial && (
+        <Tutorial goTo={setTab} setHighlight={setHighlight} onDone={() => setShowTutorial(false)} />
+      )}
+
       <nav className="fixed bottom-0 inset-x-0 z-10 border-t border-white/10 bg-pitch/95 backdrop-blur">
         <div className="max-w-[422px] mx-auto flex">
           {TABS.map(({ key, label, Icon }) => {
             const active = tab === key
+            const pulsed = highlight === key
             return (
               <button
                 key={key}
                 onClick={() => setTab(key)}
                 className={`flex-1 py-2.5 flex flex-col items-center gap-1 text-[10px] uppercase h-display ${
                   active ? 'text-gold glow-gold' : 'text-muted'
-                }`}
+                } ${pulsed ? 'animate-pulse text-neon' : ''}`}
               >
                 <Icon size={22} className={active ? 'drop-shadow-[0_0_8px_rgba(255,215,0,0.8)]' : ''} />
                 {label}

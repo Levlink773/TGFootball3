@@ -77,23 +77,34 @@ TEXT_SECOND_STEP = """
 """
 
 
+TEXT_OPEN_APP = """
+🎉 <b>Персонажа створено — ти в грі!</b>
+
+Уся гра тепер у застосунку: тренування, матчі, магазин і твоя ліга.
+Тисни <b>⚽️ ГРАТИ</b> внизу — короткий тур покаже тобі все за хвилину. 👇
+"""
+
+
 async def join_to_training(
     message: Message,
     character: Character
 ) -> None:
+    # App-first onboarding: no chat gauntlet — education lives in the Mini App tutorial.
     await asyncio.sleep(6)
-    new_status = STATUS_USER_REGISTER.FIRST_TRAINING
-    
     await UserService.edit_status_register(
         user_id=character.characters_user_id,
-        status=new_status
+        status=STATUS_USER_REGISTER.END_TRAINING
+    )
+    await UserService.edit_bot_buttons_enabled(
+        user_id=character.characters_user_id,
+        enabled=False
     )
     user = await UserService.get_user(
         user_id=character.characters_user_id
     )
     await message.answer_photo(
-        caption = TEXT_STAGE_REGISTER_USER[new_status],
-        photo   = PHOTO_STAGE_REGISTER_USER[new_status],
+        caption = TEXT_OPEN_APP,
+        photo   = PHOTO_STAGE_REGISTER_USER[STATUS_USER_REGISTER.FIRST_TRAINING],
         reply_markup = main_menu(user)
     )
 

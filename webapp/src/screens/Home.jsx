@@ -1,12 +1,11 @@
-import { useEffect, useState } from 'react'
 import { getMatches, getPlayer } from '../api'
 import { useApi } from '../hooks'
 import { Card, Loading, ErrorBox, NextBar, CtaButton, EnergyBar } from '../ui'
-import { IconCalendar, IconBolt, IconUser, IconDumbbell, IconChat, IconClose } from '../icons'
+import { IconCalendar, IconBolt, IconUser, IconDumbbell, IconChat } from '../icons'
+import { art } from '../assets/art'
 
 // game community chat, same link the bot sends to new members
 const CHAT_URL = import.meta.env.VITE_GAME_CHAT_URL || 'https://t.me/tgfootballchat'
-const TUTORIAL_KEY = 'tgf_tutorial_done'
 
 function fmtTime(iso) {
   return new Date(iso).toLocaleString('uk-UA', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
@@ -19,11 +18,6 @@ function fmtClock(iso) {
 export default function Home({ goTo }) {
   const player = useApi(getPlayer)
   const matches = useApi(getMatches)
-  const [showTutorial, setShowTutorial] = useState(() => !localStorage.getItem(TUTORIAL_KEY))
-
-  useEffect(() => {
-    if (!showTutorial) localStorage.setItem(TUTORIAL_KEY, '1')
-  }, [showTutorial])
 
   if (player.loading || matches.loading) return <Loading />
   if (player.error) return <ErrorBox error={player.error} onRetry={player.reload} />
@@ -39,6 +33,10 @@ export default function Home({ goTo }) {
         <div className="h-display text-4xl text-gold glow-gold leading-none">TG Football</div>
         <div className="text-muted text-sm mt-1.5">Привіт, {player.data.name}!</div>
       </div>
+
+      {art['banner-home'] && (
+        <img src={art['banner-home']} alt="" className="w-full aspect-[21/9] object-cover rounded-2xl border border-white/10" />
+      )}
 
       {/* Next league match — frame 1 bottom bar */}
       <Card accent="gold">
@@ -100,27 +98,6 @@ export default function Home({ goTo }) {
         )}
       </div>
 
-      {/* First-visit tutorial overlay */}
-      {showTutorial && (
-        <div className="absolute inset-x-4 top-24 z-20">
-          <div className="bg-card border border-gold ring-glow-gold rounded-2xl p-4 relative">
-            <button
-              onClick={() => setShowTutorial(false)}
-              className="absolute top-2 right-2 text-muted"
-              aria-label="Закрити підказку"
-            >
-              <IconClose size={18} />
-            </button>
-            <div className="h-display text-lg text-gold glow-gold mb-1">Як грати?</div>
-            <ol className="text-sm text-white/85 space-y-1 list-decimal list-inside">
-              <li>Реєструйся на матч у вкладці <b>Матчі</b> ⚽</li>
-              <li>Прокачуй силу у <b>Тренуваннях</b> 🏋️</li>
-              <li>Слідкуй за своїм клубом у <b>Лізі</b> 🏆</li>
-            </ol>
-            <div className="text-gold text-2xl text-center mt-2 animate-bounce">↓</div>
-          </div>
-        </div>
-      )}
     </div>
   )
 }

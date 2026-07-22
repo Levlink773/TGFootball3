@@ -55,3 +55,7 @@ dist/
 *.egg
 *.dist-info/
 *.nib
+.venv/
+art-src/out/
+art-src/test/
+webapp/.env.local

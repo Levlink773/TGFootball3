@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import { getMatches, registerMatch, registerBlitz } from '../api'
 import { useApi } from '../hooks'
-import { Card, Loading, ErrorBox, CtaButton } from '../ui'
+import { Card, Loading, ErrorBox, CtaButton, Banner, InitialsBadge } from '../ui'
 import { IconBolt, IconTrophy } from '../icons'
+import { art, clubCrest } from '../assets/art'
 
 function fmtTime(iso) {
   const d = new Date(iso)
@@ -47,6 +48,10 @@ export default function Matches() {
 
   return (
     <div className="p-4 space-y-4">
+      <Banner src={art['banner-matches']}>
+        <span className="h-display text-2xl text-gold glow-gold">Матчі</span>
+      </Banner>
+
       {message && (
         <div className="text-sm text-gold border border-gold/40 ring-glow-gold rounded-xl p-3">{message}</div>
       )}
@@ -97,11 +102,19 @@ export default function Matches() {
           </div>
           {league.next_match ? (
             <div className="flex items-center justify-between gap-3">
-              <div>
+              <div className="flex items-center gap-2.5">
+                {league.next_match.opponent_club_name && (
+                  <InitialsBadge
+                    name={league.next_match.opponent_club_name}
+                    src={clubCrest(league.next_match.opponent_club_name)}
+                  />
+                )}
+                <div>
                 <div className="h-display text-base">
                   vs {league.next_match.opponent_club_name || '—'}
                 </div>
                 <div className="text-neon text-xs h-display mt-0.5">{fmtTime(league.next_match.time_to_start)}</div>
+                </div>
               </div>
               <RegisterButton
                 color="gold"

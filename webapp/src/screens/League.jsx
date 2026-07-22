@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import { getLeagues, getPlayer } from '../api'
 import { useApi } from '../hooks'
-import { Card, Loading, ErrorBox, PillTabs, NextBar, InitialsBadge } from '../ui'
+import { Card, Loading, ErrorBox, PillTabs, NextBar, InitialsBadge, Banner } from '../ui'
 import { IconTrophy, IconStar, IconBall, IconShield } from '../icons'
+import { art, clubCrest } from '../assets/art'
 
 const LEAGUE_ICONS = [IconTrophy, IconShield, IconStar, IconBall]
 
@@ -19,6 +20,10 @@ export default function League() {
 
   return (
     <div className="p-4 space-y-4">
+      <Banner src={art['banner-league']}>
+        <span className="h-display text-2xl text-gold glow-gold">Ліга</span>
+      </Banner>
+
       <PillTabs
         tabs={data.leagues.map((l, i) => {
           const Icon = LEAGUE_ICONS[i % LEAGUE_ICONS.length]
@@ -65,7 +70,7 @@ export default function League() {
                     }`}
                   >
                     <td className="py-2.5 pl-3 h-display text-lg text-white/80">{i + 1}</td>
-                    <td className="py-1.5 w-11"><InitialsBadge name={row.club_name} active={mine} /></td>
+                    <td className="py-1.5 w-11"><InitialsBadge name={row.club_name} active={mine} src={clubCrest(row.club_name)} /></td>
                     <td className={`py-2.5 h-display text-base ${mine ? 'text-neon' : ''}`}>{row.club_name}</td>
                     <td className={`py-2.5 text-right h-display ${row.goal_difference >= 0 ? 'text-neon' : 'text-red-400'}`}>
                       {row.goal_difference >= 0 ? '+' : ''}{row.goal_difference}

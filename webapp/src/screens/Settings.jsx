@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { getSettings, updateSettings } from '../api'
 import { useApi } from '../hooks'
-import { Card, Loading, ErrorBox, SectionTitle } from '../ui'
+import { Card, Loading, ErrorBox, SectionTitle, Banner } from '../ui'
+import { art } from '../assets/art'
 
 function Toggle({ checked, onChange, disabled }) {
   return (
@@ -48,7 +49,9 @@ export default function Settings() {
 
   return (
     <div className="p-4 space-y-4">
-      <SectionTitle>Налаштування</SectionTitle>
+      <Banner src={art['banner-settings']}>
+        <span className="h-display text-2xl text-gold glow-gold">Налаштування</span>
+      </Banner>
       <Card>
         <div className="flex items-center justify-between gap-3">
           <div>

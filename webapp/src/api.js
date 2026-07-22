@@ -38,6 +38,8 @@ export const createInvoice = (product_type, product_key) =>
   api('/shop/invoice', { method: 'POST', body: JSON.stringify({ product_type, product_key }) })
 export const buyItem = (item_id, luxe = false) =>
   api('/shop/buy-item', { method: 'POST', body: JSON.stringify({ item_id, luxe }) })
+export const getTutorial = () => api('/tutorial')
+export const completeTutorial = () => api('/tutorial/complete', { method: 'POST' })
 export const getSettings = () => api('/settings')
 export const updateSettings = (bot_buttons_enabled) =>
   api('/settings', { method: 'POST', body: JSON.stringify({ bot_buttons_enabled }) })

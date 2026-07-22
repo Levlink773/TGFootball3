@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { getHallOfFame } from '../api'
 import { useApi } from '../hooks'
-import { Card, Loading, ErrorBox } from '../ui'
+import { Card, Loading, ErrorBox, Banner } from '../ui'
+import { art } from '../assets/art'
 
 const TABS = [
   { key: 'power', label: '💪 Сила' },
@@ -50,6 +51,10 @@ export default function HallOfFame() {
 
   return (
     <div className="p-4 space-y-4">
+      <Banner src={art['banner-halloffame']}>
+        <span className="h-display text-2xl text-gold glow-gold">Зал Слави</span>
+      </Banner>
+
       <div className="flex gap-2 overflow-x-auto pb-1">
         {TABS.map((t) => (
           <button

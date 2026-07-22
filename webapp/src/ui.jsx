@@ -131,8 +131,8 @@ export function CtaButton({ children, onClick, disabled, color = 'neon', classNa
   )
 }
 
-// Circle badge with club/player initials (league table logo stand-in)
-export function InitialsBadge({ name, active }) {
+// Circle badge with club crest art (fallback: initials)
+export function InitialsBadge({ name, active, src }) {
   const initials = (name || '?')
     .split(/\s+/)
     .map((w) => w[0])
@@ -141,11 +141,26 @@ export function InitialsBadge({ name, active }) {
     .toUpperCase()
   return (
     <span
-      className={`w-9 h-9 rounded-full shrink-0 flex items-center justify-center h-display text-sm border ${
+      className={`w-9 h-9 rounded-full shrink-0 flex items-center justify-center h-display text-sm border overflow-hidden ${
         active ? 'border-neon text-neon ring-glow-neon' : 'border-white/15 text-white/80 bg-card2'
       }`}
     >
-      {initials}
+      {src ? <img src={src} alt="" className="w-full h-full object-cover" /> : initials}
     </span>
+  )
+}
+
+// Screen-top hero banner strip (generated V1-neon art)
+export function Banner({ src, children }) {
+  if (!src) return null
+  return (
+    <div className="relative rounded-2xl overflow-hidden border border-white/10">
+      <img src={src} alt="" className="w-full aspect-[21/9] object-cover" />
+      {children && (
+        <div className="absolute inset-0 flex items-end bg-gradient-to-t from-black/70 to-transparent p-3">
+          {children}
+        </div>
+      )}
+    </div>
   )
 }

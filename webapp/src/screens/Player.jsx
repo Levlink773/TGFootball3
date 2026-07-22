@@ -2,6 +2,7 @@ import { getPlayer } from '../api'
 import { useApi } from '../hooks'
 import { Card, Loading, ErrorBox, StatBar, EnergyBar, InitialsBadge } from '../ui'
 import { IconBoot, IconTarget, IconShield, IconRun, IconHeart } from '../icons'
+import { avatarArt, clubCrest } from '../assets/art'
 
 const STATS = [
   { key: 'technique', label: 'Техніка', Icon: IconBoot },
@@ -33,11 +34,18 @@ export default function Player() {
     <div className="p-4 space-y-4">
       {/* Hero card — frame 1 */}
       <Card accent="gold" className="relative overflow-hidden">
+        {avatarArt(data.gender, data.position) && (
+          <img
+            src={avatarArt(data.gender, data.position)}
+            alt=""
+            className="absolute right-0 top-0 h-full w-1/2 object-cover object-top pointer-events-none opacity-90 [mask-image:linear-gradient(to_left,black_55%,transparent)]"
+          />
+        )}
         <div
           className="absolute inset-0 pointer-events-none opacity-60"
           style={{ background: 'radial-gradient(120% 90% at 80% 0%, rgba(0,255,255,0.08) 0%, transparent 55%), radial-gradient(120% 90% at 0% 100%, rgba(255,215,0,0.10) 0%, transparent 55%)' }}
         />
-        <div className="relative flex justify-between">
+        <div className="relative flex justify-between min-h-[150px]">
           <div>
             {rest.length > 0 ? (
               <>
@@ -90,7 +98,7 @@ export default function Player() {
       {data.club && (
         <Card>
           <div className="flex items-center gap-3">
-            <InitialsBadge name={data.club.name} />
+            <InitialsBadge name={data.club.name} src={clubCrest(data.club.name)} />
             <div className="flex-1">
               <div className="h-display text-lg">{data.club.name}</div>
               <div className="text-muted text-xs uppercase">{data.club.league}</div>

@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
 import { getTraining } from '../api'
 import { useApi, fmtCountdown } from '../hooks'
-import { Card, SectionTitle, Loading, ErrorBox } from '../ui'
+import { Card, SectionTitle, Loading, ErrorBox, Banner } from '../ui'
+import { art } from '../assets/art'
 
 function Countdown({ seconds }) {
   const [left, setLeft] = useState(seconds)
@@ -20,6 +21,10 @@ export default function Training() {
 
   return (
     <div className="p-4 space-y-4">
+      <Banner src={art['banner-training']}>
+        <span className="h-display text-2xl text-gold glow-gold">Тренування</span>
+      </Banner>
+
       <Card accent="gold">
         <SectionTitle>🏋️ Тренування</SectionTitle>
         {data.in_training && data.training ? (

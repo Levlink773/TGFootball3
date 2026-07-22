@@ -46,6 +46,16 @@ class UserService:
                     raise e
         
     @classmethod
+    async def edit_bot_buttons_enabled(cls, user_id: int, enabled: bool):
+        async for session in get_session():
+            async with session.begin():
+                await session.execute(
+                    update(UserBot)
+                    .where(UserBot.user_id == user_id)
+                    .values(bot_buttons_enabled = enabled)
+                )
+
+    @classmethod
     async def edit_status_register(cls, user_id: int, status: STATUS_USER_REGISTER):
         async for session in get_session():
             async with session.begin():

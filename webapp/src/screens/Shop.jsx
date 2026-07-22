@@ -1,8 +1,23 @@
 import { useState } from 'react'
 import { getShop, createInvoice, buyItem, openInvoice } from '../api'
 import { useApi } from '../hooks'
-import { Card, Loading, ErrorBox, CtaButton, PillTabs } from '../ui'
+import { Card, Loading, ErrorBox, CtaButton, PillTabs, Banner } from '../ui'
 import { IconShirt, IconBox, IconBolt, IconCoin, IconStar } from '../icons'
+import { art, gearArt } from '../assets/art'
+
+const BOX_ART = { // API box keys (small_box/medium_box/large_box/new_member_box) -> art slugs
+  small: 'box-small', medium: 'box-medium', large: 'box-premium', new_member: 'box-newbie',
+}
+function boxArt(key) {
+  const k = String(key).toLowerCase()
+  const hit = Object.keys(BOX_ART).find((n) => k.includes(n))
+  return art[hit ? BOX_ART[hit] : 'box-small'] || null
+}
+
+function Thumb({ src, size = 'w-12 h-12' }) {
+  if (!src) return null
+  return <img src={src} alt="" className={`${size} rounded-xl object-cover border border-white/10 shrink-0`} />
+}
 
 const TABS = [
   { key: 'items', label: 'Речі', icon: <IconShirt size={16} /> },
@@ -66,7 +81,8 @@ export default function Shop() {
     const affordable = data.me.money >= item.price && data.me.level >= item.level_required
     return (
       <Card className="flex justify-between items-center gap-3 py-3">
-        <div className="min-w-0">
+        <Thumb src={gearArt(item.name)} />
+        <div className="min-w-0 flex-1">
           <div className="h-display text-base truncate">{item.name}</div>
           <div className="text-muted text-xs">
             Рівень {item.level_required}+ · +{Object.values(item.stats).reduce((a, b) => a + b, 0)} до статів
@@ -89,10 +105,12 @@ export default function Shop() {
 
   return (
     <div className="p-4 space-y-4">
-      <div className="flex justify-between items-center">
-        <div className="h-display text-2xl text-gold glow-gold">Магазин</div>
-        <div className="text-sm text-muted">⚡ {data.me.energy} · 💰 {data.me.money}</div>
-      </div>
+      <Banner src={art['banner-shop']}>
+        <div className="flex justify-between items-end w-full">
+          <span className="h-display text-2xl text-gold glow-gold">Магазин</span>
+          <span className="text-sm text-white/90">⚡ {data.me.energy} · 💰 {data.me.money}</span>
+        </div>
+      </Banner>
 
       <PillTabs tabs={TABS} active={tabIdx} onSelect={setTabIdx} />
 
@@ -112,7 +130,8 @@ export default function Shop() {
         <div className="space-y-2">
           {data.boxes.map((box) => (
             <Card key={box.key} className="flex justify-between items-center gap-3 py-3">
-              <div>
+              <Thumb src={boxArt(box.key)} size="w-14 h-14" />
+              <div className="flex-1">
                 <div className="h-display text-base">{box.name_lootbox}</div>
                 <div className="text-muted text-xs">
                   ⚡ {box.min_energy}–{box.max_energy} · 💰 {box.min_money}–{box.max_money} · 📈 {box.min_exp}–{box.max_exp} XP
@@ -133,6 +152,7 @@ export default function Shop() {
         <div className="grid grid-cols-2 gap-3">
           {data.energy.map((pack) => (
             <Card key={pack.amount} className="text-center py-4">
+              {art['energy'] && <img src={art['energy']} alt="" className="w-16 h-16 mx-auto mb-2 rounded-xl object-cover" />}
               <div className="h-display text-2xl text-neon glow-neon mb-1">⚡ {pack.amount}</div>
               <div className="mb-2"><Price>{pack.price_uah} грн</Price></div>
               <CtaButton
@@ -151,6 +171,12 @@ export default function Shop() {
         <div className="grid grid-cols-2 gap-3">
           {data.coins.map((pack) => (
             <Card key={pack.key} className="text-center py-4">
+              {art['coins-small'] && (
+                <img
+                  src={pack.coins >= 1000 ? art['coins-large'] : art['coins-small']}
+                  alt="" className="w-16 h-16 mx-auto mb-2 rounded-xl object-cover"
+                />
+              )}
               <div className="h-display text-2xl text-gold glow-gold mb-1">💰 {pack.coins}</div>
               <div className="mb-2"><Price>{pack.price_uah} грн</Price></div>
               <CtaButton
@@ -170,7 +196,8 @@ export default function Shop() {
         <div className="space-y-2">
           {data.vip.map((pack) => (
             <Card key={pack.key} accent="gold" className="flex justify-between items-center gap-3 py-3">
-              <div className="h-display text-base">⭐ VIP на {pack.duration_days} днів</div>
+              <Thumb src={art['vip']} />
+              <div className="h-display text-base flex-1">⭐ VIP на {pack.duration_days} днів</div>
               <div className="flex items-center gap-2 shrink-0">
                 <Price>{pack.price_uah} грн</Price>
                 <CtaButton color="gold" disabled={busy === pack.key} onClick={() => pay(pack.key, 'vip', pack.key)}>
@@ -182,7 +209,8 @@ export default function Shop() {
 
           <Card className="py-3">
             <div className="flex justify-between items-center gap-3">
-              <div className="h-display text-base">🔄 Зміна позиції</div>
+              <Thumb src={art['changepos']} />
+              <div className="h-display text-base flex-1">🔄 Зміна позиції</div>
               <div className="flex items-center gap-2 shrink-0">
                 <Price>{data.change_position_price} грн</Price>
                 <CtaButton disabled={!!busy} onClick={() => setPickPosition((v) => !v)}>
@@ -207,7 +235,8 @@ export default function Shop() {
           </Card>
 
           <Card className="flex justify-between items-center gap-3 py-3">
-            <div className="h-display text-base">🔑 Ключ тренування</div>
+            <Thumb src={art['key']} />
+            <div className="h-display text-base flex-1">🔑 Ключ тренування</div>
             <div className="flex items-center gap-2 shrink-0">
               <Price>{data.training_key_price_uah} грн</Price>
               <CtaButton disabled={busy === 'key'} onClick={() => pay('key', 'training_key')}>
