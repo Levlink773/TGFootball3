@@ -60,26 +60,34 @@ export default function Tutorial({ goTo, setHighlight, onDone }) {
     setStep(step + 1)
   }
 
+  const intro = step === 0
   return (
-    <div className="fixed inset-0 z-30 flex items-end justify-center pointer-events-none">
-      <div className="absolute inset-0 bg-black/60" />
-      <div className="relative pointer-events-auto w-full max-w-[422px] p-4 pb-24">
-        <div className="bg-card border border-gold ring-glow-gold rounded-2xl overflow-hidden">
-          {art[s.artKey] && (
-            <img src={art[s.artKey]} alt="" className="w-full aspect-video object-cover" />
+    // Bottom sheet, no full-screen dim: the tab being explained stays visible above.
+    <div className="fixed inset-x-0 bottom-16 z-30 flex justify-center pointer-events-none">
+      <div className="pointer-events-auto w-full max-w-[422px] px-3 pb-2">
+        <div className="bg-card/95 backdrop-blur border border-gold ring-glow-gold rounded-2xl overflow-hidden shadow-[0_-8px_30px_rgba(0,0,0,0.6)]">
+          {intro && art[s.artKey] && (
+            <img src={art[s.artKey]} alt="" className="w-full aspect-[21/9] object-cover" />
           )}
-          <div className="p-4">
-            <div className="h-display text-xl text-gold glow-gold mb-1">{s.title}</div>
-            <p className="text-sm text-white/85">{s.text}</p>
-            <div className="flex items-center justify-between mt-4">
+          <div className="p-3.5">
+            <div className="flex items-start gap-3">
+              {!intro && art[s.artKey] && (
+                <img src={art[s.artKey]} alt="" className="w-16 h-16 rounded-xl object-cover border border-white/10 shrink-0" />
+              )}
+              <div className="min-w-0">
+                <div className="h-display text-lg text-gold glow-gold leading-tight">{s.title}</div>
+                <p className="text-[13px] leading-snug text-white/85 mt-0.5">{s.text}</p>
+              </div>
+            </div>
+            <div className="flex items-center justify-between mt-3">
               <div className="flex gap-1.5">
                 {STEPS.map((_, i) => (
                   <span key={i} className={`w-2 h-2 rounded-full ${i === step ? 'bg-gold' : 'bg-white/20'}`} />
                 ))}
               </div>
-              <div className="flex gap-2">
+              <div className="flex gap-2 items-center">
                 {!last && (
-                  <button onClick={finish} disabled={busy} className="text-muted text-sm px-3 py-2">
+                  <button onClick={finish} disabled={busy} className="text-muted text-sm px-2 py-2">
                     Пропустити
                   </button>
                 )}
