@@ -1,0 +1,15 @@
+# Test bot stub — /etc/systemd/system/tgfootball-testbot.service
+# Temporary: only for the test-bot phase; disable after prod go-live.
+[Unit]
+Description=TG Football test bot stub (@testbottgfootball_bot)
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/root/footballgame
+ExecStart=/root/footballgame/venv/bin/python scripts/test_bot_stub.py
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
