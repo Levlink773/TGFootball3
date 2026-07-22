@@ -6,11 +6,16 @@ export function Card({ children, className = '', accent, onClick }) {
     : accent === 'neon'
       ? 'border-neon/60 ring-glow-neon'
       : 'border-white/5'
-  return (
-    <div onClick={onClick} className={`bg-card rounded-2xl border ${border} p-4 ${className}`}>
-      {children}
-    </div>
-  )
+  const cls = `bg-card rounded-2xl border ${border} p-4 ${className}`
+  // clickable cards must be real buttons: keyboard + a11y tree
+  if (onClick) {
+    return (
+      <button type="button" onClick={onClick} className={`${cls} text-left w-full block`}>
+        {children}
+      </button>
+    )
+  }
+  return <div className={cls}>{children}</div>
 }
 
 export function SectionTitle({ children, accent = 'gold' }) {

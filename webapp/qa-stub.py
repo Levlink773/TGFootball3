@@ -68,6 +68,51 @@ F = {
         "positions": {"mf": {"label": "Півзахисники", "top": [], "me": None}},
     },
     "/api/settings": {"bot_buttons_enabled": False},
+    "/api/training/start": {"started": True, "stat": "speed", "minutes": 30, "energy_cost": 10,
+                             "chance": 40, "ends_at": "2026-07-22T18:00:00"},
+    "/api/education/claim": {"claimed": True, "exp": 3, "coins": 12, "energy": 64},
+    "/api/trainer/session": {"window": {"open_at": "2026-07-22T13:00:00", "end_at": "2026-07-22T14:00:00", "is_open": True},
+                              "in_session": False, "step": 0, "total_steps": 10, "score": 0,
+                              "direction": None, "directions": ["↖️", "⬆️", "↗️", "⬅️", "➡️", "↙️", "⬇️", "↘️"],
+                              "done": False, "stat_points": None, "stat_claimed": False},
+    "/api/trainer/join": {"joined": True, "resumed": False, "step": 1, "score": 0, "direction": "⬆️"},
+    "/api/trainer/answer": {"correct": True, "points": 7, "score": 21, "step": 4, "done": False,
+                             "direction": "↙️", "stat_points": None, "energy": None},
+    "/api/trainer/pick-stat": {"claimed": True, "stat": "speed", "points": 3},
+    "/api/team": {
+        "chat_url": "https://t.me/tgfootballchat",
+        "club": {
+            "id": 1, "name": "London United Lions", "league": "Вища ліга",
+            "description": "Найкращий клуб гри", "total_power": 12401.5,
+            "members_count": 10, "max_members": 11, "is_owner": False, "invite_only": False,
+            "stadium_name": "Лев Арена", "chat_url": "https://t.me/tgfootballchat",
+            "members": [
+                {"user_id": 1, "name": "Андрій Шевчук", "full_power": 1876, "level": 7, "position": "Півзахисник", "is_me": True},
+                {"user_id": 2, "name": "Олег Кузнецов", "full_power": 1650, "level": 6, "position": "Захисник", "is_me": False},
+                {"user_id": 3, "name": "Іван Петренко", "full_power": 1432, "level": 6, "position": "Воротар", "is_me": False},
+            ],
+        },
+        "infrastructure": {"points": 340, "objects": [
+            {"type": "TRAINING_BASE", "label": "🏋‍♂ Тренувальна база", "level": 2, "bonus": 5, "next_cost": 500},
+            {"type": "TRAINING_CENTER", "label": "📚 Навчальний центр", "level": 1, "bonus": 5, "next_cost": 250},
+            {"type": "SPORTS_MEDICINE", "label": "🏥 Спортивна медицина", "level": 0, "bonus": 0, "next_cost": 100},
+        ]},
+    },
+    "/api/team/join-list": {"clubs": [
+        {"id": 5, "name": "Paris Galaxy Dragons", "league": "Ліга новачків", "members_count": 8,
+         "max_members": 11, "total_power": 8200.1, "invite_only": False},
+        {"id": 6, "name": "Berlin Royals Bears", "league": "Ліга новачків", "members_count": 11,
+         "max_members": 11, "total_power": 9100.0, "invite_only": True},
+    ]},
+    "/api/team/join": {"joined": True, "club_id": 5, "club_name": "Paris Galaxy Dragons"},
+    "/api/team/leave": {"left": True},
+    "/api/statistics": {
+        "career": {"trainings": 42, "match_registrations": 18, "goals": 9, "blitz_played": 6,
+                    "blitz_semifinals": 2, "blitz_finals": 1, "blitz_wins": 1,
+                    "mvp_2_plus": 3, "mvp_25_plus": 1, "mvp_3_plus": 0},
+        "month": {"matches": 7, "goals": 4, "mvp_score": 5.4},
+        "progress": {"level": 7, "exp": 120, "full_power": 1876.2, "money": 25740},
+    },
 }
 
 

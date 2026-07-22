@@ -7,6 +7,7 @@ from services.character_service import CharacterService
 from services.training_service import TrainingService
 
 from webapp_api.auth import auth_user
+from webapp_api.routers.training_actions import complete_elapsed_training
 
 training_router = APIRouter()
 
@@ -16,6 +17,11 @@ async def get_training(auth: WebAppInitData = Depends(auth_user)):
     character = await CharacterService.get_character(character_user_id=auth.user.id)
     if not character:
         raise HTTPException(status_code=404, detail="No character")
+
+    # settle an elapsed training so the app can show its outcome
+    last_result = await complete_elapsed_training(character)
+    if last_result:
+        character = await CharacterService.get_character(character_user_id=auth.user.id)
 
     reminder = character.reminder
     now = datetime.now()
@@ -53,6 +59,7 @@ async def get_training(auth: WebAppInitData = Depends(auth_user)):
         "energy": character.current_energy,
         "training_keys": character.training_key,
         "in_training": bool(reminder and reminder.character_in_training),
+        "last_result": last_result,
         "training": training,
         "education": education,
         "trainer": {

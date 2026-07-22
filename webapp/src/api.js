@@ -38,6 +38,21 @@ export const createInvoice = (product_type, product_key) =>
   api('/shop/invoice', { method: 'POST', body: JSON.stringify({ product_type, product_key }) })
 export const buyItem = (item_id, luxe = false) =>
   api('/shop/buy-item', { method: 'POST', body: JSON.stringify({ item_id, luxe }) })
+export const startTraining = (stat, minutes) =>
+  api('/training/start', { method: 'POST', body: JSON.stringify({ stat, minutes }) })
+export const claimEducation = () => api('/education/claim', { method: 'POST' })
+export const getTrainerSession = () => api('/trainer/session')
+export const trainerJoin = () => api('/trainer/join', { method: 'POST' })
+export const trainerAnswer = (direction) =>
+  api('/trainer/answer', { method: 'POST', body: JSON.stringify({ direction }) })
+export const trainerPickStat = (stat) =>
+  api('/trainer/pick-stat', { method: 'POST', body: JSON.stringify({ stat }) })
+export const getTeam = () => api('/team')
+export const getJoinList = () => api('/team/join-list')
+export const joinClub = (club_id) =>
+  api('/team/join', { method: 'POST', body: JSON.stringify({ club_id }) })
+export const leaveClub = () => api('/team/leave', { method: 'POST' })
+export const getStatistics = () => api('/statistics')
 export const getTutorial = () => api('/tutorial')
 export const completeTutorial = () => api('/tutorial/complete', { method: 'POST' })
 export const getSettings = () => api('/settings')

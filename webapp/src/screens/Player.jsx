@@ -22,7 +22,7 @@ const POSITION_SHORT = {
   'Воротар': 'ВР',
 }
 
-export default function Player() {
+export default function Player({ goTo }) {
   const { data, error, loading, reload } = useApi(getPlayer)
   if (loading) return <Loading />
   if (error) return <ErrorBox error={error} onRetry={reload} />
@@ -95,17 +95,26 @@ export default function Player() {
 
       <EnergyBar value={data.energy} max={energyMax} />
 
-      {data.club && (
-        <Card>
+      <Card className="cursor-pointer" onClick={() => goTo?.('team')}>
+        {data.club ? (
           <div className="flex items-center gap-3">
             <InitialsBadge name={data.club.name} src={clubCrest(data.club.name)} />
             <div className="flex-1">
               <div className="h-display text-lg">{data.club.name}</div>
               <div className="text-muted text-xs uppercase">{data.club.league}</div>
             </div>
+            <span className="chevrons-r text-neon/70 w-8 h-4" />
           </div>
-        </Card>
-      )}
+        ) : (
+          <div className="flex items-center justify-between">
+            <span className="text-muted text-sm">Ти без команди</span>
+            <span className="text-neon text-sm h-display">Знайти команду ›</span>
+          </div>
+        )}
+      </Card>
+      <button onClick={() => goTo?.('stats')} className="w-full text-neon text-sm border border-neon/40 rounded-xl px-3 py-2.5">
+        📊 Моя статистика
+      </button>
     </div>
   )
 }

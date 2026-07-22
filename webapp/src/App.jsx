@@ -7,6 +7,9 @@ import League from './screens/League'
 import HallOfFame from './screens/HallOfFame'
 import Shop from './screens/Shop'
 import Settings from './screens/Settings'
+import Team from './screens/Team'
+import Statistics from './screens/Statistics'
+import Trainer from './screens/Trainer'
 import Tutorial from './components/Tutorial'
 import { getPlayer, getTutorial } from './api'
 import { useApi } from './hooks'
@@ -29,6 +32,9 @@ const SCREENS = {
   fame: HallOfFame,
   shop: Shop,
   settings: Settings,
+  team: Team,
+  stats: Statistics,
+  trainer: Trainer,
 }
 
 export default function App() {
