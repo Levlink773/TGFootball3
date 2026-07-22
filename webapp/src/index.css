@@ -43,6 +43,16 @@ body {
   box-shadow: 0 0 10px rgba(0, 255, 255, 0.7);
 }
 
+/* hero card bg — gold diagonal streaks + soft neon glows (ескіз v1-neon frame 1) */
+.hero-streaks {
+  background:
+    linear-gradient(115deg, transparent 0 12%, rgba(255, 215, 0, 0.28) 12% 15%, transparent 15% 20%, rgba(255, 215, 0, 0.18) 20% 22%, transparent 22% 27%, rgba(255, 215, 0, 0.10) 27% 28.5%, transparent 28.5%),
+    radial-gradient(90% 70% at 18% 85%, rgba(255, 215, 0, 0.16) 0%, transparent 55%),
+    radial-gradient(110% 80% at 85% 8%, rgba(0, 255, 255, 0.10) 0%, transparent 55%),
+    linear-gradient(295deg, transparent 0 8%, rgba(0, 255, 255, 0.10) 8% 9.5%, transparent 9.5% 13%, rgba(0, 255, 255, 0.06) 13% 14%, transparent 14%),
+    linear-gradient(160deg, #171a21 0%, #101319 55%, #0c0e13 100%);
+}
+
 /* chevron strip: »»» */
 .chevrons-r {
   background-image: repeating-linear-gradient(

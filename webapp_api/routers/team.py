@@ -38,6 +38,7 @@ def _member_entry(ch, me_user_id):
         "full_power": round(ch.full_power, 2),
         "level": ch.level,
         "position": ch.position,
+        "gender": ch.gender,
         "is_me": ch.characters_user_id == me_user_id,
     }
 

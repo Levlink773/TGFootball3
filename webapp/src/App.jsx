@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
 import Home from './screens/Home'
-import Player from './screens/Player'
 import Matches from './screens/Matches'
 import Training from './screens/Training'
 import League from './screens/League'
@@ -13,19 +12,21 @@ import Trainer from './screens/Trainer'
 import Tutorial from './components/Tutorial'
 import { getPlayer, getTutorial } from './api'
 import { useApi } from './hooks'
-import { IconUser, IconBall, IconDumbbell, IconTrophy, IconStar, IconCart, IconGear, IconCoin, IconPlus } from './icons'
+import { IconUser, IconBall, IconChart, IconTrophy, IconCart, IconGear, IconCoin, IconPlus } from './icons'
 
+// Нижнє меню — 1:1 за ескізом v1-neon frame 1.
 const TABS = [
-  { key: 'player', label: 'Гравець', Icon: IconUser },
+  { key: 'home', label: 'Профіль', Icon: IconUser },
   { key: 'matches', label: 'Матчі', Icon: IconBall },
-  { key: 'training', label: 'Трен-ня', Icon: IconDumbbell },
-  { key: 'league', label: 'Ліга', Icon: IconTrophy },
-  { key: 'fame', label: 'Зал Слави', Icon: IconStar },
+  { key: 'training', label: 'Розвиток', Icon: IconChart },
+  { key: 'shop', label: 'Магазин', Icon: IconCart },
+  { key: 'league', label: 'Турніри', Icon: IconTrophy },
 ]
 
 const SCREENS = {
   home: Home,
-  player: Player,
+  player: Home, // головна = профіль (ескіз); старий ключ живий для tutorial/goTo
+
   matches: Matches,
   training: Training,
   league: League,
@@ -76,26 +77,13 @@ export default function App() {
           </span>
         </button>
 
-        <button onClick={() => setTab('home')} className="h-display text-lg text-gold glow-gold">
-          TG FOOTBALL
+        <button
+          onClick={() => setTab('settings')}
+          className={`${tab === 'settings' ? 'text-gold' : 'text-neon'} drop-shadow-[0_0_8px_rgba(0,255,255,0.6)]`}
+          aria-label="Налаштування"
+        >
+          <IconGear size={26} />
         </button>
-
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => setTab('shop')}
-            className={tab === 'shop' ? 'text-gold' : 'text-neon'}
-            aria-label="Магазин"
-          >
-            <IconCart size={22} />
-          </button>
-          <button
-            onClick={() => setTab('settings')}
-            className={tab === 'settings' ? 'text-gold' : 'text-neon'}
-            aria-label="Налаштування"
-          >
-            <IconGear size={22} />
-          </button>
-        </div>
       </header>
 
       <main className="flex-1 pb-20">
@@ -132,12 +120,12 @@ export default function App() {
                 key={key}
                 onClick={() => setTab(key)}
                 className={`flex-1 py-2.5 flex flex-col items-center gap-1 text-[10px] uppercase h-display ${
-                  active ? 'text-gold glow-gold' : 'text-muted'
-                } ${pulsed ? 'animate-pulse text-neon' : ''}`}
+                  active ? 'text-neon glow-neon' : 'text-muted'
+                } ${pulsed ? 'animate-pulse text-gold' : ''}`}
               >
-                <Icon size={22} className={active ? 'drop-shadow-[0_0_8px_rgba(255,215,0,0.8)]' : ''} />
+                <Icon size={22} className={active ? 'drop-shadow-[0_0_8px_rgba(0,255,255,0.8)]' : ''} />
                 {label}
-                <span className={`w-6 h-0.5 rounded-full ${active ? 'bg-gold shadow-[0_0_8px_rgba(255,215,0,0.8)]' : 'bg-transparent'}`} />
+                <span className={`w-6 h-0.5 rounded-full ${active ? 'bg-neon shadow-[0_0_8px_rgba(0,255,255,0.8)]' : 'bg-transparent'}`} />
               </button>
             )
           })}
