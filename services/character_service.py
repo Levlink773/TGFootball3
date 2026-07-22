@@ -321,6 +321,33 @@ class CharacterService:
                 return merged_obj
 
     @classmethod
+    async def claim_education_reminder_send(cls, characters_user_id: int) -> bool:
+        """Atomically claim the right to send the education reward reminder.
+
+        Returns True at most once per reward cycle: the UPDATE only matches while
+        notified_date < reward_date, so restarts and concurrent instances cannot
+        re-send the same reminder.
+        """
+        async for session in get_session():
+            async with session.begin():
+                stmt = (
+                    update(ReminderCharacter)
+                    .where(
+                        ReminderCharacter.character_id.in_(
+                            select(Character.id).where(
+                                Character.characters_user_id == characters_user_id
+                            )
+                        ),
+                        ReminderCharacter.education_reward_notified_date
+                        < ReminderCharacter.education_reward_date,
+                    )
+                    .values(education_reward_notified_date=datetime.now())
+                )
+                result = await session.execute(stmt)
+                await session.commit()
+                return result.rowcount > 0
+
+    @classmethod
     async def equip_item(cls, character_obj: Character, item_obj: Item) -> Character:
         category_field_map = {
             'T_SHIRT': 't_shirt_id',

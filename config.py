@@ -30,7 +30,9 @@ CALLBACK_URL_WEBHOOK_MONEY_BLITZ = os.getenv("CALLBACK_URL_WEBHOOK_MONEY_BLITZ")
 MAIN_CHAT_GROUP_ID = os.getenv("MAIN_CHAT_GROUP_ID")
 
 WEBAPP_HOST = os.getenv("WEBAPP_HOST")
-WEBAPP_PORT = os.getenv("WEBAPP_PORT")
+# int() fails fast at import with a clear error; a malformed .env value must not
+# reach the event loop (it once boot-looped prod: gaierror in create_server).
+WEBAPP_PORT = int(os.getenv("WEBAPP_PORT", "3002"))
 TARGET_BLITZ_HOST = os.getenv("TARGET_BLITZ_HOST", 'http://127.0.0.1:3003')
 VIDEO_ID = os.getenv("VIDEO_ID")
 

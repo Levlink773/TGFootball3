@@ -21,6 +21,7 @@ class ReminderCharacter(Base):
     time_training_seconds = Column(BigInteger, nullable=True)  
     
     education_reward_date = Column(DateTime, default=datetime(1970, 1, 1), server_default=text('\'1970-01-01 00:00:00\''), nullable=False)
+    education_reward_notified_date = Column(DateTime, default=datetime(1970, 1, 1), server_default=text('\'1970-01-01 00:00:00\''), nullable=False)
     time_to_join_club     = Column(DateTime, default=datetime(1970, 1, 1), server_default=text('\'1970-01-01 00:00:00\''), nullable=False)
 
     character = relationship("Character", back_populates="reminder", uselist=False)

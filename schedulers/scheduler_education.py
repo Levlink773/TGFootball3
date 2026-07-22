@@ -8,23 +8,30 @@ from services.character_service import CharacterService
 
 from loader import bot
 from config import EPOCH_ZERO
+from logging_config import logger
 
 
 class EducationRewardReminderScheduler():
-    scheduler = AsyncIOScheduler()    
+    scheduler = AsyncIOScheduler()
     bot = bot
 
     TEMPLATE_TEXT_REWARD_EDUCATION = """Не забудьте отримати нагороди за навчання!"""
 
-    
+
     async def _send_character_remind_reward_message(self, character_user_id: int):
+        # Claim-before-send: the atomic DB flag guarantees at most one reminder
+        # per reward cycle, even across process restarts or duplicate instances.
+        if not await CharacterService.claim_education_reminder_send(character_user_id):
+            return
         try:
             await self.bot.send_message(
                 chat_id=character_user_id,
                 text=self.TEMPLATE_TEXT_REWARD_EDUCATION
             )
-        except:
-            pass
+        except Exception as e:
+            logger.warning(
+                "education reminder send failed for user %s: %s", character_user_id, e
+            )
     async def add_job_remind(self, character: Character,
                              time_get_reward: datetime):
         
