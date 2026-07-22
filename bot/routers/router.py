@@ -23,6 +23,7 @@ from bot.training.routers.duel_stage import training_duel_router
 from bot.routers.register_user.router import register_user_router
 from bot.club_infrastructure.router_infrastructure import router_infrastructure
 from .commands.block_users import block_uses_router
+from .commands.locked_buttons import locked_buttons_router
 
 main_router = Router()
 main_router.include_routers(
@@ -48,5 +49,6 @@ main_router.include_routers(
     end_training_router,
     buy_training_key_router,
     training_duel_router,
-    statistic_router
+    statistic_router,
+    locked_buttons_router
 )
