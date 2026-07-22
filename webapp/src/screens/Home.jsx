@@ -130,8 +130,8 @@ export default function Home({ goTo }) {
                       m.is_me ? 'border-gold ring-glow-gold' : 'border-neon/70'
                     } bg-card2 flex items-center justify-center`}
                   >
-                    {avatarArt(m.gender, m.position) ? (
-                      <img src={avatarArt(m.gender, m.position)} alt="" className="w-full h-full object-cover object-top" />
+                    {avatarArt(m.gender || 'MAN', m.position) ? (
+                      <img src={avatarArt(m.gender || 'MAN', m.position)} alt="" className="w-full h-full object-cover object-top" />
                     ) : (
                       <span className="h-display text-xs text-white/80">{(m.name || '?')[0]}</span>
                     )}
