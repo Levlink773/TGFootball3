@@ -44,7 +44,7 @@ class UserBot(Base):
     user_time_register = Column(DateTime, default=datetime.datetime.now)
     
     referal_user_id = Column(BigInteger, nullable=True)
-    bot_buttons_enabled = Column(Boolean, nullable=False, default=True, server_default=text('1'))
+    bot_buttons_enabled = Column(Boolean, nullable=False, default=False, server_default=text('0'))
     
     characters = relationship("Character", back_populates="owner", lazy="selectin")
     clubs = relationship("Club", back_populates="owner", lazy="selectin")

@@ -99,7 +99,23 @@ export default function App() {
       </header>
 
       <main className="flex-1 pb-20">
-        <Screen goTo={setTab} />
+        {player.error?.status === 404 ? (
+          <div className="p-6 text-center space-y-4 pt-16">
+            <div className="h-display text-3xl text-gold glow-gold">Ласкаво просимо!</div>
+            <p className="text-white/85 text-sm">
+              У тебе ще немає футболіста. Повернись у чат бота і натисни
+              <b> «СТВОРИТИ ПЕРСОНАЖА»</b> — це займе хвилину, і гра відкриється.
+            </p>
+            <button
+              onClick={() => window.Telegram?.WebApp?.close?.()}
+              className="h-display text-base rounded-xl px-5 py-2.5 bg-gold text-black shadow-[0_0_18px_rgba(255,215,0,0.5)]"
+            >
+              Відкрити чат бота
+            </button>
+          </div>
+        ) : (
+          <Screen goTo={setTab} />
+        )}
       </main>
 
       {showTutorial && (

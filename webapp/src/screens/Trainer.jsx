@@ -50,6 +50,11 @@ export default function Trainer({ goTo }) {
                 stat_points: r.stat_points, energy: r.energy })
     } catch (e) {
       setMessage(e.message)
+      if (e.status === 409) {
+        // session lost server-side (e.g. restart) — resync instead of stranding the player
+        setGame(null)
+        reload()
+      }
     } finally {
       setBusy(false)
     }

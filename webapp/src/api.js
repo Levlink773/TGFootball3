@@ -7,18 +7,35 @@ function initData() {
   return new URLSearchParams(window.location.search).get('initData') || ''
 }
 
+const HTTP_MESSAGES = {
+  401: 'Сесія недійсна — відкрий гру через кнопку в Telegram.',
+  403: 'Доступ заборонено.',
+  404: 'Дані не знайдено.',
+  500: 'Помилка сервера. Спробуй ще раз за хвилину.',
+}
+
 export async function api(path, options = {}) {
-  const res = await fetch(`${API_URL}/api${path}`, {
-    ...options,
-    headers: {
-      Authorization: `tma ${initData()}`,
-      'Content-Type': 'application/json',
-      ...options.headers,
-    },
-  })
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), 20000)
+  let res
+  try {
+    res = await fetch(`${API_URL}/api${path}`, {
+      ...options,
+      signal: controller.signal,
+      headers: {
+        Authorization: `tma ${initData()}`,
+        'Content-Type': 'application/json',
+        ...options.headers,
+      },
+    })
+  } catch {
+    throw new Error("Немає з'єднання. Перевір інтернет і спробуй ще раз.")
+  } finally {
+    clearTimeout(timer)
+  }
   const body = await res.json().catch(() => ({}))
   if (!res.ok) {
-    const err = new Error(body.detail || `HTTP ${res.status}`)
+    const err = new Error(body.detail || HTTP_MESSAGES[res.status] || `Помилка ${res.status}`)
     err.status = res.status
     throw err
   }

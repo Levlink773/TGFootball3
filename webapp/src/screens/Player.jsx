@@ -49,11 +49,11 @@ export default function Player({ goTo }) {
           <div>
             {rest.length > 0 ? (
               <>
-                <div className="h-display text-3xl leading-none text-white">{firstName}</div>
-                <div className="h-display text-4xl leading-tight text-gold glow-gold">{rest.join(' ')}</div>
+                <div className="h-display text-3xl leading-none text-white break-words max-w-[180px]">{firstName}</div>
+                <div className="h-display text-4xl leading-tight text-gold glow-gold break-words max-w-[180px]">{rest.join(' ')}</div>
               </>
             ) : (
-              <div className="h-display text-4xl leading-tight text-gold glow-gold">{firstName}</div>
+              <div className="h-display text-4xl leading-tight text-gold glow-gold break-words max-w-[180px]">{firstName}</div>
             )}
             {data.vip_active && (
               <span className="inline-block mt-2 h-display text-xs text-gold border border-gold/60 rounded-full px-2 py-0.5">

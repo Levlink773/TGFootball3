@@ -1,7 +1,7 @@
 import { getMatches, getPlayer } from '../api'
 import { useApi } from '../hooks'
 import { Card, Loading, ErrorBox, NextBar, CtaButton, EnergyBar } from '../ui'
-import { IconCalendar, IconBolt, IconUser, IconDumbbell, IconChat } from '../icons'
+import { IconCalendar, IconBolt, IconUser, IconDumbbell, IconChat, IconShield, IconChart, IconTarget } from '../icons'
 import { art } from '../assets/art'
 
 // game community chat, same link the bot sends to new members
@@ -83,15 +83,15 @@ export default function Home({ goTo }) {
           <div className="h-display text-sm">Трен-ня</div>
         </Card>
         <Card className="text-center py-3 cursor-pointer" onClick={() => goTo('team')}>
-          <span className="block text-2xl leading-none mb-1" aria-hidden>👥</span>
+          <IconShield size={24} className="text-neon mx-auto mb-1" />
           <div className="h-display text-sm">Команда</div>
         </Card>
         <Card className="text-center py-3 cursor-pointer" onClick={() => goTo('stats')}>
-          <span className="block text-2xl leading-none mb-1" aria-hidden>📊</span>
+          <IconChart size={24} className="text-neon mx-auto mb-1" />
           <div className="h-display text-sm">Статистика</div>
         </Card>
         <Card className="text-center py-3 cursor-pointer" onClick={() => goTo('trainer')}>
-          <span className="block text-2xl leading-none mb-1" aria-hidden>🎯</span>
+          <IconTarget size={24} className="text-neon mx-auto mb-1" />
           <div className="h-display text-sm">Тренер</div>
         </Card>
         {CHAT_URL ? (
