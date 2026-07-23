@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { claimQuests, getMatches, getPlayer, getQuests } from '../api'
+import { claimGift, claimQuests, getMatches, getPlayer, getQuests } from '../api'
 import { useApi } from '../hooks'
 import { Card, Loading, ErrorBox, NextBar, CtaButton, EnergyBar } from '../ui'
 import { IconCalendar, IconBolt, IconUser, IconDumbbell, IconChat, IconShield, IconChart, IconTarget } from '../icons'
@@ -73,8 +73,19 @@ function TournamentsCard({ leagues, goTo }) {
 function DailyQuestsCard() {
   const quests = useApi(getQuests)
   const [claiming, setClaiming] = useState(false)
+  const [gift, setGift] = useState(null)
   if (quests.loading || quests.error) return null
   const q = quests.data
+  const openGift = async () => {
+    setClaiming(true)
+    try {
+      const res = await claimGift()
+      setGift(res)
+      quests.reload()
+    } catch { quests.reload() } finally {
+      setClaiming(false)
+    }
+  }
   const claim = async () => {
     setClaiming(true)
     try {
@@ -109,6 +120,20 @@ function DailyQuestsCard() {
           <CtaButton color="gold" onClick={claim} disabled={claiming}>Забрати нагороду</CtaButton>
         </div>
       ) : null}
+
+      {/* Щоденний подарунок — модуль зі скетчу Max 23.07 */}
+      <div className="mt-3 pt-3 border-t border-white/10 flex items-center gap-3">
+        <span className="text-2xl">🎁</span>
+        <div className="flex-1">
+          <div className="h-display text-sm">Щоденний подарунок</div>
+          {gift && <div className="text-neon text-xs">+{gift.coins} 💰 · +{gift.energy} ⚡</div>}
+        </div>
+        {q.gift_claimed || gift ? (
+          <span className="text-muted text-xs">{gift ? 'Отримано ✓' : 'Завтра знову 🎁'}</span>
+        ) : (
+          <CtaButton color="gold" onClick={openGift} disabled={claiming}>Забрати</CtaButton>
+        )}
+      </div>
     </Card>
   )
 }

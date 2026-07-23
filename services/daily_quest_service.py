@@ -10,6 +10,7 @@ from database.session import get_session
 # ponytail: hardcoded values pending Maxim's sign-off; move to constants.py if tuned.
 QUEST_TARGETS = {"trainings": 3, "matches": 2, "wins": 1}
 QUEST_REWARD = {"coins": 50, "energy": 25}
+GIFT_REWARD = {"coins_min": 10, "coins_max": 50, "energy": 10}
 
 
 class DailyQuestService:
@@ -51,6 +52,25 @@ class DailyQuestService:
                     .values({field: col + 1})
                 )
                 await session.commit()
+
+    @classmethod
+    async def claim_gift(cls, character_id: int) -> bool:
+        # Atomic once-per-day gift flag, same pattern as claim()
+        await cls.get_today(character_id)
+        async for session in get_session():
+            async with session.begin():
+                result = await session.execute(
+                    update(DailyQuest)
+                    .where(
+                        DailyQuest.character_id == character_id,
+                        DailyQuest.quest_date == date.today(),
+                        DailyQuest.gift_claimed.is_(False),
+                    )
+                    .values(gift_claimed=True)
+                )
+                await session.commit()
+                return result.rowcount > 0
+        return False
 
     @classmethod
     async def claim(cls, character_id: int) -> bool:

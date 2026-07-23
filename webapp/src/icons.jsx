@@ -93,6 +93,12 @@ export const IconChart = (p) => (
 export const IconPlus = (p) => (
   <I {...p}><path d="M12 5v14M5 12h14" /></I>
 )
+export const IconHome = (p) => (
+  <I {...p}><path d="M3 11 12 4l9 7" /><path d="M5 10v10h5v-6h4v6h5V10" /></I>
+)
+export const IconGift = (p) => (
+  <I {...p}><rect x="4" y="10" width="16" height="10" rx="1" /><path d="M4 10h16M12 10v10M12 10c-4 0-5-2-5-3.5A2 2 0 0 1 12 6a2 2 0 0 1 5 .5C17 8 16 10 12 10Z" /></I>
+)
 export const IconClose = (p) => (
   <I {...p}><path d="M6 6l12 12M18 6 6 18" /></I>
 )

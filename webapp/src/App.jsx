@@ -13,10 +13,11 @@ import Trainer from './screens/Trainer'
 import Tutorial from './components/Tutorial'
 import { getPlayer, getTutorial } from './api'
 import { useApi } from './hooks'
-import { IconUser, IconBall, IconDumbbell, IconTrophy, IconStar, IconCart, IconGear, IconCoin, IconPlus } from './icons'
+import { IconUser, IconBall, IconDumbbell, IconTrophy, IconStar, IconCart, IconGear, IconCoin, IconPlus, IconHome } from './icons'
 
-// Нижнє меню — повернуто попередній варіант (запит Max 22.07).
+// Нижнє меню — «Головна» додана за запитом Max 23.07 (єдиний вхід на головну був через лого).
 const TABS = [
+  { key: 'home', label: 'Головна', Icon: IconHome },
   { key: 'player', label: 'Гравець', Icon: IconUser },
   { key: 'matches', label: 'Матчі', Icon: IconBall },
   { key: 'training', label: 'Трен-ня', Icon: IconDumbbell },

@@ -14,3 +14,4 @@ class DailyQuest(Base):
     matches = Column(Integer, nullable=False, default=0)
     wins = Column(Integer, nullable=False, default=0)
     claimed = Column(Boolean, nullable=False, default=False)
+    gift_claimed = Column(Boolean, nullable=False, default=False)

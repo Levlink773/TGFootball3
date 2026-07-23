@@ -1,8 +1,10 @@
+import random
+
 from fastapi import APIRouter, Depends, HTTPException
 from aiogram.utils.web_app import WebAppInitData
 
 from services.character_service import CharacterService
-from services.daily_quest_service import DailyQuestService, QUEST_TARGETS, QUEST_REWARD
+from services.daily_quest_service import DailyQuestService, QUEST_TARGETS, QUEST_REWARD, GIFT_REWARD
 
 from webapp_api.auth import auth_user
 
@@ -27,6 +29,7 @@ def _payload(q):
         "reward": QUEST_REWARD,
         "claimable": done and not q.claimed,
         "claimed": q.claimed,
+        "gift_claimed": q.gift_claimed,
     }
 
 
@@ -35,6 +38,22 @@ async def get_quests(auth: WebAppInitData = Depends(auth_user)):
     character = await _get_character(auth)
     q = await DailyQuestService.get_today(character.id)
     return _payload(q)
+
+
+@quests_router.post("/gift/claim")
+async def claim_gift(auth: WebAppInitData = Depends(auth_user)):
+    character = await _get_character(auth)
+    won = await DailyQuestService.claim_gift(character.id)
+    if not won:
+        raise HTTPException(status_code=409, detail="Подарунок уже отримано, приходь завтра")
+    coins = random.randint(GIFT_REWARD["coins_min"], GIFT_REWARD["coins_max"])
+    await CharacterService.update_money_character(
+        character_id=character.id, amount_money_adjustment=coins
+    )
+    await CharacterService.edit_character_energy(
+        character_id=character.id, amount_energy=GIFT_REWARD["energy"]
+    )
+    return {"ok": True, "coins": coins, "energy": GIFT_REWARD["energy"]}
 
 
 @quests_router.post("/quests/claim")
