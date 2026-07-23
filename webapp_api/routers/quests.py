@@ -6,7 +6,9 @@ from aiogram.utils.web_app import WebAppInitData
 from services.character_service import CharacterService
 from pydantic import BaseModel
 
-from services.daily_quest_service import DailyQuestService, QUEST_TARGETS, QUEST_REWARDS, GIFT_REWARD
+from services.daily_quest_service import (
+    DailyQuestService, QUEST_TARGETS, QUEST_REWARDS, GIFT_REWARD, COMPLETION_BONUS_COINS,
+)
 
 from webapp_api.auth import auth_user
 
@@ -37,7 +39,14 @@ def _payload(q):
             "claimable": current >= target and not claimed,
             "claimed": claimed,
         })
-    return {"quests": quests, "gift_claimed": q.gift_claimed}
+    all_claimed = all(x["claimed"] for x in quests)
+    return {
+        "quests": quests,
+        "gift_claimed": q.gift_claimed,
+        "bonus_coins": COMPLETION_BONUS_COINS,
+        "bonus_claimable": all_claimed and not q.claimed,
+        "bonus_claimed": q.claimed,
+    }
 
 
 @quests_router.get("/quests")
@@ -61,6 +70,19 @@ async def claim_gift(auth: WebAppInitData = Depends(auth_user)):
         character_id=character.id, amount_energy=GIFT_REWARD["energy"]
     )
     return {"ok": True, "coins": coins, "energy": GIFT_REWARD["energy"]}
+
+
+@quests_router.post("/quests/claim-bonus")
+async def claim_completion_bonus(auth: WebAppInitData = Depends(auth_user)):
+    character = await _get_character(auth)
+    won = await DailyQuestService.claim_completion_bonus(character.id)
+    if not won:
+        raise HTTPException(status_code=409, detail="Бонус недоступний")
+    await CharacterService.update_money_character(
+        character_id=character.id, amount_money_adjustment=COMPLETION_BONUS_COINS
+    )
+    q = await DailyQuestService.get_today(character.id)
+    return _payload(q)
 
 
 class ClaimRequest(BaseModel):

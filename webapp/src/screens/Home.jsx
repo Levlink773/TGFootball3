@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { claimGift, claimQuests, getMatches, getPlayer, getQuests } from '../api'
+import { claimGift, claimQuestBonus, claimQuests, getMatches, getPlayer, getQuests } from '../api'
 import { useApi } from '../hooks'
 import { Card, Loading, ErrorBox, NextBar, CtaButton, EnergyBar } from '../ui'
 import { IconCalendar, IconBolt, IconUser, IconDumbbell, IconChat, IconShield, IconChart, IconTarget } from '../icons'
@@ -89,7 +89,7 @@ function DailyQuestsCard() {
   const claimTask = async (key) => {
     setClaiming(true)
     try {
-      await claimQuests(key)
+      await (key === '__bonus' ? claimQuestBonus() : claimQuests(key))
       quests.reload()
     } catch { quests.reload() } finally {
       setClaiming(false)
@@ -121,6 +121,18 @@ function DailyQuestsCard() {
           )
         })}
       </div>
+
+      {/* Бонус за всі три завдання */}
+      {q.bonus_claimable && (
+        <div className="mt-3">
+          <CtaButton color="gold" onClick={() => claimTask('__bonus')} disabled={claiming}>
+            Бонус за всі завдання · {q.bonus_coins} 💰
+          </CtaButton>
+        </div>
+      )}
+      {q.bonus_claimed && (
+        <div className="text-muted text-xs mt-2">Бонус {q.bonus_coins} 💰 отримано ✓</div>
+      )}
 
       {/* Щоденний подарунок — модуль зі скетчу Max 23.07 */}
       <div className="mt-3 pt-3 border-t border-white/10 flex items-center gap-3">

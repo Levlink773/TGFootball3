@@ -82,6 +82,7 @@ export const sellItem = (item_id) =>
 export const getQuests = () => api('/quests')
 export const claimQuests = (key) => api('/quests/claim', { method: 'POST', body: JSON.stringify({ key }) })
 export const claimGift = () => api('/gift/claim', { method: 'POST' })
+export const claimQuestBonus = () => api('/quests/claim-bonus', { method: 'POST' })
 export const getSettings = () => api('/settings')
 export const updateSettings = (bot_buttons_enabled) =>
   api('/settings', { method: 'POST', body: JSON.stringify({ bot_buttons_enabled }) })

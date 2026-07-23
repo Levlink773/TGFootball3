@@ -10,6 +10,7 @@ from database.session import get_session
 # ponytail: hardcoded values pending Maxim's sign-off; move to constants.py if tuned.
 QUEST_TARGETS = {"trainings": 1, "matches": 2, "wins": 1}
 QUEST_REWARDS = {"trainings": 20, "matches": 30, "wins": 25}  # energy
+COMPLETION_BONUS_COINS = 50  # extra coins once all three tasks are claimed
 GIFT_REWARD = {"coins_min": 10, "coins_max": 50, "energy": 10}
 
 
@@ -67,6 +68,28 @@ class DailyQuestService:
                         DailyQuest.gift_claimed.is_(False),
                     )
                     .values(gift_claimed=True)
+                )
+                await session.commit()
+                return result.rowcount > 0
+        return False
+
+    @classmethod
+    async def claim_completion_bonus(cls, character_id: int) -> bool:
+        # Reuses the legacy `claimed` column as the completion-bonus flag —
+        # atomic, requires all three per-task claims first.
+        async for session in get_session():
+            async with session.begin():
+                result = await session.execute(
+                    update(DailyQuest)
+                    .where(
+                        DailyQuest.character_id == character_id,
+                        DailyQuest.quest_date == date.today(),
+                        DailyQuest.claimed.is_(False),
+                        DailyQuest.trainings_claimed.is_(True),
+                        DailyQuest.matches_claimed.is_(True),
+                        DailyQuest.wins_claimed.is_(True),
+                    )
+                    .values(claimed=True)
                 )
                 await session.commit()
                 return result.rowcount > 0
