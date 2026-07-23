@@ -86,40 +86,41 @@ function DailyQuestsCard() {
       setClaiming(false)
     }
   }
-  const claim = async () => {
+  const claimTask = async (key) => {
     setClaiming(true)
     try {
-      await claimQuests()
+      await claimQuests(key)
       quests.reload()
-    } catch { /* 409 = недоступно; стан оновить reload нижче */ } finally {
+    } catch { quests.reload() } finally {
       setClaiming(false)
     }
   }
   return (
     <Card accent="gold">
-      <div className="flex items-center mb-2">
-        <div className="h-display text-sm text-white/80 flex-1">Щоденні завдання</div>
-        <div className="text-muted text-xs">+{q.reward.coins} 💰 · +{q.reward.energy} ⚡</div>
-      </div>
+      <div className="h-display text-sm text-white/80 mb-2">Щоденні завдання</div>
       <div className="space-y-1.5">
         {q.quests.map((item) => {
           const done = item.current >= item.target
           return (
             <div key={item.key} className="flex items-center gap-2">
               <span className={done ? 'text-neon' : 'text-muted'}>{done ? '✅' : '⬜'}</span>
-              <span className={`text-sm flex-1 ${done ? 'text-white/60 line-through' : ''}`}>{item.title}</span>
-              <span className="h-display text-base tabular-nums">{Math.min(item.current, item.target)}/{item.target}</span>
+              <span className={`text-sm flex-1 ${item.claimed ? 'text-white/60 line-through' : ''}`}>{item.title}</span>
+              {item.claimable ? (
+                <CtaButton color="gold" onClick={() => claimTask(item.key)} disabled={claiming}>
+                  Забрати ⚡{item.reward_energy}
+                </CtaButton>
+              ) : (
+                <>
+                  <span className="text-neon text-xs">⚡{item.reward_energy}</span>
+                  <span className="h-display text-base tabular-nums">
+                    {item.claimed ? '✓' : `${Math.min(item.current, item.target)}/${item.target}`}
+                  </span>
+                </>
+              )}
             </div>
           )
         })}
       </div>
-      {q.claimed ? (
-        <div className="text-muted text-xs mt-2">Нагороду отримано ✓ Нові завдання — завтра</div>
-      ) : q.claimable ? (
-        <div className="mt-3">
-          <CtaButton color="gold" onClick={claim} disabled={claiming}>Забрати нагороду</CtaButton>
-        </div>
-      ) : null}
 
       {/* Щоденний подарунок — модуль зі скетчу Max 23.07 */}
       <div className="mt-3 pt-3 border-t border-white/10 flex items-center gap-3">

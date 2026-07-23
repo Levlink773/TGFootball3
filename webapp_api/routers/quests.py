@@ -4,7 +4,9 @@ from fastapi import APIRouter, Depends, HTTPException
 from aiogram.utils.web_app import WebAppInitData
 
 from services.character_service import CharacterService
-from services.daily_quest_service import DailyQuestService, QUEST_TARGETS, QUEST_REWARD, GIFT_REWARD
+from pydantic import BaseModel
+
+from services.daily_quest_service import DailyQuestService, QUEST_TARGETS, QUEST_REWARDS, GIFT_REWARD
 
 from webapp_api.auth import auth_user
 
@@ -18,19 +20,24 @@ async def _get_character(auth: WebAppInitData):
     return character
 
 
+_TITLES = {"trainings": "Проведи тренування", "matches": "Зіграй 2 матчі", "wins": "Здобудь перемогу"}
+
+
 def _payload(q):
-    done = all(getattr(q, f) >= t for f, t in QUEST_TARGETS.items())
-    return {
-        "quests": [
-            {"key": "trainings", "title": "Проведи тренування", "current": q.trainings, "target": QUEST_TARGETS["trainings"]},
-            {"key": "matches", "title": "Зіграй матч", "current": q.matches, "target": QUEST_TARGETS["matches"]},
-            {"key": "wins", "title": "Переможи", "current": q.wins, "target": QUEST_TARGETS["wins"]},
-        ],
-        "reward": QUEST_REWARD,
-        "claimable": done and not q.claimed,
-        "claimed": q.claimed,
-        "gift_claimed": q.gift_claimed,
-    }
+    quests = []
+    for key, target in QUEST_TARGETS.items():
+        current = getattr(q, key)
+        claimed = getattr(q, f"{key}_claimed")
+        quests.append({
+            "key": key,
+            "title": _TITLES[key],
+            "current": current,
+            "target": target,
+            "reward_energy": QUEST_REWARDS[key],
+            "claimable": current >= target and not claimed,
+            "claimed": claimed,
+        })
+    return {"quests": quests, "gift_claimed": q.gift_claimed}
 
 
 @quests_router.get("/quests")
@@ -56,17 +63,23 @@ async def claim_gift(auth: WebAppInitData = Depends(auth_user)):
     return {"ok": True, "coins": coins, "energy": GIFT_REWARD["energy"]}
 
 
+class ClaimRequest(BaseModel):
+    key: str
+
+
 @quests_router.post("/quests/claim")
-async def claim_quests(auth: WebAppInitData = Depends(auth_user)):
+async def claim_quest(req: ClaimRequest, auth: WebAppInitData = Depends(auth_user)):
+    if req.key not in QUEST_TARGETS:
+        raise HTTPException(status_code=400, detail="Невідоме завдання")
     character = await _get_character(auth)
-    won = await DailyQuestService.claim(character.id)
+    won = await DailyQuestService.claim_task(character.id, req.key)
     if not won:
         raise HTTPException(status_code=409, detail="Нагорода недоступна")
-    await CharacterService.update_money_character(
-        character_id=character.id, amount_money_adjustment=QUEST_REWARD["coins"]
-    )
+    energy = QUEST_REWARDS[req.key]
     await CharacterService.edit_character_energy(
-        character_id=character.id, amount_energy=QUEST_REWARD["energy"]
+        character_id=character.id, amount_energy=energy
     )
     q = await DailyQuestService.get_today(character.id)
-    return _payload(q)
+    payload = _payload(q)
+    payload["awarded_energy"] = energy
+    return payload

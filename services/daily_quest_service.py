@@ -6,10 +6,10 @@ from sqlalchemy.dialects.mysql import insert as mysql_insert
 from database.models.daily_quest import DailyQuest
 from database.session import get_session
 
-# Daily targets and completion reward.
+# Daily targets and per-task energy rewards (per Max's sketch 23.07).
 # ponytail: hardcoded values pending Maxim's sign-off; move to constants.py if tuned.
-QUEST_TARGETS = {"trainings": 3, "matches": 2, "wins": 1}
-QUEST_REWARD = {"coins": 50, "energy": 25}
+QUEST_TARGETS = {"trainings": 1, "matches": 2, "wins": 1}
+QUEST_REWARDS = {"trainings": 20, "matches": 30, "wins": 25}  # energy
 GIFT_REWARD = {"coins_min": 10, "coins_max": 50, "energy": 10}
 
 
@@ -73,8 +73,13 @@ class DailyQuestService:
         return False
 
     @classmethod
-    async def claim(cls, character_id: int) -> bool:
-        # Atomic claim: only flips claimed 0->1 when all targets are met.
+    async def claim_task(cls, character_id: int, field: str) -> bool:
+        # Atomic per-task claim: flips <field>_claimed 0->1 only when its target is met.
+        if field not in QUEST_TARGETS:
+            return False
+        count_col = getattr(DailyQuest, field)
+        claimed_col = getattr(DailyQuest, f"{field}_claimed")
+        await cls.get_today(character_id)
         async for session in get_session():
             async with session.begin():
                 result = await session.execute(
@@ -82,12 +87,10 @@ class DailyQuestService:
                     .where(
                         DailyQuest.character_id == character_id,
                         DailyQuest.quest_date == date.today(),
-                        DailyQuest.claimed.is_(False),
-                        DailyQuest.trainings >= QUEST_TARGETS["trainings"],
-                        DailyQuest.matches >= QUEST_TARGETS["matches"],
-                        DailyQuest.wins >= QUEST_TARGETS["wins"],
+                        claimed_col.is_(False),
+                        count_col >= QUEST_TARGETS[field],
                     )
-                    .values(claimed=True)
+                    .values({f"{field}_claimed": True})
                 )
                 await session.commit()
                 return result.rowcount > 0
