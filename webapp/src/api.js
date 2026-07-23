@@ -72,6 +72,13 @@ export const leaveClub = () => api('/team/leave', { method: 'POST' })
 export const getStatistics = () => api('/statistics')
 export const getTutorial = () => api('/tutorial')
 export const completeTutorial = () => api('/tutorial/complete', { method: 'POST' })
+export const getInventory = () => api('/inventory')
+export const equipItem = (item_id) =>
+  api('/inventory/equip', { method: 'POST', body: JSON.stringify({ item_id }) })
+export const unequipItem = (category) =>
+  api('/inventory/unequip', { method: 'POST', body: JSON.stringify({ category }) })
+export const sellItem = (item_id) =>
+  api('/inventory/sell', { method: 'POST', body: JSON.stringify({ item_id }) })
 export const getSettings = () => api('/settings')
 export const updateSettings = (bot_buttons_enabled) =>
   api('/settings', { method: 'POST', body: JSON.stringify({ bot_buttons_enabled }) })

@@ -1,172 +1,116 @@
-import { getMatches, getPlayer, getTeam } from '../api'
+import { getMatches, getPlayer } from '../api'
 import { useApi } from '../hooks'
-import { Card, Loading, ErrorBox, StatBar, EnergyBar, CtaButton } from '../ui'
-import { IconBoot, IconTarget, IconShield, IconRun, IconHeart, IconCalendar } from '../icons'
-import { avatarArt, clubCrest } from '../assets/art'
+import { Card, Loading, ErrorBox, NextBar, CtaButton, EnergyBar } from '../ui'
+import { IconCalendar, IconBolt, IconUser, IconDumbbell, IconChat, IconShield, IconChart, IconTarget } from '../icons'
+import { art } from '../assets/art'
 
-const STATS = [
-  { key: 'technique', label: 'Техніка', Icon: IconBoot },
-  { key: 'kicks', label: 'Удари', Icon: IconTarget },
-  { key: 'ball_selection', label: 'Відбір', Icon: IconShield },
-  { key: 'speed', label: 'Швидкість', Icon: IconRun },
-  { key: 'endurance', label: 'Витривалість', Icon: IconHeart },
-]
+// game community chat, same link the bot sends to new members
+const CHAT_URL = import.meta.env.VITE_GAME_CHAT_URL || 'https://t.me/tgfootballchat'
 
-const ENERGY_MAX_VIP = 300
-const ENERGY_MAX = 150
-
-const POSITION_SHORT = {
-  'Нападник': 'НП',
-  'Півзахисник': 'ПЗ',
-  'Захисник': 'ЗХ',
-  'Воротар': 'ВР',
+function fmtTime(iso) {
+  return new Date(iso).toLocaleString('uk-UA', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
 }
 
 function fmtClock(iso) {
   return new Date(iso).toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit' })
 }
 
-// Головна = профіль гравця, 1:1 за ескізом v1-neon frame 1:
-// hero card → stat bars → energy → club → next match.
+// Головна (стадіон) — стартовий екран: банер → наступний матч → бліц → швидкі переходи.
 export default function Home({ goTo }) {
   const player = useApi(getPlayer)
-  const team = useApi(getTeam)
   const matches = useApi(getMatches)
 
-  if (player.loading || matches.loading || team.loading) return <Loading />
+  if (player.loading || matches.loading) return <Loading />
   if (player.error) return <ErrorBox error={player.error} onRetry={player.reload} />
   if (matches.error) return <ErrorBox error={matches.error} onRetry={matches.reload} />
 
-  const data = player.data
-  const [firstName, ...rest] = (data.name || '').split(' ')
-  const energyMax = data.vip_active ? ENERGY_MAX_VIP : ENERGY_MAX
   const nextMatch = matches.data.leagues.map((l) => l.next_match).find(Boolean)
-  const club = team.error ? null : team.data?.club
+  const blitz = matches.data.blitz.next
+  const energyMax = player.data.vip_active ? 300 : 150
 
   return (
-    <div className="p-4 space-y-4">
-      {/* Hero card */}
-      <Card accent="gold" className="relative overflow-hidden hero-streaks">
-        {avatarArt(data.gender, data.position) && (
-          <img
-            src={avatarArt(data.gender, data.position)}
-            alt=""
-            className="absolute right-6 top-0 h-full w-3/5 object-cover object-top pointer-events-none [mask-image:linear-gradient(to_left,transparent_0%,black_25%,black_75%,transparent_100%)]"
-          />
-        )}
-        <div className="relative flex justify-between min-h-[170px]">
-          <div>
-            <div className="h-display text-3xl leading-none text-white break-words max-w-[200px]">{firstName}</div>
-            {rest.length > 0 && (
-              <div className="h-display text-[44px] leading-[1.05] text-gold glow-gold break-words max-w-[210px] tracking-tight">{rest.join(' ')}</div>
-            )}
-            {data.vip_active && (
-              <span className="inline-block mt-2 h-display text-xs text-gold border border-gold/60 rounded-full px-2 py-0.5">
-                ★ VIP
-              </span>
-            )}
-          </div>
-          <div className="flex flex-col items-end gap-2">
-            <span
-              className="w-14 h-14 rounded-full border-2 border-neon ring-glow-neon bg-pitch/60 flex items-center justify-center h-display text-xl text-neon"
-              title={data.position}
-            >
-              {POSITION_SHORT[data.position] || data.position}
-            </span>
-            {data.level != null && (
-              <span className="h-display text-sm text-neon border border-neon/50 bg-pitch/60 rounded-lg px-2 py-0.5">
-                {data.level} рів.
-              </span>
-            )}
-          </div>
-        </div>
-        <div className="relative flex items-end justify-end gap-3 mt-1">
-          <span className="h-display text-base text-white/85 mb-2.5">Сила</span>
-          <span className="h-display text-7xl leading-none text-gold glow-gold">
-            {Math.round(data.full_power)}
-          </span>
-        </div>
-      </Card>
+    <div className="p-4 space-y-4 relative">
+      <div className="text-center pt-1 pb-2">
+        <div className="h-display text-4xl text-gold glow-gold leading-none">TG Football</div>
+        <div className="text-muted text-sm mt-1.5">Привіт, {player.data.name}!</div>
+      </div>
 
-      {/* Stat bars */}
-      <Card>
-        {(() => {
-          const statMax = Math.max(100, ...Object.values(data.stats))
-          return STATS.map(({ key, label, Icon }) => (
-            <StatBar key={key} label={label} value={data.stats[key]} max={statMax} icon={<Icon size={20} />} />
-          ))
-        })()}
-      </Card>
+      {art['banner-home'] && (
+        <img src={art['banner-home']} alt="" className="w-full aspect-[21/9] object-cover rounded-2xl border border-white/10" />
+      )}
 
-      <EnergyBar value={data.energy} max={energyMax} />
-
-      {/* Club */}
-      <Card className="cursor-pointer" onClick={() => goTo?.('team')}>
-        {club ? (
-          <div className="space-y-3">
-            <div className="flex items-center gap-3">
-              <span className="w-14 h-14 rounded-full border border-white/15 bg-card2 overflow-hidden shrink-0 flex items-center justify-center">
-                {clubCrest(club.name) ? (
-                  <img src={clubCrest(club.name)} alt="" className="w-full h-full object-cover" />
-                ) : (
-                  <span className="h-display text-lg">{(club.name || '?')[0]}</span>
-                )}
-              </span>
-              <div className="min-w-0">
-                <div className="h-display text-xl leading-tight truncate">{club.name}</div>
-                <div className="text-muted text-[11px] uppercase tracking-wider">Сила команди</div>
-                <div className="h-display text-xl text-gold glow-gold leading-none">
-                  {Math.round(club.total_power).toLocaleString('uk-UA')}
-                </div>
-              </div>
-            </div>
-            {club.members?.length > 0 && (
-              <div className="flex gap-1.5 overflow-x-auto pb-1 -mx-1 px-1">
-                {club.members.map((m) => (
-                  <span
-                    key={m.user_id}
-                    title={m.name}
-                    className={`w-9 h-9 rounded-full shrink-0 overflow-hidden border ${
-                      m.is_me ? 'border-gold ring-glow-gold' : 'border-neon/70'
-                    } bg-card2 flex items-center justify-center`}
-                  >
-                    {avatarArt(m.gender || 'MAN', m.position) ? (
-                      <img src={avatarArt(m.gender || 'MAN', m.position)} alt="" className="w-full h-full object-cover object-top" />
-                    ) : (
-                      <span className="h-display text-xs text-white/80">{(m.name || '?')[0]}</span>
-                    )}
-                  </span>
-                ))}
-              </div>
-            )}
-          </div>
-        ) : (
-          <div className="flex items-center justify-between">
-            <span className="text-muted text-sm">Ти без команди</span>
-            <span className="text-neon text-sm h-display">Знайти команду ›</span>
-          </div>
-        )}
-      </Card>
-
-      {/* Next match */}
+      {/* Next league match — frame 1 bottom bar */}
       <Card accent="gold">
         <div className="flex items-center gap-3">
-          <IconCalendar size={30} className="text-gold shrink-0" />
-          <div className="flex-1 min-w-0">
-            <div className="h-display text-sm text-white/85 leading-none">Наступний матч</div>
+          <IconCalendar size={26} className="text-gold shrink-0" />
+          <div className="flex-1">
+            <div className="h-display text-sm text-white/80 leading-none">Наступний матч</div>
             {nextMatch ? (
-              <div className="h-display text-4xl text-gold glow-gold leading-tight">
+              <div className="h-display text-3xl text-gold glow-gold leading-tight">
                 {fmtClock(nextMatch.time_to_start)}
               </div>
             ) : (
-              <div className="text-muted text-xs mt-1.5">Немає запланованих матчів</div>
+              <div className="text-muted text-xs mt-1">Немає запланованих матчів</div>
             )}
           </div>
           <CtaButton onClick={() => goTo('matches')}>
             {nextMatch ? 'Готуватися до матчу ›' : 'До матчів ›'}
           </CtaButton>
         </div>
+        {nextMatch && (
+          <div className="text-muted text-xs mt-2 pl-9">
+            vs {nextMatch.opponent_club_name || '—'} · {fmtTime(nextMatch.time_to_start)}
+          </div>
+        )}
       </Card>
+
+      {/* Blitz */}
+      <NextBar
+        icon={<IconBolt size={22} />}
+        label={blitz ? (blitz.registered ? 'Бліц · ти в грі ✓' : 'Бліц · реєстрація') : 'Бліц щодня'}
+        time={blitz ? fmtClock(blitz.start_at) : matches.data.blitz.schedule.map((s) => s.time).join(' · ')}
+        onClick={() => goTo('matches')}
+      />
+
+      <EnergyBar value={player.data.energy} max={energyMax} />
+
+      <div className="grid grid-cols-3 gap-3">
+        <Card className="text-center py-3 cursor-pointer" onClick={() => goTo('player')}>
+          <IconUser size={24} className="text-neon mx-auto mb-1" />
+          <div className="h-display text-sm">Гравець</div>
+        </Card>
+        <Card className="text-center py-3 cursor-pointer" onClick={() => goTo('training')}>
+          <IconDumbbell size={24} className="text-neon mx-auto mb-1" />
+          <div className="h-display text-sm">Трен-ня</div>
+        </Card>
+        <Card className="text-center py-3 cursor-pointer" onClick={() => goTo('team')}>
+          <IconShield size={24} className="text-neon mx-auto mb-1" />
+          <div className="h-display text-sm">Команда</div>
+        </Card>
+        <Card className="text-center py-3 cursor-pointer" onClick={() => goTo('stats')}>
+          <IconChart size={24} className="text-neon mx-auto mb-1" />
+          <div className="h-display text-sm">Статистика</div>
+        </Card>
+        <Card className="text-center py-3 cursor-pointer" onClick={() => goTo('trainer')}>
+          <IconTarget size={24} className="text-neon mx-auto mb-1" />
+          <div className="h-display text-sm">Тренер</div>
+        </Card>
+        {CHAT_URL ? (
+          <Card className="text-center py-3 cursor-pointer" onClick={() => {
+            const tg = window.Telegram?.WebApp
+            tg?.openTelegramLink ? tg.openTelegramLink(CHAT_URL) : window.open(CHAT_URL, '_blank')
+          }}>
+            <IconChat size={24} className="text-gold mx-auto mb-1" />
+            <div className="h-display text-sm">Чат гри</div>
+          </Card>
+        ) : (
+          <Card className="text-center py-3 opacity-40">
+            <IconChat size={24} className="text-muted mx-auto mb-1" />
+            <div className="h-display text-sm text-muted">Чат</div>
+          </Card>
+        )}
+      </div>
+
     </div>
   )
 }

@@ -123,9 +123,62 @@ F = {
 }
 
 
+# Stateful inventory stub: equip/unequip/sell mutate INV so the flow is testable.
+INV = {
+    "items": [
+        {"id": 11, "name": "Футболка початківця", "category": "T_SHIRT", "price": 15,
+         "sell_price": 5, "level_required": 1,
+         "stats": {"technique": 1, "kicks": 1, "endurance": 1}},
+        {"id": 12, "name": "Бутси Футбольний Гранд", "category": "BOOTS", "price": 1940,
+         "sell_price": 582, "level_required": 8,
+         "stats": {"technique": 9, "kicks": 8, "ball_selection": 6, "speed": 9, "endurance": 8}},
+        {"id": 13, "name": "Гетри Профі", "category": "GAITERS", "price": 300,
+         "sell_price": 90, "level_required": 3, "stats": {"speed": 3, "endurance": 2}},
+    ],
+    "equipped": {"t_shirt_id": 11, "shorts_id": None, "gaiters_id": None, "boots_id": None},
+    "sell_percent": 30,
+    "money": 25740,
+}
+_FIELD = {"T_SHIRT": "t_shirt_id", "SHORTS": "shorts_id", "GAITERS": "gaiters_id", "BOOTS": "boots_id"}
+
+
+def _inventory_route(path, payload):
+    if path == "/api/inventory":
+        return INV
+    if path == "/api/inventory/equip":
+        item = next((i for i in INV["items"] if i["id"] == payload.get("item_id")), None)
+        if item:
+            INV["equipped"][_FIELD[item["category"]]] = item["id"]
+        return {"ok": True, "item": item}
+    if path == "/api/inventory/unequip":
+        INV["equipped"][_FIELD.get(payload.get("category"), "t_shirt_id")] = None
+        return {"ok": True}
+    if path == "/api/inventory/sell":
+        item = next((i for i in INV["items"] if i["id"] == payload.get("item_id")), None)
+        if item:
+            for f, v in INV["equipped"].items():
+                if v == item["id"]:
+                    INV["equipped"][f] = None
+            INV["items"] = [i for i in INV["items"] if i["id"] != item["id"]]
+            INV["money"] += item["sell_price"]
+            return {"ok": True, "sold_for": item["sell_price"], "money": INV["money"]}
+        return {"ok": False}
+    return None
+
+
 class H(BaseHTTPRequestHandler):
     def _send(self):
-        body = F.get(self.path.split("?")[0])
+        path = self.path.split("?")[0]
+        payload = {}
+        length = int(self.headers.get("Content-Length") or 0)
+        if length:
+            try:
+                payload = json.loads(self.rfile.read(length))
+            except Exception:
+                payload = {}
+        body = _inventory_route(path, payload)
+        if body is None:
+            body = F.get(path)
         self.send_response(200 if body is not None else 404)
         self.send_header("Content-Type", "application/json")
         self.send_header("Access-Control-Allow-Origin", "*")

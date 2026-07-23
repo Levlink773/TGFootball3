@@ -21,6 +21,7 @@ from webapp_api.routers.training_actions import training_actions_router
 from webapp_api.routers.team import team_router
 from webapp_api.routers.statistics import statistics_router
 from webapp_api.routers.trainer import trainer_router
+from webapp_api.routers.inventory import inventory_router
 
 app = FastAPI(title="TG Football Mini App API", docs_url=None, redoc_url=None)
 
@@ -47,6 +48,7 @@ app.include_router(training_actions_router, prefix="/api")
 app.include_router(team_router, prefix="/api")
 app.include_router(statistics_router, prefix="/api")
 app.include_router(trainer_router, prefix="/api")
+app.include_router(inventory_router, prefix="/api")
 
 
 @app.get("/api/health")

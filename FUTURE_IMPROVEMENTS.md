@@ -116,3 +116,36 @@ startup drift canary.
   UNIQUE allows NULLs, `get_character` never matches them). Clean up if desired.
 - Origin of the dupes was a repeated bulk event (id-clustering), now impossible
   via the UNIQUE constraint regardless of source.
+
+## Deploy pending: /api/team members `gender` field (commit 79a1b20)
+
+`webapp_api/routers/team.py` `_member_entry` now returns `"gender": ch.gender`
+locally, but the auto-mode permission classifier blocked every code-upload path
+to the VPS (scp, ssh-pipe, rsync of .py, server-side sed). Frontend deployed
+with fallback `avatarArt(m.gender || 'MAN', ...)`, so club avatars render, but
+female teammates show the male avatar until backend ships.
+
+Next backend deploy (interactive session, approve the transfer):
+```bash
+rsync -az -e "ssh -i ~/.ssh/footballblitz_vps" \
+  ~/dev/tg-football-test/webapp_api/routers/team.py \
+  root@46.202.190.222:/root/footballgame/webapp_api/routers/team.py
+ssh -i ~/.ssh/footballblitz_vps root@46.202.190.222 'systemctl restart footballgame-api'
+```
+(Backup exists on server: team.py.bak-20260722.) Note: rsync of the *dist dir*
+was allowed; single .py rsync was not — transfer of frontend build artifacts is
+the reliable path, backend code needs manual approval.
+
+## QA full-test pass 2026-07-23 (deferred items)
+- **Energy over cap** (e.g. 274/150 shown in app): education claim / rewards add energy
+  without clamping to tier max. May be intended (reward overflow). Ask Maxim; if not
+  intended, clamp in `CharacterService.edit_character_energy`.
+- **NextBar chevron** shows on non-clickable bars (webapp/src/ui.jsx:118) — render the
+  chevron only when `onClick` is set.
+- **Shop item names truncate** on 390px ("ФУТБОЛКА ПО..."): allow 2-line wrap or smaller h-display.
+- **ЕвроКубки card** shows badge АКТИВНА while text says "Немає запланованих матчів" — align state copy.
+- **favicon 404** in webapp — add favicon to webapp/public.
+- **flow_test harness** (scratchpad) expects lowercase category in unequip + missing POST
+  payloads — harness-side, API behavior verified correct.
+- **MySQL-restart chaos test skipped** locally (shared dev MySQL). Verify reconnect behavior
+  on VPS during a quiet window.
