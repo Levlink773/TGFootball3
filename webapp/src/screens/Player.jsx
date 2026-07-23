@@ -3,7 +3,7 @@ import { getMatches, getPlayer, getTeam, getInventory, equipItem, unequipItem, s
 import { useApi } from '../hooks'
 import { Card, Loading, ErrorBox, StatBar, EnergyBar, CtaButton } from '../ui'
 import { IconBoot, IconTarget, IconShield, IconRun, IconHeart, IconCalendar, IconShirt } from '../icons'
-import { avatarArt, clubCrest } from '../assets/art'
+import { avatarArt, clubCrest, gearArt } from '../assets/art'
 
 const STATS = [
   { key: 'technique', label: 'Техніка', Icon: IconBoot },
@@ -47,10 +47,13 @@ function ItemSheet({ item, isEquipped, busy, onEquip, onUnequip, onSell, onClose
         className="relative w-full max-w-[422px] mx-auto bg-card border-t border-gold/40 rounded-t-2xl p-4 space-y-3"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between">
-          <div className="h-display text-xl text-white">{item.name}</div>
+        <div className="flex items-center gap-3">
+          {gearArt(item.name) && (
+            <img src={gearArt(item.name)} alt="" className="w-12 h-12 object-contain rounded-lg bg-card2 shrink-0" />
+          )}
+          <div className="h-display text-xl text-white flex-1">{item.name}</div>
           {isEquipped && (
-            <span className="h-display text-xs text-gold border border-gold/60 rounded-full px-2 py-0.5">одягнуто</span>
+            <span className="h-display text-xs text-gold border border-gold/60 rounded-full px-2 py-0.5 shrink-0">одягнуто</span>
           )}
         </div>
         <div className="flex flex-wrap gap-2">
@@ -161,12 +164,26 @@ export default function Player({ goTo }) {
         </div>
       </Card>
 
-      {/* Stat bars */}
+      {/* XP progress + stat bars (compact — Max 23.07) */}
       <Card>
+        {data.exp_next != null && (
+          <div className="mb-3">
+            <div className="flex items-baseline justify-between mb-1">
+              <span className="text-muted text-[11px] uppercase tracking-wider">Досвід · рівень {data.level}</span>
+              <span className="h-display text-xs text-neon">{data.exp}/{data.exp_next} XP</span>
+            </div>
+            <div className="h-1.5 bg-card2 rounded-full overflow-hidden">
+              <div
+                className="h-full bar-neon rounded-full"
+                style={{ width: `${Math.max(0, Math.min(100, ((data.exp - data.exp_floor) / (data.exp_next - data.exp_floor)) * 100))}%` }}
+              />
+            </div>
+          </div>
+        )}
         {(() => {
           const statMax = Math.max(100, ...Object.values(data.stats))
           return STATS.map(({ key, label, Icon }) => (
-            <StatBar key={key} label={label} value={data.stats[key]} max={statMax} icon={<Icon size={20} />} />
+            <StatBar key={key} label={label} value={data.stats[key]} max={statMax} icon={<Icon size={18} />} dense />
           ))
         })()}
       </Card>
@@ -193,7 +210,11 @@ export default function Player({ goTo }) {
                     : 'border border-dashed border-white/20 bg-pitch/40'
                 }`}
               >
-                <IconShirt size={22} className={item ? 'text-gold' : 'text-muted'} />
+                {item && gearArt(item.name) ? (
+                  <img src={gearArt(item.name)} alt="" className="w-9 h-9 object-contain" />
+                ) : (
+                  <IconShirt size={22} className={item ? 'text-gold' : 'text-muted'} />
+                )}
                 <span className={`h-display text-[9px] uppercase leading-tight text-center ${item ? 'text-white' : 'text-muted'}`}>
                   {item ? item.name : label}
                 </span>
@@ -211,7 +232,11 @@ export default function Player({ goTo }) {
                   onClick={() => setOpenItem(i)}
                   className="shrink-0 rounded-lg border border-neon/40 bg-card2 px-2.5 py-1.5 flex items-center gap-1.5"
                 >
-                  <IconShirt size={16} className="text-neon" />
+                  {gearArt(i.name) ? (
+                    <img src={gearArt(i.name)} alt="" className="w-5 h-5 object-contain" />
+                  ) : (
+                    <IconShirt size={16} className="text-neon" />
+                  )}
                   <span className="h-display text-[11px] text-white/90 max-w-[90px] truncate">{i.name}</span>
                 </button>
               ))}

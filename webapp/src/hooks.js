@@ -1,20 +1,30 @@
 import { useCallback, useEffect, useState } from 'react'
 
-export function useApi(fn) {
+// pollMs (optional): silently refetch on an interval — no loading flash, so
+// polled data (training status, quests) can drive live UI without spinners.
+export function useApi(fn, { pollMs } = {}) {
   const [data, setData] = useState(null)
   const [error, setError] = useState(null)
   const [loading, setLoading] = useState(true)
 
-  const reload = useCallback(() => {
-    setLoading(true)
+  const run = useCallback((silent) => {
+    if (!silent) setLoading(true)
     setError(null)
     fn()
       .then(setData)
       .catch(setError)
-      .finally(() => setLoading(false))
+      .finally(() => { if (!silent) setLoading(false) })
   }, [fn])
 
-  useEffect(() => { reload() }, [reload])
+  const reload = useCallback(() => run(false), [run])
+
+  useEffect(() => { run(false) }, [run])
+  useEffect(() => {
+    if (!pollMs) return
+    const t = setInterval(() => run(true), pollMs)
+    return () => clearInterval(t)
+  }, [pollMs, run])
+
   return { data, error, loading, reload }
 }
 

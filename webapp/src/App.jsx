@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Home from './screens/Home'
 import Player from './screens/Player'
 import Matches from './screens/Matches'
@@ -11,7 +11,7 @@ import Team from './screens/Team'
 import Statistics from './screens/Statistics'
 import Trainer from './screens/Trainer'
 import Tutorial from './components/Tutorial'
-import { getPlayer, getTutorial } from './api'
+import { getPlayer, getTutorial, getTraining, getQuests } from './api'
 import { useApi } from './hooks'
 import { IconUser, IconBall, IconDumbbell, IconTrophy, IconStar, IconCart, IconGear, IconCoin, IconPlus, IconHome } from './icons'
 
@@ -44,6 +44,10 @@ export default function App() {
   const [highlight, setHighlight] = useState(null)
   const [showTutorial, setShowTutorial] = useState(false)
   const player = useApi(getPlayer)
+  // Polled state drives the live training countdown, nav badges and the
+  // "training finished" popup without per-screen refetching.
+  const training = useApi(getTraining, { pollMs: 15000 })
+  const quests = useApi(getQuests, { pollMs: 30000 })
   const Screen = SCREENS[tab]
 
   // Server-driven onboarding: show once per account until /tutorial/complete succeeds.
@@ -60,6 +64,42 @@ export default function App() {
 
   // keep header balance fresh after purchases/registrations
   useEffect(() => { player.reload() }, [tab]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Training-finished popup: last_result is non-null only on the first poll
+  // after completion, so firing on any non-null value is a clean one-shot.
+  const shownResultRef = useRef(false)
+  useEffect(() => {
+    const lr = training.data?.last_result
+    if (!lr) { shownResultRef.current = false; return }
+    if (shownResultRef.current) return
+    shownResultRef.current = true
+    const tg = window.Telegram?.WebApp
+    tg?.HapticFeedback?.notificationOccurred?.(lr.success ? 'success' : 'warning')
+    const msg = lr.success
+      ? `Тренування завершено! +${lr.points} до характеристики 💪`
+      : 'Тренування завершено — цього разу без прогресу. Спробуй ще!'
+    if (tg?.showPopup) tg.showPopup({ title: 'Тренування', message: msg, buttons: [{ type: 'ok' }] })
+    training.reload() // pull the settled state (energy, in_training) back
+  }, [training.data]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Red attention dots: Трен-ня when idle-with-energy or a result waits;
+  // Головна when a daily quest / bonus / gift is claimable.
+  const q = quests.data
+  const badges = {
+    training: Boolean(
+      training.data && (
+        training.data.last_result ||
+        (!training.data.in_training && training.data.energy > 0)
+      )
+    ),
+    home: Boolean(
+      q && (
+        q.bonus_claimable ||
+        !q.gift_claimed ||
+        q.quests?.some((item) => item.claimable)
+      )
+    ),
+  }
 
   return (
     <div className="max-w-[422px] mx-auto min-h-full flex flex-col">
@@ -116,7 +156,7 @@ export default function App() {
             </button>
           </div>
         ) : (
-          <Screen goTo={setTab} />
+          <Screen goTo={setTab} training={training.data} />
         )}
       </main>
 
@@ -129,6 +169,7 @@ export default function App() {
           {TABS.map(({ key, label, Icon }) => {
             const active = tab === key
             const pulsed = highlight === key
+            const badge = badges[key]
             return (
               <button
                 key={key}
@@ -137,7 +178,12 @@ export default function App() {
                   active ? 'text-gold glow-gold' : 'text-muted'
                 } ${pulsed ? 'animate-pulse text-neon' : ''}`}
               >
-                <Icon size={22} className={active ? 'drop-shadow-[0_0_8px_rgba(255,215,0,0.8)]' : ''} />
+                <span className="relative">
+                  <Icon size={22} className={active ? 'drop-shadow-[0_0_8px_rgba(255,215,0,0.8)]' : ''} />
+                  {badge && (
+                    <span className="absolute -top-0.5 -right-1 w-2 h-2 rounded-full bg-red-500 ring-2 ring-pitch shadow-[0_0_6px_rgba(239,68,68,0.9)]" />
+                  )}
+                </span>
                 {label}
                 <span className={`w-6 h-0.5 rounded-full ${active ? 'bg-gold shadow-[0_0_8px_rgba(255,215,0,0.8)]' : 'bg-transparent'}`} />
               </button>

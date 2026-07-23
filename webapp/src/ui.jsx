@@ -43,16 +43,17 @@ export function ErrorBox({ error, onRetry }) {
   )
 }
 
-// v1-neon stat row: gold icon · label · cyan glowing bar · cyan value
-export function StatBar({ label, value, max = 100, icon = null }) {
+// v1-neon stat row: gold icon · label · cyan glowing bar · cyan value.
+// dense: tighter rows for the compact player card (Max 23.07 — «менше по висоті»).
+export function StatBar({ label, value, max = 100, icon = null, dense = false }) {
   return (
-    <div className="flex items-center gap-3 py-2">
+    <div className={`flex items-center gap-3 ${dense ? 'py-1' : 'py-2'}`}>
       {icon && <span className="text-gold shrink-0">{icon}</span>}
-      <span className="h-display text-sm w-28 shrink-0">{label}</span>
-      <div className="flex-1 h-2 bg-card2 rounded-full overflow-hidden">
+      <span className={`h-display w-28 shrink-0 ${dense ? 'text-xs' : 'text-sm'}`}>{label}</span>
+      <div className={`flex-1 bg-card2 rounded-full overflow-hidden ${dense ? 'h-1.5' : 'h-2'}`}>
         <div className="h-full rounded-full bar-neon" style={{ width: `${Math.min(100, (value / max) * 100)}%` }} />
       </div>
-      <span className="h-display text-lg text-neon glow-neon w-9 text-right shrink-0">{value}</span>
+      <span className={`h-display text-neon glow-neon text-right shrink-0 ${dense ? 'text-base w-8' : 'text-lg w-9'}`}>{value}</span>
     </div>
   )
 }

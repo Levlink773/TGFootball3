@@ -151,8 +151,58 @@ function DailyQuestsCard() {
   )
 }
 
+// ВІП-чип: активний — «ВІП до DD.MM», інакше — заклик придбати (перки коротко). Веде в магазин.
+function VipChip({ vipActive, vipUntil, goTo }) {
+  if (vipActive) {
+    const until = vipUntil
+      ? new Date(vipUntil).toLocaleDateString('uk-UA', { day: 'numeric', month: 'short' })
+      : null
+    return (
+      <button
+        onClick={() => goTo('shop')}
+        className="w-full flex items-center gap-2 bg-card rounded-xl border border-gold/50 ring-glow-gold px-3 py-2"
+      >
+        <span className="text-lg">⚜️</span>
+        <span className="h-display text-sm text-gold flex-1 text-left">ВІП активний{until ? ` · до ${until}` : ''}</span>
+        <span className="text-muted text-xs">Продовжити ›</span>
+      </button>
+    )
+  }
+  return (
+    <button
+      onClick={() => goTo('shop')}
+      className="w-full flex items-center gap-2 bg-card rounded-xl border border-gold/40 px-3 py-2"
+    >
+      <span className="text-lg">⚜️</span>
+      <span className="h-display text-sm text-gold flex-1 text-left">Отримати ВІП</span>
+      <span className="text-muted text-[11px] text-right">+300⚡ · +5% трен · x2 ›</span>
+    </button>
+  )
+}
+
+// «Почати тренування» / якщо треня йде — живий таймер до завершення (Max 23.07).
+function TrainingCta({ training, goTo }) {
+  const [, tick] = useState(0)
+  const active = Boolean(training?.in_training && training?.training?.ends_at)
+  useEffect(() => {
+    if (!active) return
+    const t = setInterval(() => tick((n) => n + 1), 1000)
+    return () => clearInterval(t)
+  }, [active])
+  let label = 'Почати тренування ›'
+  if (active) {
+    const leftMs = new Date(training.training.ends_at).getTime() - Date.now()
+    label = `Тренування · ${fmtCountdown(leftMs)} ›`
+  }
+  return (
+    <CtaButton onClick={() => goTo('training')} className="w-full">
+      {label}
+    </CtaButton>
+  )
+}
+
 // Головна (стадіон) — стартовий екран: банер → наступний матч → бліц → швидкі переходи.
-export default function Home({ goTo }) {
+export default function Home({ goTo, training }) {
   const player = useApi(getPlayer)
   const matches = useApi(getMatches)
 
@@ -170,6 +220,8 @@ export default function Home({ goTo }) {
         <div className="h-display text-4xl text-gold glow-gold leading-none">TG Football</div>
         <div className="text-muted text-sm mt-1.5">Привіт, {player.data.name}!</div>
       </div>
+
+      <VipChip vipActive={player.data.vip_active} vipUntil={player.data.vip_until} goTo={goTo} />
 
       {art['banner-home'] && (
         <img src={art['banner-home']} alt="" className="w-full aspect-[21/9] object-cover rounded-2xl border border-white/10" />
@@ -214,9 +266,7 @@ export default function Home({ goTo }) {
 
       <TournamentsCard leagues={matches.data.leagues} goTo={goTo} />
 
-      <CtaButton onClick={() => goTo('training')} className="w-full">
-        Почати тренування ›
-      </CtaButton>
+      <TrainingCta training={training} goTo={goTo} />
 
       <div className="grid grid-cols-3 gap-3">
         <Card className="text-center py-3 cursor-pointer" onClick={() => goTo('player')}>
