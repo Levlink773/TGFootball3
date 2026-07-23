@@ -190,6 +190,13 @@ async def buy_item(req: BuyItemRequest, auth: WebAppInitData = Depends(auth_user
     if character.level < item["level_required"]:
         raise HTTPException(status_code=400, detail="Не вистачає рівня, щоб купити цю річ")
 
+    # Debit first, atomically conditional on balance — concurrent buys must not
+    # drive money negative (the read-check above is advisory only).
+    paid = await CharacterService.spend_money_if_enough(
+        character_id=character.id, amount=item["price"]
+    )
+    if not paid:
+        raise HTTPException(status_code=400, detail="Не вистачає монет на купівлю цієї речі")
     item_obj = Item(
         name=item["name"],
         category=item["category"],
@@ -199,9 +206,5 @@ async def buy_item(req: BuyItemRequest, auth: WebAppInitData = Depends(auth_user
         owner_character_id=character.id,
     )
     await ItemService.create_item(item_obj=item_obj)
-    await CharacterService.update_money_character(
-        character_id=character.id,
-        amount_money_adjustment=-item_obj.price,
-    )
 
     return {"ok": True, "item": {"id": item["id"], "name": item["name"]}, "money": character.money - item["price"]}

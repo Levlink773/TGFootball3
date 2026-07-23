@@ -295,6 +295,23 @@ class CharacterService:
                 await session.commit()
 
     @classmethod
+    async def spend_money_if_enough(cls, character_id: int, amount: int) -> bool:
+        # Atomic conditional debit: WHERE money >= amount makes concurrent
+        # purchases race-safe — only requests the balance can cover succeed.
+        # A plain read-check-then-update lets N parallel buys all pass the check
+        # and drive the balance negative.
+        async for session in get_session():
+            async with session.begin():
+                result = await session.execute(
+                    update(Character)
+                    .where(Character.id == character_id, Character.money >= amount)
+                    .values(money=Character.money - amount)
+                )
+                await session.commit()
+                return result.rowcount > 0
+        return False
+
+    @classmethod
     async def add_exp_character(cls, character_id: int, amount_exp_add: int):
         async for session in get_session():
             async with session.begin():

@@ -55,6 +55,23 @@ class ItemService:
                     delete(Item).where(Item.id == item_id)
                 )
                 await session.commit()
+
+    @classmethod
+    async def delete_item_owned(cls, item_id: int, owner_character_id: int) -> bool:
+        # Atomic claim-and-delete: exactly one concurrent seller can win the row.
+        # Credit money only when this returns True, otherwise parallel sells of the
+        # same item each pass the ownership pre-check and all get paid.
+        async for session in get_session():
+            async with session.begin():
+                result = await session.execute(
+                    delete(Item).where(
+                        Item.id == item_id,
+                        Item.owner_character_id == owner_character_id,
+                    )
+                )
+                await session.commit()
+                return result.rowcount > 0
+        return False
                 
     @classmethod
     async def unequip_item(cls, character_obj: Character, category_item: str):
