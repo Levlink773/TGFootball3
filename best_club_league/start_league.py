@@ -2,7 +2,7 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.date import DateTrigger
 from apscheduler.triggers.cron import CronTrigger
 
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from best_club_league.service.get_best_league_match import BestClubLeagueMatchService
 
@@ -73,6 +73,16 @@ class BestClubLeague:
             trigger = DateTrigger(time_send_join_match_text),
             misfire_grace_time = 1800
         )
+        # Pre-match registration reminders at T-40 and T-10 (Max 23.07).
+        for mins in (40, 10):
+            remind_at = time_start_match - timedelta(minutes=mins)
+            if remind_at > datetime.now():
+                self.scheduler_best_league.add_job(
+                    func = user_sender.send_reminder,
+                    trigger = DateTrigger(remind_at),
+                    kwargs = {"minutes_left": mins},
+                    misfire_grace_time = 1800
+                )
         self.scheduler_best_league.add_job(
             func    = match_.start_match,
             trigger = DateTrigger(time_start_match),

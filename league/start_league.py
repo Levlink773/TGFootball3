@@ -123,16 +123,25 @@ class StartDefaultLeague:
         
         ClubMatchManager.add_match(match_data)
         user_sender = UserSender(match_id=match_data.match_id)
-        self.scheduler_league.add_job(user_sender.send_messages_to_users, 
+        self.scheduler_league.add_job(user_sender.send_messages_to_users,
                                       trigger=DateTrigger(start_time_sender),
                                       misfire_grace_time = 10,
-                                      
+
                                       )
-        self.scheduler_league.add_job(match_.start_match, 
+        # Pre-match registration reminders at T-40 and T-10 (Max 23.07).
+        for mins in (40, 10):
+            remind_at = start_time_fight - timedelta(minutes=mins)
+            if remind_at > datetime.now():
+                self.scheduler_league.add_job(user_sender.send_reminder,
+                                              trigger=DateTrigger(remind_at),
+                                              kwargs={"minutes_left": mins},
+                                              misfire_grace_time=10,
+                                              )
+        self.scheduler_league.add_job(match_.start_match,
                                       trigger=DateTrigger(start_time_fight),
                                       misfire_grace_time = 10
                                       )
-        
+
 class SchedulerDefaultLeague:
     def __init__(self):
         self.scheduler = AsyncIOScheduler()

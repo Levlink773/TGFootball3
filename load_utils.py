@@ -21,6 +21,7 @@ from schedulers.scheduler_vip_pass import VipPassSchedulerService
 from schedulers.scheduler_reset_training_key import ResetTrainingKeyScheduler
 from schedulers.scheduler_notification_start_leagues import StartNotificationScheduler
 from schedulers.task_reminder_scheduler import EducationCenterReminderText, ReminderEducationCenter
+from schedulers.scheduler_idle_training import IdleTrainingReminder
 
 from training.timers.starter_taimers import SchedulerRegisterTraining
 
@@ -105,6 +106,7 @@ async def start_utils():
     await scheduler_notification_start_league.start()
     # await scheduler_notification_task.start()  # DISABLED 2026-06-30: promo broadcast off per client
     await scheduler_anulate.start()
+    await idle_training_reminder.start()
     
     # await end_duel_season.wait_to_end_season_duel()
     # asyncio.create_task(core_duel._waiting_users())
@@ -140,3 +142,4 @@ scheduler_new_legue = SchedulerNewClubLeague()
 scheduler_notification_start_league = StartNotificationScheduler()
 scheduler_notification_task = ReminderEducationCenter()
 scheduler_anulate = AnulateStatisticsScheduler()
+idle_training_reminder = IdleTrainingReminder()

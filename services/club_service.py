@@ -249,6 +249,27 @@ class ClubService:
                 
                 
     @classmethod
+    async def rename_club(cls, club_id: int, new_name: str) -> bool:
+        # Reject a name already taken by another real club, else rename. Returns False on collision.
+        async for session in get_session():
+            async with session.begin():
+                clash = await session.execute(
+                    select(Club.id).where(
+                        Club.name_club == new_name,
+                        Club.id != club_id,
+                        Club.is_fake_club == False,
+                    )
+                )
+                if clash.scalar_one_or_none() is not None:
+                    return False
+                await session.execute(
+                    update(Club).where(Club.id == club_id).values(name_club=new_name)
+                )
+                await session.commit()
+                return True
+        return False
+
+    @classmethod
     async def change_status_invoice_invite(
         cls,
         club_id: int,

@@ -1,7 +1,7 @@
-"""Команда (club) — read + join/leave, mirroring bot club menu logic.
+"""Команда (club) — read + join/leave + owner moderation + infrastructure upgrade.
 
-Owner management (kick/transfer/schema/etc.) stays in the bot for now; the app
-covers what regular players need daily. (ponytail: owner tools = next block.)
+Owner tools (kick/transfer/rename/invite-only/description/upgrade) are exposed
+here for the webapp; join-request approval stays in the bot (no requests table).
 """
 from datetime import datetime
 
@@ -12,7 +12,7 @@ from aiogram.utils.web_app import WebAppInitData
 from config import LINK_TO_CHAT
 from constants import MAX_LEN_MEMBERS_CLUB, TIME_TO_JOIN_TO_CLUB
 from bot.club_infrastructure.config import INFRASTRUCTURE_BONUSES, UPGRADE_COSTS
-from bot.club_infrastructure.types import InfrastructureType
+from bot.club_infrastructure.types import InfrastructureType, InfrastructureLevel, InfrastructureTyping
 from services.character_service import CharacterService
 from services.club_service import ClubService
 from services.club_infrastructure_service import ClubInfrastructureService
@@ -31,6 +31,32 @@ INFRA_LABELS = {
 }
 
 
+def _infra_payload(infra):
+    """Infra block: current levels + a per-level cost/bonus table for the UI."""
+    objects = []
+    for itype in InfrastructureType:
+        level = infra.get_infrastructure_level(itype)
+        level_i = int(level.value)
+        bonuses = INFRASTRUCTURE_BONUSES[itype]
+        levels = [
+            {
+                "level": int(lvl.value),
+                "bonus": bonuses.get(level=lvl),
+                "cost": UPGRADE_COSTS.get(lvl, 0) if int(lvl.value) >= 1 else 0,
+            }
+            for lvl in InfrastructureLevel
+        ]
+        objects.append({
+            "type": itype.name,
+            "label": INFRA_LABELS[itype],
+            "level": level_i,
+            "bonus": bonuses.get(level=level),
+            "next_cost": UPGRADE_COSTS.get(level.get_next_level()) if level_i < 5 else None,
+            "levels": levels,
+        })
+    return {"points": infra.points, "objects": objects}
+
+
 def _member_entry(ch, me_user_id):
     return {
         "user_id": ch.characters_user_id,
@@ -41,6 +67,19 @@ def _member_entry(ch, me_user_id):
         "gender": ch.gender,
         "is_me": ch.characters_user_id == me_user_id,
     }
+
+
+async def _owner_club(auth: WebAppInitData):
+    """Resolve the caller's club and require them to be its owner."""
+    character = await CharacterService.get_character(character_user_id=auth.user.id)
+    if not character or not character.club_id:
+        raise HTTPException(status_code=404, detail="Ти не в команді")
+    club = await ClubService.get_club(club_id=character.club_id)
+    if not club:
+        raise HTTPException(status_code=404, detail="Команду не знайдено")
+    if club.owner_id != auth.user.id:
+        raise HTTPException(status_code=403, detail="Тільки лідер команди")
+    return club
 
 
 @team_router.get("/team")
@@ -58,21 +97,7 @@ async def get_team(auth: WebAppInitData = Depends(auth_user)):
 
     members = sorted(club.characters, key=lambda c: c.full_power, reverse=True)
     infra = await ClubInfrastructureService.get_infrastructure(club_id=club.id)
-    infrastructure = None
-    if infra:
-        objects = []
-        for itype in InfrastructureType:
-            level = infra.get_infrastructure_level(itype)
-            level_i = int(level.value)
-            bonuses = INFRASTRUCTURE_BONUSES[itype]
-            objects.append({
-                "type": itype.name,
-                "label": INFRA_LABELS[itype],
-                "level": level_i,
-                "bonus": bonuses.get(level=level),
-                "next_cost": UPGRADE_COSTS.get(level.get_next_level()) if level_i < 5 else None,
-            })
-        infrastructure = {"points": infra.points, "objects": objects}
+    infrastructure = _infra_payload(infra) if infra else None
 
     return {
         "club": {
@@ -157,3 +182,104 @@ async def leave_club(auth: WebAppInitData = Depends(auth_user)):
         raise HTTPException(status_code=409, detail="Лідер не може покинути команду — передай лідерство в боті")
     await CharacterService.leave_club(character)
     return {"left": True}
+
+
+# ── Owner moderation (all owner-guarded via _owner_club) ──────────────────────
+
+class UserIdReq(BaseModel):
+    user_id: int
+
+
+class RenameReq(BaseModel):
+    name: str
+
+
+class InviteOnlyReq(BaseModel):
+    enabled: bool
+
+
+class DescriptionReq(BaseModel):
+    text: str
+
+
+class UpgradeReq(BaseModel):
+    type: str  # InfrastructureType member name, e.g. "TRAINING_CENTER"
+
+
+@team_router.post("/team/kick")
+async def kick_member(req: UserIdReq, auth: WebAppInitData = Depends(auth_user)):
+    club = await _owner_club(auth)
+    if req.user_id == auth.user.id:
+        raise HTTPException(status_code=409, detail="Не можна вигнати себе")
+    target = await CharacterService.get_character(character_user_id=req.user_id)
+    if not target or target.club_id != club.id:
+        raise HTTPException(status_code=404, detail="Гравця немає в команді")
+    await ClubService.remove_character_from_club(target.id)
+    return {"ok": True}
+
+
+@team_router.post("/team/transfer")
+async def transfer_owner(req: UserIdReq, auth: WebAppInitData = Depends(auth_user)):
+    club = await _owner_club(auth)
+    if req.user_id == auth.user.id:
+        raise HTTPException(status_code=409, detail="Ти вже лідер")
+    target = await CharacterService.get_character(character_user_id=req.user_id)
+    if not target or target.club_id != club.id:
+        raise HTTPException(status_code=404, detail="Гравця немає в команді")
+    await ClubService.transfer_club_owner(club, req.user_id)
+    return {"ok": True}
+
+
+@team_router.post("/team/rename")
+async def rename_team(req: RenameReq, auth: WebAppInitData = Depends(auth_user)):
+    club = await _owner_club(auth)
+    name = (req.name or "").strip()
+    if not (3 <= len(name) <= 30):
+        raise HTTPException(status_code=400, detail="Назва: від 3 до 30 символів")
+    if not await ClubService.rename_club(club.id, name):
+        raise HTTPException(status_code=409, detail="Така назва вже зайнята")
+    return {"ok": True, "name": name}
+
+
+@team_router.post("/team/invite-only")
+async def set_invite_only(req: InviteOnlyReq, auth: WebAppInitData = Depends(auth_user)):
+    club = await _owner_club(auth)
+    await ClubService.change_status_invoice_invite(club.id, req.enabled)
+    return {"ok": True, "invite_only": req.enabled}
+
+
+@team_router.post("/team/description")
+async def set_description(req: DescriptionReq, auth: WebAppInitData = Depends(auth_user)):
+    club = await _owner_club(auth)
+    text = (req.text or "").strip()
+    if len(text) > 255:
+        raise HTTPException(status_code=400, detail="Опис: до 255 символів")
+    await ClubService.update_description_club(club.id, text or "Не вказано")
+    return {"ok": True, "description": text}
+
+
+@team_router.post("/team/infrastructure/upgrade")
+async def upgrade_infrastructure(req: UpgradeReq, auth: WebAppInitData = Depends(auth_user)):
+    club = await _owner_club(auth)
+    try:
+        itype = InfrastructureType[req.type]
+    except KeyError:
+        raise HTTPException(status_code=400, detail="Невідомий об'єкт")
+    infra = await ClubInfrastructureService.get_infrastructure(club_id=club.id)
+    if not infra:
+        raise HTTPException(status_code=404, detail="Немає інфраструктури")
+    level = infra.get_infrastructure_level(itype)
+    if level == InfrastructureLevel.LEVEL_5:
+        raise HTTPException(status_code=409, detail="Максимальний рівень")
+    next_level = level.get_next_level()
+    cost = UPGRADE_COSTS[next_level]
+    # atomic debit first, then bump the level (avoids the bot flow's double-spend race)
+    if not await ClubInfrastructureService.spend_points_if_enough(club.id, cost):
+        raise HTTPException(status_code=409, detail="Недостатньо очок інфраструктури")
+    await ClubInfrastructureService.update_level_infrastructure(
+        club_id=club.id,
+        infrastructure_type=InfrastructureTyping.get_name(itype),
+        infrastructure_level=next_level,
+    )
+    infra = await ClubInfrastructureService.get_infrastructure(club_id=club.id)
+    return {"ok": True, "infrastructure": _infra_payload(infra)}

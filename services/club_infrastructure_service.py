@@ -68,6 +68,28 @@ class ClubInfrastructureService:
                 await session.commit()
                 
     @classmethod
+    async def spend_points_if_enough(
+        cls,
+        club_id: int,
+        points: int
+    ) -> bool:
+        # Atomic conditional debit: only deducts when the balance covers the cost.
+        # Prevents the double-upgrade race the bot flow (level-then-reduce) allows.
+        async for session in get_session():
+            async with session.begin():
+                res = await session.execute(
+                    update(ClubInfrastructure)
+                    .where(
+                        ClubInfrastructure.club_id == club_id,
+                        ClubInfrastructure.points >= points,
+                    )
+                    .values(points=ClubInfrastructure.points - points)
+                )
+                await session.commit()
+                return res.rowcount == 1
+        return False
+
+    @classmethod
     async def reduce_points(
         cls,
         club_id: int,

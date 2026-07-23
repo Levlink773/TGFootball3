@@ -79,6 +79,18 @@ export const unequipItem = (category) =>
   api('/inventory/unequip', { method: 'POST', body: JSON.stringify({ category }) })
 export const sellItem = (item_id) =>
   api('/inventory/sell', { method: 'POST', body: JSON.stringify({ item_id }) })
+export const kickMember = (user_id) =>
+  api('/team/kick', { method: 'POST', body: JSON.stringify({ user_id }) })
+export const transferOwner = (user_id) =>
+  api('/team/transfer', { method: 'POST', body: JSON.stringify({ user_id }) })
+export const renameClub = (name) =>
+  api('/team/rename', { method: 'POST', body: JSON.stringify({ name }) })
+export const setInviteOnly = (enabled) =>
+  api('/team/invite-only', { method: 'POST', body: JSON.stringify({ enabled }) })
+export const setClubDescription = (text) =>
+  api('/team/description', { method: 'POST', body: JSON.stringify({ text }) })
+export const upgradeInfrastructure = (type) =>
+  api('/team/infrastructure/upgrade', { method: 'POST', body: JSON.stringify({ type }) })
 export const getQuests = () => api('/quests')
 export const claimQuests = (key) => api('/quests/claim', { method: 'POST', body: JSON.stringify({ key }) })
 export const claimGift = () => api('/gift/claim', { method: 'POST' })

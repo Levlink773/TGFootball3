@@ -34,11 +34,39 @@ class UserSender:
         self.second_club: Club = league_fight.second_club
         self.characters = [character for character in (self.second_club.characters + self.first_club.characters) if not character.is_bot] 
         
+    TEMPLATE_REMINDER = (
+        "⏰ Матч <b>{name_first_club}</b> vs <b>{name_second_club}</b> вже за "
+        "<b>{minutes} хв</b>! Зареєструйся, щоб зіграти."
+    )
+
     async def send_messages_to_users(self):
         await self._post_init()
-        
+
         for character in self.characters:
             await self.__send_message(character)
+
+    async def send_reminder(self, minutes_left: int):
+        # Lightweight text nudge (no photo) for the T-40 / T-10 pre-match reminders.
+        await self._post_init()
+        for character in self.characters:
+            await self.__send_reminder(character, minutes_left)
+
+    @rate_limiter
+    async def __send_reminder(self, character: Character, minutes_left: int):
+        try:
+            if not character.is_bot:
+                await asyncio.sleep(1)
+                await bot.send_message(
+                    chat_id=character.characters_user_id,
+                    text=self.TEMPLATE_REMINDER.format(
+                        name_first_club=self.first_club.name_club,
+                        name_second_club=self.second_club.name_club,
+                        minutes=minutes_left,
+                    ),
+                    reply_markup=keyboard_to_join_character_to_fight(match_id=self.match_id),
+                )
+        except Exception as E:
+            logger.error(f"Failed reminder to {character.characters_user_id}\nError: {E}")
 
     def __get_text(self):
         return self.TEMPLATE_JOIN_TO_FIGHT.format(

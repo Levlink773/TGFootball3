@@ -4,6 +4,7 @@ from datetime import datetime
 from sqlalchemy import Column, BigInteger, String, DateTime, Boolean, ForeignKey, text, Integer
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import relationship, Mapped
+from sqlalchemy.orm.exc import DetachedInstanceError
 from database.models.character import Character
 
 from config import LEAGUES
@@ -31,10 +32,26 @@ class Club(Base):
     
     owner          = relationship("UserBot", back_populates="clubs", lazy="subquery")
     characters:Mapped[list['Character']]  = relationship("Character", back_populates="club", lazy="subquery")
+    infrastructure = relationship("ClubInfrastructure", uselist=False, lazy="subquery")
+
+    def _training_center_multiplier(self) -> float:
+        # Training-center infrastructure raises the whole club's power (Max 23.07).
+        # Local import dodges a model-load circular import via bot.club_infrastructure.
+        from bot.club_infrastructure.config import INFRASTRUCTURE_BONUSES
+        from bot.club_infrastructure.types import InfrastructureType
+        try:
+            infra = self.infrastructure
+        except DetachedInstanceError:
+            return 1.0
+        if not infra:
+            return 1.0
+        pct = INFRASTRUCTURE_BONUSES[InfrastructureType.TRAINING_CENTER].get(level=infra.training_center)
+        return 1.0 + (pct or 0) / 100.0
 
     @hybrid_property
     def total_power(self) -> int:
-        return sum(character.full_power for character in self.characters)
+        base = sum(character.full_power for character in self.characters)
+        return round(base * self._training_center_multiplier())
 
     @hybrid_property
     def koef_energy(self) -> float:
