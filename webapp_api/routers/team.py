@@ -273,13 +273,15 @@ async def upgrade_infrastructure(req: UpgradeReq, auth: WebAppInitData = Depends
         raise HTTPException(status_code=409, detail="Максимальний рівень")
     next_level = level.get_next_level()
     cost = UPGRADE_COSTS[next_level]
-    # atomic debit first, then bump the level (avoids the bot flow's double-spend race)
-    if not await ClubInfrastructureService.spend_points_if_enough(club.id, cost):
-        raise HTTPException(status_code=409, detail="Недостатньо очок інфраструктури")
-    await ClubInfrastructureService.update_level_infrastructure(
+    # single atomic level-CAS + debit: concurrent clicks can't overcharge or skip a level
+    ok = await ClubInfrastructureService.upgrade_if_current(
         club_id=club.id,
-        infrastructure_type=InfrastructureTyping.get_name(itype),
-        infrastructure_level=next_level,
+        column_name=InfrastructureTyping.get_name(itype),
+        current_level=level,
+        next_level=next_level,
+        cost=cost,
     )
+    if not ok:
+        raise HTTPException(status_code=409, detail="Недостатньо очок або рівень уже змінено")
     infra = await ClubInfrastructureService.get_infrastructure(club_id=club.id)
     return {"ok": True, "infrastructure": _infra_payload(infra)}

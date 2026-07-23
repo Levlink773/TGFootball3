@@ -68,22 +68,29 @@ class ClubInfrastructureService:
                 await session.commit()
                 
     @classmethod
-    async def spend_points_if_enough(
+    async def upgrade_if_current(
         cls,
         club_id: int,
-        points: int
+        column_name: str,
+        current_level,
+        next_level,
+        cost: int,
     ) -> bool:
-        # Atomic conditional debit: only deducts when the balance covers the cost.
-        # Prevents the double-upgrade race the bot flow (level-then-reduce) allows.
+        # Fully-atomic upgrade: level compare-and-swap + points debit in ONE
+        # statement. The `column == current_level` guard means concurrent clicks
+        # on the same transition let exactly one win — no overcharge, no double
+        # level-up, no negative points.
         async for session in get_session():
             async with session.begin():
+                col = getattr(ClubInfrastructure, column_name)
                 res = await session.execute(
                     update(ClubInfrastructure)
                     .where(
                         ClubInfrastructure.club_id == club_id,
-                        ClubInfrastructure.points >= points,
+                        col == current_level,
+                        ClubInfrastructure.points >= cost,
                     )
-                    .values(points=ClubInfrastructure.points - points)
+                    .values({column_name: next_level, "points": ClubInfrastructure.points - cost})
                 )
                 await session.commit()
                 return res.rowcount == 1
