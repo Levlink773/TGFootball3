@@ -1,4 +1,5 @@
-import { getMatches, getPlayer } from '../api'
+import { useEffect, useState } from 'react'
+import { claimQuests, getMatches, getPlayer, getQuests } from '../api'
 import { useApi } from '../hooks'
 import { Card, Loading, ErrorBox, NextBar, CtaButton, EnergyBar } from '../ui'
 import { IconCalendar, IconBolt, IconUser, IconDumbbell, IconChat, IconShield, IconChart, IconTarget } from '../icons'
@@ -13,6 +14,103 @@ function fmtTime(iso) {
 
 function fmtClock(iso) {
   return new Date(iso).toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit' })
+}
+
+// Next occurrence of a league's registration/start day (day_start, 08:00)
+function nextLeagueStart(dayStart) {
+  const now = new Date()
+  let d = new Date(now.getFullYear(), now.getMonth(), dayStart, 8, 0, 0)
+  if (d <= now) d = new Date(now.getFullYear(), now.getMonth() + 1, dayStart, 8, 0, 0)
+  return d
+}
+
+function fmtCountdown(ms) {
+  if (ms <= 0) return '00:00:00'
+  const total = Math.floor(ms / 1000)
+  const d = Math.floor(total / 86400)
+  const h = String(Math.floor((total % 86400) / 3600)).padStart(2, '0')
+  const m = String(Math.floor((total % 3600) / 60)).padStart(2, '0')
+  const s = String(total % 60).padStart(2, '0')
+  return d > 0 ? `${d}д ${h}:${m}:${s}` : `${h}:${m}:${s}`
+}
+
+// 🏆 Активні турніри: countdown до реєстрації (неактивна ліга) чи до матчу (активна)
+function TournamentsCard({ leagues, goTo }) {
+  const [, tick] = useState(0)
+  useEffect(() => {
+    const t = setInterval(() => tick((n) => n + 1), 1000)
+    return () => clearInterval(t)
+  }, [])
+  const now = Date.now()
+  const rows = leagues.map((l) => {
+    const target = l.is_active && l.next_match
+      ? new Date(l.next_match.time_to_start)
+      : nextLeagueStart(l.day_start)
+    return {
+      key: l.type,
+      name: l.name,
+      caption: l.is_active && l.next_match ? 'До матчу' : 'До реєстрації',
+      left: target.getTime() - now,
+    }
+  })
+  return (
+    <Card>
+      <div className="h-display text-sm text-white/80 mb-2">🏆 Активні турніри</div>
+      <div className="space-y-2">
+        {rows.map((r) => (
+          <div key={r.key} className="flex items-center gap-2 cursor-pointer" onClick={() => goTo('league')}>
+            <div className="h-display text-base flex-1">{r.name}</div>
+            <div className="text-muted text-xs">{r.caption}</div>
+            <div className="h-display text-lg text-neon glow-neon tabular-nums">{fmtCountdown(r.left)}</div>
+          </div>
+        ))}
+      </div>
+    </Card>
+  )
+}
+
+// Щоденні завдання: 3 прогрес-рядки + кнопка нагороди
+function DailyQuestsCard() {
+  const quests = useApi(getQuests)
+  const [claiming, setClaiming] = useState(false)
+  if (quests.loading || quests.error) return null
+  const q = quests.data
+  const claim = async () => {
+    setClaiming(true)
+    try {
+      await claimQuests()
+      quests.reload()
+    } catch { /* 409 = недоступно; стан оновить reload нижче */ } finally {
+      setClaiming(false)
+    }
+  }
+  return (
+    <Card accent="gold">
+      <div className="flex items-center mb-2">
+        <div className="h-display text-sm text-white/80 flex-1">Щоденні завдання</div>
+        <div className="text-muted text-xs">+{q.reward.coins} 💰 · +{q.reward.energy} ⚡</div>
+      </div>
+      <div className="space-y-1.5">
+        {q.quests.map((item) => {
+          const done = item.current >= item.target
+          return (
+            <div key={item.key} className="flex items-center gap-2">
+              <span className={done ? 'text-neon' : 'text-muted'}>{done ? '✅' : '⬜'}</span>
+              <span className={`text-sm flex-1 ${done ? 'text-white/60 line-through' : ''}`}>{item.title}</span>
+              <span className="h-display text-base tabular-nums">{Math.min(item.current, item.target)}/{item.target}</span>
+            </div>
+          )
+        })}
+      </div>
+      {q.claimed ? (
+        <div className="text-muted text-xs mt-2">Нагороду отримано ✓ Нові завдання — завтра</div>
+      ) : q.claimable ? (
+        <div className="mt-3">
+          <CtaButton color="gold" onClick={claim} disabled={claiming}>Забрати нагороду</CtaButton>
+        </div>
+      ) : null}
+    </Card>
+  )
 }
 
 // Головна (стадіон) — стартовий екран: банер → наступний матч → бліц → швидкі переходи.
@@ -73,6 +171,14 @@ export default function Home({ goTo }) {
       />
 
       <EnergyBar value={player.data.energy} max={energyMax} />
+
+      <DailyQuestsCard />
+
+      <TournamentsCard leagues={matches.data.leagues} goTo={goTo} />
+
+      <CtaButton onClick={() => goTo('training')} className="w-full">
+        Почати тренування ›
+      </CtaButton>
 
       <div className="grid grid-cols-3 gap-3">
         <Card className="text-center py-3 cursor-pointer" onClick={() => goTo('player')}>

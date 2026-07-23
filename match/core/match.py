@@ -200,8 +200,18 @@ class Match:
             club = winner_match_club,
             sender_match = self.match_sender
         )
-        
+
         await calculate_reward.calculate_award_match()
+
+        # daily quest «Переможи»: credit each real player of the winning club
+        from services.daily_quest_service import DailyQuestService
+        for ch in winner_match_club.characters_in_match:
+            if getattr(ch, "is_bot", False):
+                continue
+            try:
+                await DailyQuestService.increment(ch.id, "wins")
+            except Exception as e:
+                logger.warning(f"daily quest win increment failed for {ch.id}: {e}")
         
         
     async def _add_event(

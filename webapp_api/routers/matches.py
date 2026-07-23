@@ -15,6 +15,7 @@ from blitz.exception import BlitzCloseError, CharacterExistsInBlitzError, MaxUse
 from blitz.services.blitz_service import BlitzService
 
 from services.character_service import CharacterService
+from services.daily_quest_service import DailyQuestService
 from services.match_character_service import MatchCharacterService
 from services.club_shemas_service import SchemaSerivce
 from services.league_services.league_service import LeagueService
@@ -168,6 +169,7 @@ async def register_to_match(body: MatchRegisterBody, auth: WebAppInitData = Depe
     if not ok:
         raise HTTPException(status_code=500, detail="Не вдалося зареєструватися")
     await CharacterService.add_count_register_on_match(character.id, 1)
+    await DailyQuestService.increment(character.id, "matches")
     return {"ok": True, "match_id": fight.match_id}
 
 
@@ -187,4 +189,5 @@ async def register_to_blitz(auth: WebAppInitData = Depends(auth_user)):
         raise HTTPException(status_code=409, detail="Вже зареєстрований на бліц")
     except MaxUsersInBlitzError:
         raise HTTPException(status_code=409, detail="Бліц заповнено")
+    await DailyQuestService.increment(character.id, "matches")
     return {"ok": True, "blitz_id": state["blitz_id"]}

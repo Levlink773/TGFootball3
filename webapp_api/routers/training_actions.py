@@ -31,6 +31,7 @@ from database.models.reminder_character import ReminderCharacter
 from database.session import get_session
 from services.character_service import CharacterService
 from services.club_infrastructure_service import ClubInfrastructureService
+from services.daily_quest_service import DailyQuestService
 from services.reminder_character_service import RemniderCharacterService
 from utils.randomaizer import check_chance
 
@@ -130,6 +131,7 @@ async def start_training(req: StartTraining, auth: WebAppInitData = Depends(auth
         time_training_seconds=duration.total_seconds(),
     )
     await CharacterService.consume_energy(character_id=character.id, energy_consumed=cost)
+    await DailyQuestService.increment(character.id, "trainings")
 
     return {
         "started": True,
