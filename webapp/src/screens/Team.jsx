@@ -285,31 +285,38 @@ export default function Team({ goTo }) {
             )}
           </Card>
 
-          <Card className="p-0 overflow-hidden">
-            <div className="px-4 pt-3"><SectionTitle>Склад</SectionTitle></div>
-            {club.members.map((m, i) => (
-              <div
-                key={m.user_id}
-                className={`flex items-center gap-3 px-4 py-2 border-t border-white/5 ${m.is_me ? 'bg-neon/10' : ''}`}
-              >
-                <span className="w-7 text-center">{MEDALS[i] || <span className="text-muted">{i + 1}</span>}</span>
-                <div className="flex-1 min-w-0">
-                  <div className={`h-display text-sm truncate ${m.is_me ? 'text-neon' : ''}`}>{m.name}</div>
-                  <div className="text-muted text-[11px]">{m.position} · {m.level} рів.</div>
+          <div>
+            <SectionTitle>Склад</SectionTitle>
+            {/* 2 гравці в рядок замість одного стовпчика (Max 24.07) */}
+            <div className="grid grid-cols-2 gap-2">
+              {club.members.map((m, i) => (
+                <div
+                  key={m.user_id}
+                  className={`bg-card rounded-xl border p-2.5 ${m.is_me ? 'border-neon/50 ring-glow-neon' : 'border-white/10'}`}
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="shrink-0 text-sm">{MEDALS[i] || <span className="text-muted text-xs">{i + 1}</span>}</span>
+                    <div className="min-w-0 flex-1">
+                      <div className={`h-display text-xs truncate ${m.is_me ? 'text-neon' : ''}`}>{m.name}</div>
+                      <div className="text-muted text-[10px] truncate">{m.position} · {m.level} рів.</div>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between mt-1.5">
+                    <span className="h-display text-gold glow-gold text-sm">{m.full_power}</span>
+                    {club.is_owner && !m.is_me && (
+                      <button
+                        onClick={() => setSheetMember(m)}
+                        className="text-muted hover:text-neon text-base leading-none px-1"
+                        aria-label="Дії з гравцем"
+                      >
+                        ⚙
+                      </button>
+                    )}
+                  </div>
                 </div>
-                <span className="h-display text-gold glow-gold">{m.full_power}</span>
-                {club.is_owner && !m.is_me && (
-                  <button
-                    onClick={() => setSheetMember(m)}
-                    className="text-muted hover:text-neon text-lg px-1"
-                    aria-label="Дії з гравцем"
-                  >
-                    ⚙
-                  </button>
-                )}
-              </div>
-            ))}
-          </Card>
+              ))}
+            </div>
+          </div>
 
           {club.is_owner && <OwnerSettings club={club} busy={busy} run={run} />}
 
