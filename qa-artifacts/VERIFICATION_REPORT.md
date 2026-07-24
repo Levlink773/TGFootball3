@@ -201,6 +201,49 @@ Prod DB reset (client-authorised) is sequenced **last**, after a fresh Telegram 
 completes registration on production — because wiping `users` makes every player a new user,
 which is exactly the path that produced the black screen.
 
+## DEPLOYED — 2026-07-25, 01:10–01:20 Kyiv (quiet window; blitz runs 15:00 / 19:00)
+
+Reviewer returned **GO_WITH_CONDITIONS with zero blocking objections** after the atomicity fix.
+All four units shipped, plus the authorised DB reset. Every step verified live.
+
+| Unit | Shipped | Verification |
+|---|---|---|
+| 0 — nginx rate limits | zones in `http{}`, `limit_req` on `/api/`, tighter bucket on `/api/shop/invoice` | `nginx -t` OK, reloaded. **80 concurrent → 34×200 / 46×429**; invoice bucket → burst+1 through, rest 429 |
+| A — frontend | `deploy_webapp.sh` (atomic, no `--delete`) | new bundle live; **old bundle still 200** so cached clients don't break; `?initData=` fallback confirmed stripped |
+| B — API sidecar | `auth.py`, `trainer.py`, `team.py`; `TEST_BOT_TOKEN` commented out of prod `.env` | `footballgame-api` restarted; all endpoints 200 with prod-signed initData, 401 without, **test-token impersonation now 401** |
+| C — shared services + webhooks | 6 handlers, `payment_service`, `character_service`, `items_service`, `club_service`, `club_shemas_service`, `monobank_signature`, `base_endpoint`, `requirements.txt` | bot restarted, **0 restarts, 0 error lines**; forged unsigned callback → **403 Invalid signature**, no exception text leaked |
+| E — DB reset (client-authorised) | FK-safe truncate of all player tables | see below |
+
+Backups taken before each unit: nginx confs, prod `.env`, every touched `.py` under
+`/root/unitc-backup-<ts>/`, and the pre-wipe DB dump at
+`/root/db-backups/tgfootball-prewipe-20260724-221410.sql`.
+
+### DB reset
+
+Pre-wipe state was **281 users / 212 characters / 42 clubs / 71 payments / 10 items**, but only
+**12** real characters had any progress and the only real money was **6 paid invoices totalling
+820 UAH, all from one account, newest 2025-12-10** — consistent with Maxim's «стара не
+залишилась».
+
+The dump was **restore-tested before the wipe** (replayed into a scratch schema locally and
+matched exactly: 281 / 212 / 42 / 71 / 10), so the backup is proven replayable — the first
+attempt on the VPS failed because `fbuser` cannot `CREATE DATABASE`, and an earlier dump
+carried `GTID_PURGED` and would not replay at all.
+
+Writers were drained (`footballgame` + `footballgame-api` stopped) before truncating, then
+restarted. Post-wipe: `users=0 characters=0 clubs=0 payments=0`, `alembic_version` preserved at
+`f6a7b8c1d2e3`, bot 0 restarts. A brand-new user now gets a clean `404 No character` on every
+endpoint — which the frontend renders as the onboarding screen — and `/api/leagues` still 200.
+
+### Two extra defects found and fixed during deployment
+
+- The app rendered the API's internal English `detail` ("Missing initData") to players outside
+  Telegram. Ukrainian copy now wins for 401/429. Live: «Сесія недійсна — відкрий гру через
+  кнопку в Telegram.»
+- **`index.html` was served with no `Cache-Control`.** A cached shell pointing at a deleted
+  asset hash is precisely the mechanism behind the black screen. The SPA shell is now
+  `Cache-Control: no-cache`; hashed assets stay `immutable`, 30d.
+
 ## Verdict
 
 Every defect proven by exploit in this audit is fixed, with a committed regression test that
