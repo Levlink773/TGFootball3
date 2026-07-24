@@ -1,0 +1,20 @@
+tests/test_energy_and_keys.py FFF                                        [100%]
+=================================== FAILURES ===================================
+___________________________ test_energy_respects_cap ___________________________
+tests/test_energy_and_keys.py:41: in test_energy_respects_cap
+    assert final <= 300, f"energy exceeded VIP cap: {final} > 300"
+E   AssertionError: energy exceeded VIP cap: 650 > 300
+E   assert 650 <= 300
+___________________________ test_energy_not_negative ___________________________
+tests/test_energy_and_keys.py:57: in test_energy_not_negative
+    assert final >= 0, f"energy went negative: {final}"
+E   AssertionError: energy went negative: -989
+E   assert -989 >= 0
+________________________ test_training_key_not_negative ________________________
+tests/test_energy_and_keys.py:75: in test_training_key_not_negative
+    assert final >= 0, f"training_key went negative: {final}"
+E   AssertionError: training_key went negative: -4
+E   assert -4 >= 0
+FAILED tests/test_energy_and_keys.py::test_energy_respects_cap - AssertionErr...
+FAILED tests/test_energy_and_keys.py::test_energy_not_negative - AssertionErr...
+FAILED tests/test_energy_and_keys.py::test_training_key_not_negative - Assert...

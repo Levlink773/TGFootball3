@@ -1,0 +1,6 @@
+
+> webapp@0.0.0 lint
+> oxlint
+
+src/screens/Settings.jsx:4:35: warning eslint(no-unused-vars): Identifier 'SectionTitle' is imported but never used. help: Consider removing this import.
+src/screens/Home.jsx:288:13: warning eslint(no-unused-expressions): Expected expression to be used help: Consider using this expression or removing it

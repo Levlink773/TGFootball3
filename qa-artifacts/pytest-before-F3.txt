@@ -1,0 +1,10 @@
+=================================== FAILURES ===================================
+    assert after == before + 777, (
+E   AssertionError: MERGE CLOBBER: unequip reverted money 10777 -> 10000 (stale snapshot 10000 written back over a concurrent credit)
+E   assert 10000 == (10000 + 777)
+    assert after == before_energy + 500, (
+E   AssertionError: MERGE CLOBBER: transfer_club_owner reverted energy_applied 500 -> 0
+E   assert 0 == (0 + 500)
+FAILED tests/test_merge_clobber.py::test_unequip_does_not_revert_concurrent_money_change
+FAILED tests/test_merge_clobber.py::test_transfer_owner_does_not_revert_concurrent_club_change
+========================= 2 failed, 1 warning in 0.24s =========================

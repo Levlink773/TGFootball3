@@ -1,0 +1,14 @@
+=================================== FAILURES ===================================
+    assert "<" not in stored and ">" not in stored, (
+E   AssertionError: HTML INJECTION: stored club name contains markup: "<a href='https://evil'>ФК"
+E   assert ('<' not in "<a href='https://evil'>ФК"
+    assert "<" not in stored and ">" not in stored, (
+E   AssertionError: HTML INJECTION in description: '<b>x</b>'
+E   assert ('<' not in '<b>x</b>'
+    assert is_safe, (
+E   AssertionError: SCHEMA DoS: getattr(cls, club.schema) accepts a non-schema attribute name; an unvalidated club.schema string breaks /api/match/register for every member
+E   assert False
+FAILED tests/test_injection_and_dos.py::test_rename_rejects_html - AssertionE...
+FAILED tests/test_injection_and_dos.py::test_description_rejects_html - Asser...
+FAILED tests/test_injection_and_dos.py::test_schema_lookup_validates_name - A...
+========================= 3 failed, 1 warning in 0.20s =========================

@@ -1,0 +1,6 @@
+=================================== FAILURES ===================================
+    assert calls["n"] == 1, (
+E   AssertionError: TOCTOU: reward awarded 20x for one session (expected 1)
+E   assert 20 == 1
+FAILED tests/test_trainer_toctou.py::test_pick_stat_awards_exactly_once - Ass...
+========================= 1 failed, 1 warning in 1.12s =========================

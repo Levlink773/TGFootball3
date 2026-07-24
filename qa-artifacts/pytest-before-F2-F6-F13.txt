@@ -1,0 +1,14 @@
+=================================== FAILURES ===================================
+    assert ok is False, (
+E   AssertionError: FAIL-OPEN: signature verification returned True with no merchant token; a forged callback would be accepted and credit real coins
+E   assert True is False
+    assert after - before == CREDIT, (
+E   AssertionError: REPLAY DOUBLE-CREDIT: balance moved 1000, expected 500
+E   assert (11000 - 10000) == 500
+    assert "secret-internal-detail-xyz" not in body, (
+E   AssertionError: INFO LEAK: raw exception text returned to the client: {"status": "BAD", "error": "secret-internal-detail-xyz"}
+E   assert 'secret-internal-detail-xyz' not in '{"status": ...detail-xyz"}'
+FAILED tests/test_webhook_money.py::test_signature_fail_open - AssertionError...
+FAILED tests/test_webhook_money.py::test_replay_credits_exactly_once - Assert...
+FAILED tests/test_webhook_money.py::test_error_response_has_no_raw_exception
+==================== 3 failed, 1 passed, 1 warning in 0.20s ====================
