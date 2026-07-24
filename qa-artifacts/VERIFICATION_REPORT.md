@@ -2,7 +2,7 @@
 
 - **Project:** TG Football (`@tg_football_game_bot`), Telegram Mini App, client Maxim
 - **Repo/branch:** `~/dev/tg-football-test` @ `prod-snapshot`
-- **Baseline audited:** `ce5d738` · **Fixes commit:** `aff5130`
+- **Baseline audited:** `ce5d738` · **Fixes:** `aff5130`, `c3e1ad3`
 - **Date:** 2026-07-25
 - **Live app:** https://app.football-blitz.online (nginx static + `/api/` → uvicorn :3004)
 - **Scope note:** FootballBlitz is a *separate* sibling project (repo `alotofms/FootballBlitz`,
@@ -35,7 +35,7 @@ would **not** replay — re-taken with `--set-gtid-purged=OFF`).
 | `python -m compileall` over api, webhook, services, bot | clean, exit 0 |
 | `alembic heads` | single head `f6a7b8c1d2e3` — no fork |
 | Route registration | 41 routes |
-| `pytest tests/` | **24 passed, 1 skipped** |
+| `pytest tests/` | **26 passed, 1 skipped** |
 
 The skip is the `TEST_BOT_TOKEN` impersonation exploit, which only runs when the API is
 deliberately started with that token set. It was executed manually — see F1.
@@ -121,28 +121,52 @@ Mutation exercised end to end: **daily gift claim** → money `10000 → 10020`,
 held at the `150` cap by the new clamp. No 500s and no tracebacks in the uvicorn log for the
 entire session; the only non-2xx entries are this audit's own 401/404/400 probes.
 
-## PRODUCTION CONFIG CHECK (read-only, 2026-07-25) — two live vulnerabilities
+## PRODUCTION CONFIG CHECK (read-only, 2026-07-25)
 
-Checked `/root/footballgame/.env` on the VPS for **presence only**, no values read:
+Checked `/root/footballgame/.env` and the loaded `config` on the VPS. Presence and SHA-256
+prefixes only — no secret values were read or printed.
 
 | Key | Prod state | Consequence |
 |---|---|---|
-| `TOKEN_MONOBANK` | **ABSENT / EMPTY** | `verify()` currently returns `True` for every callback → **Monobank webhook signature checking is OFF in production right now**. Anyone who guesses a pending `invoiceId` can POST a forged `status:"success"` and be credited. |
-| `TEST_BOT_TOKEN` | **SET (len 46)** | Combined with the pre-fix `auth.py`, the test-bot token is a live second signer → **anyone holding it can authenticate as ANY player** on production. |
-| `ALLOW_TEST_BOT_INITDATA` | absent | (the new opt-in flag; correct — nothing to do) |
+| `TOKEN_MONOBANK` | **LOADED**, len 23, sha `2bbd1f5c0b17` | Signature verification **is active** in production. The fail-closed fix is therefore safe to ship. |
+| `TEST_BOT_TOKEN` | **SET (len 46)** | With the pre-fix `auth.py`, the test-bot token is a live second signer → **anyone holding it can authenticate as ANY player**. Still open until Unit B ships and the var is removed. |
+| `ALLOW_TEST_BOT_INITDATA` | absent | correct — the new opt-in flag is off |
 | services | `footballgame`, `footballgame-api`, `tgfootball-testbot` all active | test bot still running |
 | `limit_req_zone` in nginx.conf | **0** | no rate limiting in force |
 | prod alembic head | `f6a7b8c1d2e3` | matches local — no migration drift |
 
-Both vulnerabilities are **live on production as of this check**. They were rated HIGH from
-code alone; the config confirms they are not theoretical. Neither was exploited against
-production — this determination is from reading configuration and code only.
+> **Correction to an earlier draft of this report.** It stated that `TOKEN_MONOBANK` was
+> absent on production and that Monobank signature verification was consequently off. That
+> was wrong. The prod `.env` writes the key as `TOKEN_MONOBANK =` (space before `=`), which
+> the first `grep -E '^TOKEN_MONOBANK='` did not match; python-dotenv strips the whitespace
+> and loads it correctly. Confirmed by importing `config` on the VPS: the token is loaded,
+> length 23. **Signature verification has been on the whole time**, and the fail-closed fix
+> does not risk stopping payments.
 
-**This inverts the deploy risk for F2.** Shipping the fail-closed signature fix while
-`TOKEN_MONOBANK` is empty would stop crediting *every* payment. The correct production
-Monobank merchant token must be set on the VPS **before** Unit C ships. (The local `.env` has
-a `TOKEN_MONOBANK` of length 23, which does not look like a full merchant token — it must be
-confirmed with Maxim rather than copied.)
+The token is the same one used by the sibling FootballBlitz project
+(`~/.claude/env/footballblitz.env`, identical sha `2bbd1f5c0b17`) — i.e. one Monobank
+merchant serves both games, so no token change is required.
+
+## Payment atomicity (commit `c3e1ad3`)
+
+The first fix made the replay gate atomic but left claim and credit in **separate**
+transactions. A crash between them would mark a payment paid with nothing delivered, and
+Monobank's retry would then see `status=True` and credit nothing.
+
+`PaymentServise.claim_and_apply(order_id, *stmts)` now runs the `status False->True` gate and
+the credit in **one** transaction — both commit or both roll back. Applied to money, energy,
+training key, change-position and VIP pass. Two credits are computed in SQL so a stale read
+cannot skew them: energy uses `LEAST(cap, current + amount)`, VIP uses
+`DATE_ADD(GREATEST(NOW(), COALESCE(expiry, NOW())), INTERVAL n DAY)` (extending an active
+pass rather than truncating it; `n` comes from the server-side catalog, never the callback).
+
+Box is the exception and is documented as such: its grant is an animated Telegram flow with
+sleeps plus three separate credits, so it cannot join a DB transaction. It keeps claim-first
+(at-most-once — a replay must never hand out a second box) and now logs
+`PAID BUT BOX NOT DELIVERED` if the delayed open throws, so it is reconcilable by hand.
+
+Proven by two new tests: a failing credit leaves `status=0` and the balance untouched, and 20
+concurrent deliveries produce exactly one winner and one credit.
 
 ## Residual risk / not done
 
