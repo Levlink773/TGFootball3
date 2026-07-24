@@ -42,7 +42,15 @@ export async function api(path, options = {}) {
   }
   const body = await res.json().catch(() => ({}))
   if (!res.ok) {
-    const err = new Error(body.detail || HTTP_MESSAGES[res.status] || `Помилка ${res.status}`)
+    // Auth/rate-limit details from the API are internal English strings
+    // ("Missing initData", "Invalid initData"). Show our Ukrainian copy for those
+    // and only fall back to `detail` for endpoint errors, which are already
+    // written in Ukrainian for the player.
+    const preferOurCopy = res.status === 401 || res.status === 429
+    const msg = preferOurCopy
+      ? HTTP_MESSAGES[res.status]
+      : body.detail || HTTP_MESSAGES[res.status] || `Помилка ${res.status}`
+    const err = new Error(msg)
     err.status = res.status
     throw err
   }
