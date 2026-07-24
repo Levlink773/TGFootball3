@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { getMatches, getPlayer, getTeam, getInventory, equipItem, unequipItem, sellItem } from '../api'
 import { useApi } from '../hooks'
-import { Card, Loading, ErrorBox, StatBar, EnergyBar, CtaButton } from '../ui'
+import { Card, Loading, ErrorBox, EnergyBar, CtaButton } from '../ui'
 import { IconBoot, IconTarget, IconShield, IconRun, IconHeart, IconCalendar, IconShirt } from '../icons'
 import { avatarArt, clubCrest, gearArt } from '../assets/art'
 
@@ -121,58 +121,74 @@ export default function Player({ goTo }) {
 
   return (
     <div className="p-4 space-y-4">
-      {/* Hero card */}
+      {/* Hero card — stats live in the left field next to the player (Max 24.07) */}
       <Card accent="gold" className="relative overflow-hidden hero-streaks">
         {avatarArt(data.gender, data.position) && (
           <img
             src={avatarArt(data.gender, data.position)}
             alt=""
-            className="absolute right-6 top-0 h-full w-3/5 object-cover object-top pointer-events-none [mask-image:linear-gradient(to_left,transparent_0%,black_25%,black_75%,transparent_100%)]"
+            className="absolute right-2 top-0 h-full w-[56%] object-cover object-top pointer-events-none [mask-image:linear-gradient(to_left,transparent_0%,black_30%,black_80%,transparent_100%)]"
           />
         )}
-        <div className="relative flex justify-between min-h-[170px]">
-          <div>
-            <div className="h-display text-3xl leading-none text-white break-words max-w-[200px]">{firstName}</div>
+        {/* top row: name (left) · position + level (right) */}
+        <div className="relative flex justify-between items-start">
+          <div className="min-w-0">
+            <div className="h-display text-2xl leading-none text-white break-words max-w-[150px]">{firstName}</div>
             {rest.length > 0 && (
-              <div className="h-display text-[44px] leading-[1.05] text-gold glow-gold break-words max-w-[210px] tracking-tight">{rest.join(' ')}</div>
+              <div className="h-display text-[32px] leading-[1.05] text-gold glow-gold break-words max-w-[160px] tracking-tight">{rest.join(' ')}</div>
             )}
             {data.vip_active && (
-              <span className="inline-block mt-2 h-display text-xs text-gold border border-gold/60 rounded-full px-2 py-0.5">
-                ★ VIP
-              </span>
+              <span className="inline-block mt-1.5 h-display text-[11px] text-gold border border-gold/60 rounded-full px-2 py-0.5">★ VIP</span>
             )}
           </div>
-          <div className="flex flex-col items-end gap-2">
+          <div className="flex flex-col items-end gap-1.5 shrink-0">
             <span
-              className="w-14 h-14 rounded-full border-2 border-neon ring-glow-neon bg-pitch/60 flex items-center justify-center h-display text-xl text-neon"
+              className="w-12 h-12 rounded-full border-2 border-neon ring-glow-neon bg-pitch/60 flex items-center justify-center h-display text-lg text-neon"
               title={data.position}
             >
               {POSITION_SHORT[data.position] || data.position}
             </span>
             {data.level != null && (
-              <span className="h-display text-sm text-neon border border-neon/50 bg-pitch/60 rounded-lg px-2 py-0.5">
+              <span className="h-display text-xs text-neon border border-neon/50 bg-pitch/60 rounded-lg px-2 py-0.5">
                 {data.level} рів.
               </span>
             )}
           </div>
         </div>
-        <div className="relative flex items-end justify-end gap-3 mt-1">
-          <span className="h-display text-base text-white/85 mb-2.5">Сила</span>
-          <span className="h-display text-7xl leading-none text-gold glow-gold">
+
+        {/* stat rows in the empty left field */}
+        <div className="relative mt-3 w-[52%] space-y-1.5">
+          {(() => {
+            const statMax = Math.max(100, ...Object.values(data.stats))
+            return STATS.map(({ key, Icon }) => (
+              <div key={key} className="flex items-center gap-1.5">
+                <Icon size={13} className="text-gold shrink-0" />
+                <span className="text-[9px] text-white/70 w-7 shrink-0 uppercase">{STAT_SHORT[key]}</span>
+                <div className="flex-1 h-1.5 bg-pitch/70 rounded-full overflow-hidden">
+                  <div className="h-full bar-neon rounded-full" style={{ width: `${Math.min(100, (data.stats[key] / statMax) * 100)}%` }} />
+                </div>
+                <span className="h-display text-sm text-neon glow-neon w-6 text-right shrink-0">{data.stats[key]}</span>
+              </div>
+            ))
+          })()}
+        </div>
+
+        {/* СИЛА over the art */}
+        <div className="relative flex items-end justify-end gap-2 -mt-6">
+          <span className="h-display text-base text-white/85 mb-2">Сила</span>
+          <span className="h-display text-6xl leading-none text-gold glow-gold">
             {Math.round(data.full_power)}
           </span>
         </div>
-      </Card>
 
-      {/* XP progress + stat bars (compact — Max 23.07) */}
-      <Card>
+        {/* XP progress — thin strip at the card foot */}
         {data.exp_next != null && (
-          <div className="mb-3">
+          <div className="relative mt-2">
             <div className="flex items-baseline justify-between mb-1">
-              <span className="text-muted text-[11px] uppercase tracking-wider">Досвід · рівень {data.level}</span>
-              <span className="h-display text-xs text-neon">{data.exp}/{data.exp_next} XP</span>
+              <span className="text-muted text-[10px] uppercase tracking-wider">Досвід</span>
+              <span className="h-display text-[11px] text-neon">{data.exp}/{data.exp_next} XP</span>
             </div>
-            <div className="h-1.5 bg-card2 rounded-full overflow-hidden">
+            <div className="h-1.5 bg-pitch/70 rounded-full overflow-hidden">
               <div
                 className="h-full bar-neon rounded-full"
                 style={{ width: `${Math.max(0, Math.min(100, ((data.exp - data.exp_floor) / (data.exp_next - data.exp_floor)) * 100))}%` }}
@@ -180,12 +196,6 @@ export default function Player({ goTo }) {
             </div>
           </div>
         )}
-        {(() => {
-          const statMax = Math.max(100, ...Object.values(data.stats))
-          return STATS.map(({ key, label, Icon }) => (
-            <StatBar key={key} label={label} value={data.stats[key]} max={statMax} icon={<Icon size={18} />} dense />
-          ))
-        })()}
       </Card>
 
       <EnergyBar value={data.energy} max={energyMax} />
