@@ -5,7 +5,10 @@ from aiogram.enums import ParseMode
 
 from bot.routers.stores.vip_pass.types import VipPassTypes, vip_passes
 
+from sqlalchemy import update, func, text
+
 from database.models.payment.vip_pass_payment import VipPassPayment
+from database.models.character import Character
 
 from services.payment_service import PaymentServise
 from services.vip_pass_service import VipPassService
@@ -67,14 +70,27 @@ class MonoResultVipPass(EndPoint):
             )
             return self.OK()
 
-        # Atomic replay gate — only the delivery that flips status False->True credits.
-        if not await PaymentServise.claim_payment(order_id=self.data.invoiceId):
+        # Claim + grant in ONE transaction. The new expiry is computed in SQL from the
+        # stored value (extend if still active, else from now), so it cannot be
+        # miscalculated from a stale read or lost to a crash between the two writes.
+        # duration comes from the server-side vip_passes catalog, never the callback.
+        applied = await PaymentServise.claim_and_apply(
+            self.data.invoiceId,
+            update(Character)
+            .where(Character.id == character.id)
+            .values(
+                vip_pass_expiration_date=func.date_add(
+                    func.greatest(
+                        func.now(),
+                        func.coalesce(Character.vip_pass_expiration_date, func.now()),
+                    ),
+                    text(f"INTERVAL {int(duration)} DAY"),
+                )
+            ),
+        )
+        if not applied:
             return self.OK()
 
-        await VipPassService.update_vip_pass_time(
-            character = character,
-            day_vip_pass = duration
-        )
         await self.bot.send_message(
             chat_id = payment.payment.user_id,
             text    = self.TEXT_TEMPLATE.format(

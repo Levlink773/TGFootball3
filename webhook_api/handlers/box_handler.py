@@ -48,8 +48,12 @@ class MonoResultBox(EndPoint):
             )
             return self.OK()
 
-        # Claim BEFORE any side effect (message + box open), so a replayed webhook
-        # cannot hand out a second box.
+        # Box is the one grant that cannot ride inside the claim transaction: opening
+        # it is an animated Telegram flow with sleeps plus three separate credits.
+        # So claim FIRST — a replayed webhook must never hand out a second box — and
+        # log loudly if the grant then fails, so it can be settled by hand.
+        # ponytail: ceiling is "at-most-once box"; upgrading to exactly-once needs a
+        # durable job queue for the delayed open, which this codebase has no use for yet.
         if not await PaymentServise.claim_payment(order_id=self.data.invoiceId):
             return self.OK()
 
@@ -67,7 +71,13 @@ class MonoResultBox(EndPoint):
         # Open the box after a 30s delay without holding the webhook connection open.
         async def _delayed_open():
             await asyncio.sleep(30)
-            await open_box.open_box()
+            try:
+                await open_box.open_box()
+            except Exception as E:
+                logger.error(
+                    "PAID BUT BOX NOT DELIVERED order_id=%s user_id=%s: %s",
+                    self.data.invoiceId, payment.payment.user_id, E,
+                )
 
         asyncio.create_task(_delayed_open())
         return self.OK()

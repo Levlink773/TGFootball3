@@ -53,6 +53,29 @@ class PaymentServise:
                     logger.error(f"err get payment: {E}")
                     
     @classmethod
+    async def claim_and_apply(cls, order_id: str, *stmts) -> bool:
+        """Claim the payment AND apply its credit in ONE transaction.
+
+        The status flip False->True is the replay gate, and the credit rides in the
+        same transaction, so the two cannot come apart: either the player is marked
+        paid and credited, or neither happened and Monobank's retry will do both.
+        Returns True only if this call is the one that credited.
+        """
+        async for session in get_session():
+            async with session.begin():
+                claimed = await session.execute(
+                    update(Payment)
+                    .where(Payment.order_id == order_id, Payment.status.is_(False))
+                    .values(status=True)
+                )
+                if claimed.rowcount == 0:
+                    return False  # already credited by an earlier delivery
+                for stmt in stmts:
+                    await session.execute(stmt)
+                return True  # session.begin() commits on exit; any error rolls back BOTH
+        return False
+
+    @classmethod
     async def claim_payment(cls, order_id: str) -> bool:
         """Atomic replay gate: the status flip IS the claim.
 

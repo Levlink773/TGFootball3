@@ -5,7 +5,10 @@ from aiogram.enums import ParseMode
 from webhook_api.schemas import MonoResultSchema
 from ..base_endpoint import EndPoint, HTTPMethod
 
+from sqlalchemy import update
+
 from database.models.payment.money_payment import MoneyPayment
+from database.models.character import Character
 
 from services.payment_service import PaymentServise
 from services.character_service import CharacterService
@@ -43,14 +46,17 @@ class MonoResultMoney(EndPoint):
             )
             return self.OK()
 
-        # Atomic replay gate — only the delivery that flips status False->True credits.
-        if not await PaymentServise.claim_payment(order_id=self.data.invoiceId):
+        # Claim + credit in ONE transaction: a crash between them is impossible, so a
+        # payment can never be marked paid without the coins landing.
+        credited = await PaymentServise.claim_and_apply(
+            self.data.invoiceId,
+            update(Character)
+            .where(Character.id == character.id)
+            .values(money=Character.money + payment.count_money),
+        )
+        if not credited:
             return self.OK()
 
-        await CharacterService.update_money_character(
-            character_id = character.id,
-            amount_money_adjustment = payment.count_money
-        )
         await self.bot.send_message(
             chat_id = payment.payment.user_id,
             text    = self.TEXT_TEMPLATE.format(amount_money = payment.count_money)

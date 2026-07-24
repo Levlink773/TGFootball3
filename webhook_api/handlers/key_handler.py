@@ -8,7 +8,10 @@ from ..base_endpoint import EndPoint, HTTPMethod
 from bot.training.routers.utils import get_near_end_time_training
 from bot.training.keyboard.keyboard_re_invite import join_to_training
 
+from sqlalchemy import update
+
 from database.models.payment.key_payment import KeyPayment
+from database.models.character import Character
 
 from services.payment_service import PaymentServise
 from services.character_service import CharacterService
@@ -59,13 +62,16 @@ class MonoResultBuyTrainingKey(EndPoint):
             )
             return self.OK()
 
-        # Atomic replay gate — only the delivery that flips status False->True credits.
-        if not await PaymentServise.claim_payment(order_id=self.data.invoiceId):
+        # Claim + credit in ONE transaction.
+        credited = await PaymentServise.claim_and_apply(
+            self.data.invoiceId,
+            update(Character)
+            .where(Character.id == character.id)
+            .values(training_key=Character.training_key + 1),
+        )
+        if not credited:
             return self.OK()
 
-        await CharacterService.add_trainin_key(
-            character_id = character.id,
-        )
         text = BASE_TEXT_TEMPLATE
         keyboard = None
         

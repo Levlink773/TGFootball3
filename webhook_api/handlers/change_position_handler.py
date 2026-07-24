@@ -5,7 +5,10 @@ from aiogram.enums import ParseMode
 from webhook_api.schemas import MonoResultSchema
 from ..base_endpoint import EndPoint, HTTPMethod
 
+from sqlalchemy import update
+
 from database.models.payment.change_position_payment import ChangePositionPayment
+from database.models.character import Character
 
 from services.payment_service import PaymentServise
 from services.character_service import CharacterService
@@ -51,14 +54,15 @@ class MonoResultChangePosition(EndPoint):
             )
             return self.OK()
 
-        # Atomic replay gate — only the delivery that flips status False->True credits.
-        if not await PaymentServise.claim_payment(order_id=self.data.invoiceId):
-            return self.OK()
-
-        await CharacterService.change_position(
-            character_id = character.id,
-            position = payment.position.value
+        # Claim + apply in ONE transaction.
+        applied = await PaymentServise.claim_and_apply(
+            self.data.invoiceId,
+            update(Character)
+            .where(Character.id == character.id)
+            .values(position=payment.position.value),
         )
+        if not applied:
+            return self.OK()
 
         await self.bot.send_message(
             chat_id = payment.payment.user_id,

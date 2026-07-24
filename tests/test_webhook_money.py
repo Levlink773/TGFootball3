@@ -106,6 +106,81 @@ async def test_replay_credits_exactly_once(monkeypatch):
         _cleanup_payment()
 
 
+# ---- Atomicity: claim and credit must commit or roll back together ----
+
+@pytest.mark.asyncio
+async def test_claim_and_credit_are_one_transaction():
+    """A failure while crediting must NOT leave the payment marked paid.
+
+    Otherwise Monobank's retry sees status=True, credits nothing, and the player
+    has paid for something they never received.
+    """
+    from services.payment_service import PaymentServise
+    from conftest import scalar
+    from sqlalchemy import update
+    from database.models.character import Character
+
+    before = int(char_col(CHAR_ID, "money"))
+    _seed_payment(status=False)
+    try:
+        # second statement is invalid -> the whole transaction must roll back
+        ok = await PaymentServise.claim_and_apply(
+            ORDER,
+            update(Character).where(Character.id == CHAR_ID).values(
+                money=Character.money + CREDIT
+            ),
+            update(Character).where(Character.id == CHAR_ID).values(
+                no_such_column_exists=1
+            ),
+        )
+        status = scalar(f"SELECT status FROM payments WHERE order_id='{ORDER}'")
+        after = int(char_col(CHAR_ID, "money"))
+        assert str(status) == "0", (
+            f"payment left marked paid ({status}) after a failed credit — money lost"
+        )
+        assert after == before, f"partial credit persisted: {before} -> {after}"
+        assert ok is not True
+    except Exception:
+        # the failure surfaced to the caller; what matters is the DB state below
+        status = scalar(f"SELECT status FROM payments WHERE order_id='{ORDER}'")
+        after = int(char_col(CHAR_ID, "money"))
+        assert str(status) == "0", f"payment left marked paid ({status}) after rollback"
+        assert after == before, f"partial credit persisted: {before} -> {after}"
+    finally:
+        from conftest import _mysql
+        _mysql(f"UPDATE characters SET money={before} WHERE id={CHAR_ID}")
+        _cleanup_payment()
+
+
+@pytest.mark.asyncio
+async def test_claim_and_apply_credits_once_under_concurrency():
+    """20 concurrent deliveries -> exactly one credit."""
+    from services.payment_service import PaymentServise
+    from sqlalchemy import update
+    from database.models.character import Character
+
+    before = int(char_col(CHAR_ID, "money"))
+    _seed_payment(status=False)
+    try:
+        results = await asyncio.gather(*[
+            PaymentServise.claim_and_apply(
+                ORDER,
+                update(Character).where(Character.id == CHAR_ID).values(
+                    money=Character.money + CREDIT
+                ),
+            )
+            for _ in range(20)
+        ], return_exceptions=True)
+        winners = sum(1 for r in results if r is True)
+        after = int(char_col(CHAR_ID, "money"))
+        assert winners == 1, f"{winners} deliveries credited, expected exactly 1"
+        assert after - before == CREDIT, f"balance moved {after - before}, expected {CREDIT}"
+    finally:
+        from conftest import _mysql
+        _mysql(f"UPDATE characters SET money={before} WHERE id={CHAR_ID}")
+        _cleanup_payment()
+
+
 # ---- F13: raw exception text leaked in webhook response ----
 
 @pytest.mark.asyncio
