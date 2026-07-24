@@ -25,3 +25,7 @@ APScheduler==3.11.2
 redis==5.0.8
 openpyxl==3.1.5
 alembic==1.18.4
+# Mini App API sidecar (footballgame-api runs uvicorn webapp_api.app:app).
+# Pinned to what is installed and running today, so a venv rebuild is a no-op.
+fastapi==0.115.0
+uvicorn==0.30.6

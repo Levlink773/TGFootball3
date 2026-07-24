@@ -116,7 +116,8 @@ export function NextBar({ icon, label, time, onClick, cta }) {
       {icon && <span className="text-gold shrink-0">{icon}</span>}
       <span className="h-display text-base flex-1">{label}</span>
       <span className="h-display text-2xl text-neon glow-neon">{time}</span>
-      {cta ? cta : <span className="chevrons-r text-neon/70 w-8 h-4" />}
+      {/* chevron is an affordance — only show it when the bar actually navigates */}
+      {cta ? cta : (onClick ? <span className="chevrons-r text-neon/70 w-8 h-4" /> : null)}
     </div>
   )
 }

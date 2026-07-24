@@ -78,7 +78,11 @@ export default function App() {
     const msg = lr.success
       ? `Тренування завершено! +${lr.points} до характеристики 💪`
       : 'Тренування завершено — цього разу без прогресу. Спробуй ще!'
-    if (tg?.showPopup) tg.showPopup({ title: 'Тренування', message: msg, buttons: [{ type: 'ok' }] })
+    // showPopup needs Bot API 6.2; older Telegram clients throw
+    // WebAppMethodUnsupported, which would escape this effect uncaught.
+    try {
+      if (tg?.showPopup) tg.showPopup({ title: 'Тренування', message: msg, buttons: [{ type: 'ok' }] })
+    } catch { /* unsupported on this Telegram version — the screen already shows the result */ }
     training.reload() // pull the settled state (energy, in_training) back
   }, [training.data]) // eslint-disable-line react-hooks/exhaustive-deps
 

@@ -125,8 +125,11 @@ async def trainer_join(auth: WebAppInitData = Depends(auth_user)):
     if len(others) >= MAX_LIMIT_JOIN_CHARACTERS:
         raise HTTPException(status_code=409, detail="Сесія заповнена (50 гравців)")
 
+    # Spend the key FIRST — the atomic debit is the gate. Concurrent joins that lose
+    # the race get 409 instead of a free session and a negative key counter.
+    if not await CharacterService.remove_training_key(character_id=character.id):
+        raise HTTPException(status_code=409, detail="Немає ключів тренування")
     await TrainingService.add_character_to_training(character_id=character.id, user_id=auth.user.id)
-    await CharacterService.remove_training_key(character_id=character.id)
 
     sess = {"step": 1, "score": 0, "done": False}
     _issue_step(sess)
@@ -196,11 +199,17 @@ async def trainer_pick_stat(req: PickStat, auth: WebAppInitData = Depends(auth_u
     if req.stat not in const_name_characteristics:
         raise HTTPException(status_code=400, detail="Невідома характеристика")
 
+    # Claim BEFORE the first await. The loop can interleave a concurrent request at
+    # any await point, so setting the flag after get_character let a burst of
+    # requests all pass the check above and each award the reward.
+    # Same ordering as trainer_answer()'s sess["done"] = True.
+    sess["stat_claimed"] = True
+
     character = await CharacterService.get_character(character_user_id=auth.user.id)
     if not character:
+        sess["stat_claimed"] = False  # nothing awarded — release the claim
         raise HTTPException(status_code=404, detail="No character")
 
-    sess["stat_claimed"] = True
     await CharacterService.update_character_characteristic(
         character_id=character.id,
         type_characteristic=req.stat,

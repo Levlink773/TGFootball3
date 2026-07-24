@@ -4,13 +4,20 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:3004'
 function initData() {
   const tg = window.Telegram?.WebApp
   if (tg?.initData) return tg.initData
-  return new URLSearchParams(window.location.search).get('initData') || ''
+  // Dev only. Vite replaces import.meta.env.DEV with false in a production build
+  // and drops this branch, so a 24h bearer credential can never reach browser
+  // history, Referer headers or access logs from the shipped bundle.
+  if (import.meta.env.DEV) {
+    return new URLSearchParams(window.location.search).get('initData') || ''
+  }
+  return ''
 }
 
 const HTTP_MESSAGES = {
   401: 'Сесія недійсна — відкрий гру через кнопку в Telegram.',
   403: 'Доступ заборонено.',
   404: 'Дані не знайдено.',
+  429: 'Забагато запитів — зачекай секунду і спробуй ще раз.',
   500: 'Помилка сервера. Спробуй ще раз за хвилину.',
 }
 

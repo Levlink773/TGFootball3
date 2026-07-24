@@ -16,6 +16,7 @@ from schedulers.scheduler_vip_pass import VipPassScheduler
 from webhook_api.schemas import MonoResultSchema
 
 from config import BOT_TOKEN
+from logging_config import logger
 
 from ..base_endpoint import EndPoint, HTTPMethod
 
@@ -56,13 +57,20 @@ class MonoResultVipPass(EndPoint):
         if self.data.status != "success":
             return self.OK()
 
-        if payment.payment.status:
+        duration = vip_passes.get(payment.type_vip_pass).duration
+
+        character = await CharacterService.get_character(payment.payment.user_id)
+        if not character:
+            logger.error(
+                "PAID BUT NOT CREDITED order_id=%s user_id=%s: no character",
+                self.data.invoiceId, payment.payment.user_id,
+            )
             return self.OK()
 
-        duration = vip_passes.get(payment.type_vip_pass).duration
-        
-        
-        character = await CharacterService.get_character(payment.payment.user_id)
+        # Atomic replay gate — only the delivery that flips status False->True credits.
+        if not await PaymentServise.claim_payment(order_id=self.data.invoiceId):
+            return self.OK()
+
         await VipPassService.update_vip_pass_time(
             character = character,
             day_vip_pass = duration
@@ -73,7 +81,6 @@ class MonoResultVipPass(EndPoint):
                 duration = duration
             )
         )
-        await PaymentServise.change_payment_status(order_id=self.data.invoiceId)
         update_character = await CharacterService.get_character(payment.payment.user_id)
         vip_pass_reminder = VipPassScheduler(update_character)
         await vip_pass_reminder.start_taimer()

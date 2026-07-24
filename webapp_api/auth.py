@@ -14,10 +14,11 @@ from config import BOT_TOKEN
 
 MAX_INITDATA_AGE_SECONDS = 60 * 60 * 24  # Telegram re-issues initData per launch
 
-# Optional second signer for the test bot (@testbottgfootball_bot) so the same
-# deployed API can be exercised from BotFather's test bot before prod go-live.
+# A second accepted signer is a full impersonation key: anyone holding that token
+# can sign initData for ANY user id and the API will believe it. The test-bot phase
+# is over, so this is opt-in only and must stay OFF in production.
 _VALID_TOKENS = [BOT_TOKEN]
-if os.getenv("TEST_BOT_TOKEN"):
+if os.getenv("ALLOW_TEST_BOT_INITDATA") == "1" and os.getenv("TEST_BOT_TOKEN"):
     _VALID_TOKENS.append(os.getenv("TEST_BOT_TOKEN"))
 
 

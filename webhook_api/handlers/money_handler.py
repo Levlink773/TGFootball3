@@ -10,6 +10,7 @@ from database.models.payment.money_payment import MoneyPayment
 from services.payment_service import PaymentServise
 from services.character_service import CharacterService
 from config import BOT_TOKEN
+from logging_config import logger
 
 class MonoResultMoney(EndPoint):
     schema = MonoResultSchema
@@ -34,11 +35,18 @@ class MonoResultMoney(EndPoint):
         if self.data.status != "success":
             return self.OK()
 
-        if payment.payment.status:
+        character = await CharacterService.get_character(payment.payment.user_id)
+        if not character:
+            logger.error(
+                "PAID BUT NOT CREDITED order_id=%s user_id=%s: no character",
+                self.data.invoiceId, payment.payment.user_id,
+            )
             return self.OK()
 
-        character = await CharacterService.get_character(payment.payment.user_id)
-        
+        # Atomic replay gate — only the delivery that flips status False->True credits.
+        if not await PaymentServise.claim_payment(order_id=self.data.invoiceId):
+            return self.OK()
+
         await CharacterService.update_money_character(
             character_id = character.id,
             amount_money_adjustment = payment.count_money
@@ -47,7 +55,6 @@ class MonoResultMoney(EndPoint):
             chat_id = payment.payment.user_id,
             text    = self.TEXT_TEMPLATE.format(amount_money = payment.count_money)
         )
-        await PaymentServise.change_payment_status(order_id=self.data.invoiceId)
         return self.OK()
         
         

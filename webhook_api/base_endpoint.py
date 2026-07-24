@@ -52,11 +52,15 @@ class EndPoint(ABC, ResponseAnswer):
             data = self.schema(**data)
             return data
         except ValidationError as E:
-            logger.error(E)
-            return self.BAD(error = E)
-        
+            # Never echo the exception to the caller: this is an internet-facing
+            # payment endpoint. (A ValidationError object is also not JSON
+            # serialisable, so returning it made the error handler itself throw.)
+            logger.error("webhook payload failed validation: %s", E)
+            return self.BAD(error = "Invalid payload")
+
         except Exception as E:
-            return self.BAD(error = str(E), status=500)
+            logger.error("webhook body parse failed: %s", E)
+            return self.BAD(error = "Bad request")
     
     @classmethod
     async def router(cls, request: Request) -> Response:
@@ -73,4 +77,8 @@ class EndPoint(ABC, ResponseAnswer):
                 return obj.BAD(error="Invalid signature", status=403)
 
         obj.data = await obj.get_data()
+        if isinstance(obj.data, Response):
+            # Body failed to parse — get_data already built the error response.
+            # Reaching handle_request here would AttributeError on self.data.invoiceId.
+            return obj.data
         return await obj.handle_request()

@@ -13,6 +13,7 @@ from database.models.payment.key_payment import KeyPayment
 from services.payment_service import PaymentServise
 from services.character_service import CharacterService
 from config import BOT_TOKEN
+from logging_config import logger
 
 
 BASE_TEXT_TEMPLATE = """
@@ -50,10 +51,18 @@ class MonoResultBuyTrainingKey(EndPoint):
         if self.data.status != "success":
             return self.OK()
 
-        if payment.payment.status:
+        character = await CharacterService.get_character(payment.payment.user_id)
+        if not character:
+            logger.error(
+                "PAID BUT NOT CREDITED order_id=%s user_id=%s: no character",
+                self.data.invoiceId, payment.payment.user_id,
+            )
             return self.OK()
 
-        character = await CharacterService.get_character(payment.payment.user_id)
+        # Atomic replay gate — only the delivery that flips status False->True credits.
+        if not await PaymentServise.claim_payment(order_id=self.data.invoiceId):
+            return self.OK()
+
         await CharacterService.add_trainin_key(
             character_id = character.id,
         )
@@ -71,7 +80,6 @@ class MonoResultBuyTrainingKey(EndPoint):
             text    = text,
             reply_markup = keyboard
         )
-        await PaymentServise.change_payment_status(order_id=self.data.invoiceId)
         return self.OK()
 
 

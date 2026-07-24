@@ -5,6 +5,7 @@ from database.models.character import Character
 from database.session import get_session
 from sqlalchemy import select
 from sqlalchemy import delete
+from sqlalchemy import update
 
 from enum import Enum
 import json
@@ -82,8 +83,15 @@ class ItemService:
             "BOOTS":"boots_id",
         }
         
+        # Targeted single-column UPDATE. merge() of a DETACHED character wrote the
+        # entire loaded graph back (money, energy, exp, and the whole clubs row),
+        # reverting any concurrent atomic update.
         async for session in get_session():
             async with session.begin():
-                setattr(character_obj, name_model_item[category_item], None)
-                await session.merge(character_obj)
+                await session.execute(
+                    update(Character)
+                    .where(Character.id == character_obj.id)
+                    .values({name_model_item[category_item]: None})
+                )
                 await session.commit()
+        setattr(character_obj, name_model_item[category_item], None)

@@ -40,12 +40,14 @@ class MonobankSignatureVerifier:
 
     @classmethod
     async def verify(cls, x_sign: str | None, body: bytes) -> bool:
-        # No merchant token configured (dev / polling-only) -> skip verification.
+        # Fail CLOSED: without the merchant token we cannot fetch Monobank's public
+        # key, so the callback is unverifiable — and an unverified callback credits
+        # real coins. Refuse it rather than trust it.
         if not TOKEN_MONOBANK:
-            logger.warning(
-                "TOKEN_MONOBANK not set; skipping webhook signature verification"
+            logger.error(
+                "TOKEN_MONOBANK not set; REJECTING webhook (cannot verify signature)"
             )
-            return True
+            return False
         if not x_sign:
             return False
         pub_pem = await cls._get_pub_key_pem()

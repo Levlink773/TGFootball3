@@ -285,7 +285,8 @@ export default function Home({ goTo, training }) {
         {CHAT_URL ? (
           <Card className="text-center py-3 cursor-pointer" onClick={() => {
             const tg = window.Telegram?.WebApp
-            tg?.openTelegramLink ? tg.openTelegramLink(CHAT_URL) : window.open(CHAT_URL, '_blank')
+            if (tg?.openTelegramLink) tg.openTelegramLink(CHAT_URL)
+            else window.open(CHAT_URL, '_blank')
           }}>
             <IconChat size={24} className="text-gold mx-auto mb-1" />
             <div className="h-display text-sm">Чат гри</div>

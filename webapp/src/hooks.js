@@ -29,7 +29,9 @@ export function useApi(fn, { pollMs } = {}) {
 }
 
 export function fmtCountdown(seconds) {
-  if (seconds <= 0) return '00:00'
+  // !(x > 0) also catches NaN, which `<= 0` lets through and which rendered as
+  // "NaN:NaN:NaN" whenever a match/league timestamp was missing.
+  if (!(seconds > 0)) return '00:00'
   const h = Math.floor(seconds / 3600)
   const m = Math.floor((seconds % 3600) / 60)
   const s = seconds % 60

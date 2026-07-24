@@ -53,6 +53,30 @@ class PaymentServise:
                     logger.error(f"err get payment: {E}")
                     
     @classmethod
+    async def claim_payment(cls, order_id: str) -> bool:
+        """Atomic replay gate: the status flip IS the claim.
+
+        Monobank retries webhooks, so the same invoice can arrive several times
+        concurrently. Only the request that actually moves status False->True may
+        credit the player; every replay gets rowcount 0 and credits nothing.
+        """
+        async for session in get_session():
+            async with session as sess:
+                try:
+                    stmt = (
+                        update(Payment)
+                        .where(Payment.order_id == order_id, Payment.status.is_(False))
+                        .values(status=True)
+                    )
+                    result = await sess.execute(stmt)
+                    await sess.commit()
+                    return result.rowcount > 0
+                except Exception as E:
+                    logger.error(f"err claim payment: {E}")
+                    return False
+        return False
+
+    @classmethod
     async def change_payment_status(cls, order_id: str):
         async for session in get_session():
             async with session as sess:

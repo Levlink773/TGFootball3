@@ -19,6 +19,11 @@ REPO="$(cd "$(dirname "$0")/.." && pwd)"
 if grep -q "127.0.0.1" "$REPO"/webapp/dist/assets/index-*.js 2>/dev/null; then
   echo "ERROR: dist bundle points at a local API URL — rebuild with the prod VITE_API_URL"; exit 1
 fi
+# The ?initData= dev fallback must never ship: it puts a 24h bearer credential in
+# the URL. Vite drops it from a production build; this catches a dev-mode build.
+if grep -q "location.search" "$REPO"/webapp/dist/assets/index-*.js 2>/dev/null; then
+  echo "ERROR: dist bundle still contains the ?initData= dev fallback — build with NODE_ENV=production"; exit 1
+fi
 
 COPYFILE_DISABLE=1 tar -czf /tmp/wdist.tgz -C "$REPO" webapp/dist
 scp -i "$KEY" -o StrictHostKeyChecking=no /tmp/wdist.tgz "$VPS:/root/wdist.tgz"

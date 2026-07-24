@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { getSettings, updateSettings } from '../api'
 import { useApi } from '../hooks'
-import { Card, Loading, ErrorBox, SectionTitle, Banner } from '../ui'
+import { Card, Loading, ErrorBox, Banner } from '../ui'
 import { art } from '../assets/art'
 
 function Toggle({ checked, onChange, disabled }) {

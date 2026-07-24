@@ -236,6 +236,11 @@ async def rename_team(req: RenameReq, auth: WebAppInitData = Depends(auth_user))
     name = (req.name or "").strip()
     if not (3 <= len(name) <= 30):
         raise HTTPException(status_code=400, detail="Назва: від 3 до 30 символів")
+    # The bot renders club names with parse_mode=HTML into league broadcasts sent to
+    # other players. Angle brackets would inject markup (phishing links) or break the
+    # whole broadcast with "can't parse entities".
+    if "<" in name or ">" in name:
+        raise HTTPException(status_code=400, detail="Назва не може містити символи < або >")
     if not await ClubService.rename_club(club.id, name):
         raise HTTPException(status_code=409, detail="Така назва вже зайнята")
     return {"ok": True, "name": name}
@@ -254,6 +259,9 @@ async def set_description(req: DescriptionReq, auth: WebAppInitData = Depends(au
     text = (req.text or "").strip()
     if len(text) > 255:
         raise HTTPException(status_code=400, detail="Опис: до 255 символів")
+    # Same HTML-injection boundary as /team/rename.
+    if "<" in text or ">" in text:
+        raise HTTPException(status_code=400, detail="Опис не може містити символи < або >")
     await ClubService.update_description_club(club.id, text or "Не вказано")
     return {"ok": True, "description": text}
 

@@ -115,11 +115,18 @@ class ClubService:
             
     @classmethod
     async def donate_energy(cls, club: Club, count_energy: int) -> None:
+        # Atomic increment. The old merge() rewrote the whole stale Club row AND
+        # never committed, so concurrent donations lost updates.
         async for session in get_session():
             async with session.begin():
-                club.energy_applied += count_energy
-                merged_obj = await session.merge(club)
-                return merged_obj
+                await session.execute(
+                    update(Club)
+                    .where(Club.id == club.id)
+                    .values(energy_applied=Club.energy_applied + count_energy)
+                )
+                await session.commit()
+        club.energy_applied += count_energy
+        return club
             
     @classmethod
     async def reset_energy_aplied_not_bot_clubs(cls):
@@ -134,12 +141,16 @@ class ClubService:
                 
     @classmethod
     async def transfer_club_owner(cls, club: Club, new_owner_id: int) -> None:
+        # Targeted single-column UPDATE — merge() of a detached Club rewrote every
+        # loaded column (energy_applied, points, ...) from a stale snapshot.
         async for session in get_session():
             async with session.begin():
-                club.owner_id = new_owner_id
-                merged_obj = await session.merge(club)
+                await session.execute(
+                    update(Club).where(Club.id == club.id).values(owner_id=new_owner_id)
+                )
                 await session.commit()
-                return merged_obj
+        club.owner_id = new_owner_id
+        return club
             
     @classmethod
     async def remove_all_characters_from_club(cls, club: Club) -> None:

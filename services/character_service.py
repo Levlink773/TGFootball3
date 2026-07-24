@@ -196,9 +196,15 @@ class CharacterService:
     async def consume_energy(cls, character_id: int, energy_consumed: int) -> Character:
         async for session in get_session():
             async with session.begin():
-                character = await session.get(Character, character_id)
+                # SELECT ... FOR UPDATE serialises concurrent debits so the
+                # read-modify-write cannot lose an update. Kept as an ORM write on
+                # purpose: the Character before_update listener (low-energy push,
+                # referral reward, new-member box) only fires on an ORM flush.
+                character = await session.get(Character, character_id, with_for_update=True)
                 if character:
-                    character.current_energy -= energy_consumed
+                    character.current_energy = max(
+                        0, (character.current_energy or 0) - energy_consumed
+                    )
                     await session.flush()
 
     @classmethod
@@ -208,9 +214,15 @@ class CharacterService:
             amount_energy: int) -> Character:
         async for session in get_session():
             async with session.begin():
-                character = await session.get(Character, character_id)
+                # Row lock + clamp to the character's tier cap. Without these,
+                # concurrent credits lost updates and rewards pushed energy past the
+                # cap (the "274/150" display bug).
+                character = await session.get(Character, character_id, with_for_update=True)
                 if character:
-                    character.current_energy = (character.current_energy or 0) + amount_energy
+                    cap = CONST_VIP_ENERGY if character.vip_pass_is_active else CONST_ENERGY
+                    character.current_energy = min(
+                        cap, max(0, (character.current_energy or 0) + amount_energy)
+                    )
                     await session.flush()
 
     @classmethod
@@ -449,16 +461,21 @@ class CharacterService:
     async def remove_training_key(
             cls,
             character_id: int,
-    ):
+    ) -> bool:
+        # Atomic conditional debit: WHERE training_key > 0 means concurrent joins
+        # cannot drive the counter negative, and only the request that actually
+        # consumed a key may proceed. Returns True if a key was spent.
         async for session in get_session():
             async with session.begin():
                 stmt = (
                     update(Character)
-                    .where(Character.id == character_id)
+                    .where(Character.id == character_id, Character.training_key > 0)
                     .values(training_key=Character.training_key - 1)
                 )
-                await session.execute(stmt)
+                result = await session.execute(stmt)
                 await session.commit()
+                return result.rowcount > 0
+        return False
 
     @classmethod
     async def get_characters_by_position(
