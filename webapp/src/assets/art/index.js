@@ -48,7 +48,10 @@ const POS_SLUG = {
   'Воротар': 'goalkeeper',
 }
 export function avatarArt(gender, position) {
-  const g = String(gender || '').toUpperCase().includes('WOMAN') ? 'woman' : 'man'
+  // The API returns Gender.value ("Чоловік"/"Жінка"), never the member name, so
+  // matching on "WOMAN" alone made every woman avatar unreachable. Both forms are
+  // accepted because the wizard posts member names.
+  const g = /жін|woman/i.test(String(gender || '')) ? 'woman' : 'man'
   const p = POS_SLUG[position]
   return p ? art[`avatar-${g}-${p}`] || null : null
 }

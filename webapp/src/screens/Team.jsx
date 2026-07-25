@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import {
-  getTeam, getJoinList, joinClub, leaveClub,
+  getTeam, getJoinList, joinClub, leaveClub, createClub,
   kickMember, transferOwner, renameClub, setInviteOnly, setClubDescription, upgradeInfrastructure,
 } from '../api'
 import { useApi } from '../hooks'
@@ -35,7 +35,11 @@ function JoinBrowser({ onJoined, setMessage }) {
   }
 
   if (!data.clubs.length) {
-    return <div className="text-muted text-sm text-center py-4">Немає команд із вільними місцями</div>
+    return (
+      <div className="text-muted text-sm text-center py-4">
+        Поки що жодної команди немає — стань першим і створи свою.
+      </div>
+    )
   }
   return (
     <div className="space-y-2">
@@ -58,6 +62,66 @@ function JoinBrowser({ onJoined, setMessage }) {
         </Card>
       ))}
     </div>
+  )
+}
+
+// Creating a club was bot-only until now, which left a player with no club and no
+// clubs to join at a dead end — the exact state a fresh database puts everyone in.
+function CreateClubForm({ onCreated, setMessage }) {
+  const [open, setOpen] = useState(false)
+  const [name, setName] = useState('')
+  const [busy, setBusy] = useState(false)
+  const trimmed = name.trim()
+
+  const create = async () => {
+    setBusy(true)
+    setMessage(null)
+    try {
+      const r = await createClub(trimmed)
+      setMessage(`✅ Команду «${r.name}» створено!`)
+      onCreated()
+    } catch (e) {
+      setMessage(e.message)
+      setBusy(false)
+    }
+  }
+
+  if (!open) {
+    return (
+      <CtaButton color="gold" className="w-full" onClick={() => setOpen(true)}>
+        ⛩ Створити команду
+      </CtaButton>
+    )
+  }
+  return (
+    <Card accent="gold" className="space-y-3">
+      <input
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+        maxLength={30}
+        autoFocus
+        placeholder="Назва команди"
+        className="w-full bg-card2 border border-white/10 focus:border-neon focus:outline-none rounded-xl px-4 py-3 text-white h-display"
+      />
+      <p className="text-muted text-xs">Від 3 до 30 символів. Ти станеш лідером команди.</p>
+      <div className="flex gap-2">
+        <CtaButton
+          color="gold"
+          className="flex-1"
+          disabled={busy || trimmed.length < 3 || trimmed.length > 30}
+          onClick={create}
+        >
+          {busy ? 'Створюємо…' : 'Створити'}
+        </CtaButton>
+        <button
+          onClick={() => { setOpen(false); setName('') }}
+          disabled={busy}
+          className="text-muted text-sm px-4 disabled:opacity-40"
+        >
+          Скасувати
+        </button>
+      </div>
+    </Card>
   )
 }
 
@@ -250,8 +314,10 @@ export default function Team({ goTo }) {
         <>
           <div className="text-center">
             <div className="h-display text-3xl text-gold glow-gold">Команда</div>
-            <div className="text-muted text-sm mt-1">Ти поки без команди — обери клуб і грай у лізі!</div>
+            <div className="text-muted text-sm mt-1">Ти поки без команди — створи свою або приєднайся!</div>
           </div>
+          <CreateClubForm onCreated={reload} setMessage={setMessage} />
+          <div className="text-muted text-xs text-center pt-2">Або приєднайся до наявної</div>
           <JoinBrowser onJoined={reload} setMessage={setMessage} />
         </>
       ) : (

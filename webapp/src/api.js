@@ -79,8 +79,13 @@ export const trainerAnswer = (direction) =>
   api('/trainer/answer', { method: 'POST', body: JSON.stringify({ direction }) })
 export const trainerPickStat = (stat) =>
   api('/trainer/pick-stat', { method: 'POST', body: JSON.stringify({ stat }) })
+export const getCharacterOptions = () => api('/character/options')
+export const createCharacter = (name, gender, position) =>
+  api('/character', { method: 'POST', body: JSON.stringify({ name, gender, position }) })
 export const getTeam = () => api('/team')
 export const getJoinList = () => api('/team/join-list')
+export const createClub = (name) =>
+  api('/team/create', { method: 'POST', body: JSON.stringify({ name }) })
 export const joinClub = (club_id) =>
   api('/team/join', { method: 'POST', body: JSON.stringify({ club_id }) })
 export const leaveClub = () => api('/team/leave', { method: 'POST' })

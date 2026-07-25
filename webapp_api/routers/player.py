@@ -16,15 +16,12 @@ def _xp_bounds(level: int) -> tuple[int, int | None]:
     return floor, nxt
 
 
-@player_router.get("/player")
-async def get_player(auth: WebAppInitData = Depends(auth_user)):
-    character = await CharacterService.get_character(character_user_id=auth.user.id)
-    if not character:
-        raise HTTPException(status_code=404, detail="No character")
+def player_payload(character: Character, user_id: int) -> dict:
+    """Shared with POST /character so creation can return the player in one round-trip."""
     club = character.club
     exp_floor, exp_next = _xp_bounds(character.level)
     return {
-        "user_id": auth.user.id,
+        "user_id": user_id,
         "name": character.name,
         "position": character.position,
         "gender": character.gender,
@@ -47,3 +44,11 @@ async def get_player(auth: WebAppInitData = Depends(auth_user)):
         "tier": character.tier_cipher,
         "club": {"id": club.id, "name": club.name_club, "league": club.league} if club else None,
     }
+
+
+@player_router.get("/player")
+async def get_player(auth: WebAppInitData = Depends(auth_user)):
+    character = await CharacterService.get_character(character_user_id=auth.user.id)
+    if not character:
+        raise HTTPException(status_code=404, detail="No character")
+    return player_payload(character, auth.user.id)

@@ -5,6 +5,8 @@ POST /api/tutorial/complete marks the user's bot education finished
 a missing ReminderCharacter row (known strand: education handlers dereference
 character.reminder unguarded).
 """
+from datetime import datetime
+
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select, update
 from aiogram.utils.web_app import WebAppInitData
@@ -25,7 +27,10 @@ async def get_tutorial(auth: WebAppInitData = Depends(auth_user)):
     user = await UserService.get_user(user_id=auth.user.id)
     if not user:
         raise HTTPException(status_code=404, detail="No user")
-    return {"completed": user.end_register}
+    # NOT user.end_register any more. POST /api/character sets END_TRAINING at
+    # creation (it has to — see that module), so deriving "seen the slides" from
+    # it would mean the tutorial never ran for anyone registering in the app.
+    return {"completed": user.tutorial_completed_at is not None}
 
 
 @tutorial_router.post("/tutorial/complete")
@@ -37,11 +42,16 @@ async def complete_tutorial(auth: WebAppInitData = Depends(auth_user)):
     character = await CharacterService.get_character(character_user_id=auth.user.id)
     async for session in get_session():
         async with session.begin():
+            values = {}
             if not user.end_register:
+                # Retained as a safety net for players who registered through the
+                # old bot FSM and never reached END_TRAINING.
+                values["status_register"] = STATUS_USER_REGISTER.END_TRAINING
+            if user.tutorial_completed_at is None:
+                values["tutorial_completed_at"] = datetime.now()
+            if values:
                 await session.execute(
-                    update(UserBot)
-                    .where(UserBot.user_id == auth.user.id)
-                    .values(status_register=STATUS_USER_REGISTER.END_TRAINING)
+                    update(UserBot).where(UserBot.user_id == auth.user.id).values(**values)
                 )
             if character:
                 has_reminder = await session.scalar(

@@ -11,8 +11,10 @@ import Team from './screens/Team'
 import Statistics from './screens/Statistics'
 import Trainer from './screens/Trainer'
 import Tutorial from './components/Tutorial'
+import CreateCharacter from './components/CreateCharacter'
 import { getPlayer, getTutorial, getTraining, getQuests } from './api'
 import { useApi } from './hooks'
+import { ErrorBox, Loading } from './ui'
 import { IconUser, IconBall, IconDumbbell, IconTrophy, IconStar, IconCart, IconGear, IconCoin, IconPlus, IconHome } from './icons'
 
 // Нижнє меню — «Головна» додана за запитом Max 23.07 (єдиний вхід на головну був через лого).
@@ -39,22 +41,16 @@ const SCREENS = {
   trainer: Trainer,
 }
 
+/**
+ * Gate: nothing below this point mounts until a character exists.
+ *
+ * The registration branch used to wrap only <main>, which left the header, the
+ * nav and both pollers live for a player who had nothing to poll — a permanent
+ * 404 loop behind a dead-end screen. Keeping the whole shell unmounted is what
+ * makes "reload after creation" a non-problem: AppShell fetches on mount.
+ */
 export default function App() {
-  const [tab, setTab] = useState('home')
-  const [highlight, setHighlight] = useState(null)
-  const [showTutorial, setShowTutorial] = useState(false)
   const player = useApi(getPlayer)
-  // Polled state drives the live training countdown, nav badges and the
-  // "training finished" popup without per-screen refetching.
-  const training = useApi(getTraining, { pollMs: 15000 })
-  const quests = useApi(getQuests, { pollMs: 30000 })
-  const Screen = SCREENS[tab]
-
-  // Server-driven onboarding: show once per account until /tutorial/complete succeeds.
-  useEffect(() => {
-    if (localStorage.getItem('tgf_tutorial_done')) return
-    getTutorial().then((t) => { if (!t.completed) setShowTutorial(true) }).catch(() => {})
-  }, [])
 
   useEffect(() => {
     const tg = window.Telegram?.WebApp
@@ -62,8 +58,36 @@ export default function App() {
     tg?.expand?.()
   }, [])
 
-  // keep header balance fresh after purchases/registrations
-  useEffect(() => { player.reload() }, [tab]) // eslint-disable-line react-hooks/exhaustive-deps
+  if (player.loading) return <Loading />
+  if (player.error?.status === 404) {
+    return <CreateCharacter onCreated={() => player.reload()} />
+  }
+  if (player.error) return <ErrorBox error={player.error} onRetry={player.reload} />
+
+  return <AppShell player={player} />
+}
+
+function AppShell({ player }) {
+  const [tab, setTab] = useState('home')
+  const [highlight, setHighlight] = useState(null)
+  const [showTutorial, setShowTutorial] = useState(false)
+  // Polled state drives the live training countdown, nav badges and the
+  // "training finished" popup without per-screen refetching.
+  const training = useApi(getTraining, { pollMs: 15000 })
+  const quests = useApi(getQuests, { pollMs: 30000 })
+  const Screen = SCREENS[tab]
+
+  // Server-driven onboarding: show once per account until /tutorial/complete succeeds.
+  // `completed` is users.tutorial_completed_at, not the bot registration status —
+  // in-app registration sets END_TRAINING at creation, so the two had to be split.
+  useEffect(() => {
+    if (localStorage.getItem('tgf_tutorial_done')) return
+    getTutorial().then((t) => { if (!t.completed) setShowTutorial(true) }).catch(() => {})
+  }, [])
+
+  // keep header balance fresh after purchases/registrations — silent, or the
+  // App gate above would unmount this whole subtree on every tab change
+  useEffect(() => { player.refresh() }, [tab]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Training-finished popup: last_result is non-null only on the first poll
   // after completion, so firing on any non-null value is a clean one-shot.
@@ -145,23 +169,7 @@ export default function App() {
       </header>
 
       <main className="flex-1 pb-20">
-        {player.error?.status === 404 ? (
-          <div className="p-6 text-center space-y-4 pt-16">
-            <div className="h-display text-3xl text-gold glow-gold">Ласкаво просимо!</div>
-            <p className="text-white/85 text-sm">
-              У тебе ще немає футболіста. Повернись у чат бота і натисни
-              <b> «СТВОРИТИ ПЕРСОНАЖА»</b> — це займе хвилину, і гра відкриється.
-            </p>
-            <button
-              onClick={() => window.Telegram?.WebApp?.close?.()}
-              className="h-display text-base rounded-xl px-5 py-2.5 bg-gold text-black shadow-[0_0_18px_rgba(255,215,0,0.5)]"
-            >
-              Відкрити чат бота
-            </button>
-          </div>
-        ) : (
-          <Screen goTo={setTab} training={training.data} />
-        )}
+        <Screen goTo={setTab} training={training.data} />
       </main>
 
       {showTutorial && (

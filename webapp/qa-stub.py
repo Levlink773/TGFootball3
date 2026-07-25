@@ -113,6 +113,21 @@ F = {
     ]},
     "/api/team/join": {"joined": True, "club_id": 5, "club_name": "Paris Galaxy Dragons"},
     "/api/team/leave": {"left": True},
+    "/api/team/create": {"ok": True, "club_id": 9, "name": "Нова команда"},
+    "/api/character/options": {
+        "genders": [{"key": "MAN", "label": "Чоловік"}, {"key": "WOMAN", "label": "Жінка"}],
+        "positions": [
+            {"key": "GOALKEEPER", "label": "Воротар",
+             "stats": {"technique": 5, "kicks": 6, "ball_selection": 7, "speed": 6, "endurance": 6}},
+            {"key": "DEFENDER", "label": "Захисник",
+             "stats": {"technique": 5, "kicks": 5, "ball_selection": 8, "speed": 6, "endurance": 7}},
+            {"key": "MIDFIELDER", "label": "Півзахисник",
+             "stats": {"technique": 8, "kicks": 6, "ball_selection": 6, "speed": 7, "endurance": 6}},
+            {"key": "ATTACKER", "label": "Нападник",
+             "stats": {"technique": 7, "kicks": 8, "ball_selection": 4, "speed": 7, "endurance": 6}},
+        ],
+        "name_min": 2, "name_max": 20,
+    },
     "/api/statistics": {
         "career": {"trainings": 42, "match_registrations": 18, "goals": 9, "blitz_played": 6,
                     "blitz_semifinals": 2, "blitz_finals": 1, "blitz_wins": 1,
@@ -164,6 +179,9 @@ def _inventory_route(path, payload):
             return {"ok": True, "sold_for": item["sell_price"], "money": INV["money"]}
         return {"ok": False}
     return None
+
+
+F["/api/character"] = {"created": True, "player": F["/api/player"]}
 
 
 class H(BaseHTTPRequestHandler):

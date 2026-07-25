@@ -52,13 +52,20 @@ class ClubService:
         async for session in get_session():
             async with session.begin():
    
+                # OUTER join + count(Character.id), and both halves are load-bearing.
+                # An inner join drops clubs with zero members entirely, so a freshly
+                # created club was invisible in the join list until someone else was
+                # already in it — and on an empty database every club was invisible.
+                # count(*) would then count the all-NULL row an outer join emits and
+                # report an empty club as having 1 member; count(Character.id) skips
+                # NULLs and returns 0.
                 subquery = (
                     select(
                         Club.id.label('club_id'),
-                        func.count().label('characters_count')
+                        func.count(Character.id).label('characters_count')
                     )
                     .select_from(Club)
-                    .join(Club.characters)
+                    .outerjoin(Club.characters)
                     .group_by(Club.id)
                     .subquery()
                 )
@@ -92,6 +99,33 @@ class ClubService:
                 merged_obj = await session.merge(obj)
                 return merged_obj
             
+    @classmethod
+    async def create_club_checked(cls, name_club: str, owner_id: int) -> Club | None:
+        # Clash check + insert in one transaction. Returns None if the name is taken.
+        # Advisory only: clubs.name_club has no unique index, so a simultaneous
+        # create of the same name can still slip through. Adding the index would
+        # turn rename_club's soft `return False` into an IntegrityError, so it is a
+        # separate change.
+        async for session in get_session():
+            async with session.begin():
+                clash = await session.execute(
+                    select(Club.id).where(
+                        Club.name_club == name_club,
+                        Club.is_fake_club == False,
+                    )
+                )
+                if clash.scalar_one_or_none() is not None:
+                    return None
+                obj = Club(
+                    owner_id=owner_id,
+                    name_club=name_club,
+                    is_fake_club=False,
+                    league="🟢 Ліга новачків",
+                )
+                session.add(obj)
+                await session.flush()
+                return obj
+
     @classmethod
     async def update_link_to_chat(cls, club: Club, new_link: str) -> None:
         async for session in get_session():
