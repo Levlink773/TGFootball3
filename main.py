@@ -19,6 +19,7 @@ from webhook_api.handlers.key_handler import MonoResultBuyTrainingKey
 from config import (
     WEBAPP_HOST,
     WEBAPP_PORT,
+    WEBAPP_ORIGIN,
     CALLBACK_URL_WEBHOOK_ENERGY,
     CALLBACK_URL_WEBHOOK_BOX,
     CALLBACK_URL_WEBHOOK_CHANGE_POSITION,
@@ -27,6 +28,12 @@ from config import (
     CALLBACK_URL_WEBHOOK_BUY_TRAINING_KEY, CALLBACK_URL_WEBHOOK_ENERGY_BLITZ, CALLBACK_URL_WEBHOOK_BOX_BLITZ,
     CALLBACK_URL_WEBHOOK_VIP_PASS_BLITZ, CALLBACK_URL_WEBHOOK_MONEY_BLITZ
 )
+
+# The ГРАТИ button in main_menu() is the only way a new player can register now
+# (the chat FSM is gone), and WebAppInfo(url=None) would raise inside /start for
+# everyone. Fail at boot instead — a restart loop is visible, a broken /start isn't.
+if not WEBAPP_ORIGIN:
+    raise RuntimeError("WEBAPP_ORIGIN is not set — the ГРАТИ button cannot be built")
 
 dp.include_router(main_router)
     

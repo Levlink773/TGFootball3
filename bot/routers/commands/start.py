@@ -5,7 +5,6 @@ from aiogram.fsm.context import FSMContext
 from aiogram.filters import CommandStart, Command
 
 from bot.keyboards.menu_keyboard import main_menu, test
-from bot.routers.register_user.start_register_user import StartRegisterUser
 from bot.routers.register_user.routers.join_to_club import join_to_club
 
 from database.models.user_bot import UserBot, STATUS_USER_REGISTER
@@ -30,11 +29,11 @@ async def start_command_handler(
     if command.args:
         await register_referal(user=user, referal=command.args) 
     if not user.end_register:
-        if user.status_register == STATUS_USER_REGISTER.PRE_RIGSTER_STATUS:
-            start_register = StartRegisterUser(
-                user = user
-            )
-            return await start_register.start_register_user()
+        # PRE_RIGSTER_STATUS used to start the chat registration FSM here. That flow
+        # is gone (players register in the Mini App now), so a brand-new user falls
+        # through to the welcome video, whose keyboard is the ГРАТИ button.
+        # JOIN_TO_CLUB stays: anyone already parked in it still needs a way out, and
+        # nobody new can enter it.
         if user.status_register == STATUS_USER_REGISTER.JOIN_TO_CLUB:
             character = await CharacterService.get_character(
                 character_user_id = user.user_id
@@ -64,7 +63,7 @@ async def start_command_handler(
 <b>Готові стати новою зіркою футболу? 🌟</b>
 Час почати свою подорож до слави!
 
-🔽<b>НАТИСКАЙ КНОПКУ СТВОРИТИ ПЕРСОНАЖА</b>🔽
+🔽<b>НАТИСКАЙ КНОПКУ «⚽️ ГРАТИ» — І СТВОРИ СВОГО ФУТБОЛІСТА</b>🔽
     """
     
     message = await message.answer_video(

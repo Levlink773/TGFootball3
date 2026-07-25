@@ -37,6 +37,24 @@ def test_rejected(name, headers):
     assert r.status_code == 401, f"{name}: expected 401, got {r.status_code} {r.text[:200]}"
 
 
+@pytest.mark.parametrize("path,body", [
+    ("/api/character", {"name": "Хтось", "gender": "MAN", "position": "ATTACKER"}),
+    ("/api/team/create", {"name": "Чужа команда"}),
+])
+@pytest.mark.parametrize("name,headers", [
+    ("no_header", {}),
+    ("wrong_scheme", {"Authorization": f"Bearer {forge(QA_UID)}"}),
+    ("foreign_token", {"Authorization": f"tma {forge(QA_UID, token='1111111:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA')}"}),
+    ("stale_25h", {"Authorization": f"tma {forge(QA_UID, age_s=90000)}"}),
+])
+def test_write_endpoints_rejected(path, body, name, headers):
+    """The two endpoints that create rows must sit behind the same wall as the
+    read endpoints — unauthenticated creation would let anyone mint characters
+    and clubs for arbitrary user ids."""
+    r = httpx.post(f"{API}{path}", json=body, headers=headers, timeout=10)
+    assert r.status_code == 401, f"{path} {name}: got {r.status_code} {r.text[:200]}"
+
+
 def test_tampered_hash_rejected():
     init = forge(QA_UID)
     # flip the final hex digit of the signature

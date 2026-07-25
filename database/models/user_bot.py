@@ -45,6 +45,10 @@ class UserBot(Base):
     
     referal_user_id = Column(BigInteger, nullable=True)
     bot_buttons_enabled = Column(Boolean, nullable=False, default=False, server_default=text('0'))
+    # Deliberately NOT derived from status_register: in-app registration sets
+    # END_TRAINING at character creation, so that flag can no longer answer
+    # "has this player seen the tutorial slides?".
+    tutorial_completed_at = Column(DateTime, nullable=True)
     
     characters = relationship("Character", back_populates="owner", lazy="selectin")
     clubs = relationship("Club", back_populates="owner", lazy="selectin")

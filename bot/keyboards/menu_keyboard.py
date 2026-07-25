@@ -1,6 +1,7 @@
 from aiogram.utils.keyboard import ReplyKeyboardBuilder, InlineKeyboardBuilder
-from aiogram.types import ReplyKeyboardRemove
+from aiogram.types import KeyboardButton, ReplyKeyboardRemove, WebAppInfo
 
+from config import WEBAPP_ORIGIN
 from database.models.user_bot import UserBot, STATUS_USER_REGISTER
 
 from constants import date_is_get_reward_christmas_tree
@@ -29,7 +30,12 @@ AVAILABLE_BUTTONS_BY_STATUS = {
 def main_menu(user: UserBot):
     keyboard = ReplyKeyboardBuilder()
     if not user.characters:
-        keyboard.button(text="СТВОРИТИ ПЕРСОНАЖА")
+        # Registration moved into the Mini App — a chat FSM asking for a name in
+        # plain text was putting new players off. This is the single entry point
+        # now, and it is a reply-keyboard button (not inline) so all seven callers
+        # of main_menu keep working unchanged. Bot-wide menu buttons are pinned by
+        # BotFather and cannot be set over the Bot API, so this sidesteps them.
+        keyboard.button(text="⚽️ ГРАТИ", web_app=WebAppInfo(url=WEBAPP_ORIGIN))
     else:
         available_buttons = AVAILABLE_BUTTONS_BY_STATUS.get(user.status_register, [])
         for button_text in ALL_MAIN_BUTTONS:

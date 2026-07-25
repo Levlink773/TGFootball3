@@ -7,16 +7,21 @@ export function useApi(fn, { pollMs } = {}) {
   const [error, setError] = useState(null)
   const [loading, setLoading] = useState(true)
 
+  // Returns the promise so callers can await a refetch (the registration wizard
+  // holds its busy state until the app is genuinely ready rather than flashing).
   const run = useCallback((silent) => {
     if (!silent) setLoading(true)
     setError(null)
-    fn()
+    return fn()
       .then(setData)
       .catch(setError)
       .finally(() => { if (!silent) setLoading(false) })
   }, [fn])
 
   const reload = useCallback(() => run(false), [run])
+  // Silent refetch: no loading flag, so a caller that re-renders on `loading`
+  // (the App gate) doesn't tear its subtree down just to refresh a balance.
+  const refresh = useCallback(() => run(true), [run])
 
   useEffect(() => { run(false) }, [run])
   useEffect(() => {
@@ -25,7 +30,7 @@ export function useApi(fn, { pollMs } = {}) {
     return () => clearInterval(t)
   }, [pollMs, run])
 
-  return { data, error, loading, reload }
+  return { data, error, loading, reload, refresh }
 }
 
 export function fmtCountdown(seconds) {

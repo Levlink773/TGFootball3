@@ -124,7 +124,11 @@ async def join_list(auth: WebAppInitData = Depends(auth_user)):
     character = await CharacterService.get_character(character_user_id=auth.user.id)
     if not character:
         raise HTTPException(status_code=404, detail="No character")
-    clubs = await ClubService.get_all_clubs_to_join()
+    # filter_join_to_req reads backwards: False is what EXCLUDES invite-only clubs
+    # (services/club_service.py: `if not filter_join_to_req: ... is_invite_only == False`).
+    # The app has no join-request flow, so listing them only produced a dead
+    # "за запрошенням" row that POST /team/join would 409 anyway.
+    clubs = await ClubService.get_all_clubs_to_join(filter_join_to_req=False)
     return {
         "clubs": [
             {
@@ -168,6 +172,65 @@ async def join_club(req: JoinClub, auth: WebAppInitData = Depends(auth_user)):
 
     await CharacterService.update_character_club_id(character=character, club_id=club.id)
     return {"joined": True, "club_id": club.id, "club_name": club.name_club}
+
+
+class CreateClubReq(BaseModel):
+    name: str
+
+
+def _validate_club_name(raw: str) -> str:
+    """One rule for both /team/create and /team/rename, so they cannot drift apart."""
+    name = (raw or "").strip()
+    if not (3 <= len(name) <= 30):
+        raise HTTPException(status_code=400, detail="Назва: від 3 до 30 символів")
+    # The bot renders club names with parse_mode=HTML into league broadcasts sent to
+    # other players. Angle brackets would inject markup (phishing links) or break the
+    # whole broadcast with "can't parse entities".
+    if "<" in name or ">" in name:
+        raise HTTPException(status_code=400, detail="Назва не може містити символи < або >")
+    return name
+
+
+async def _finish_club_setup(character, club):
+    """Steps 2 and 3 of club creation. Split out because the three writes are three
+    separate sessions and cannot be made atomic without duplicating infra logic the
+    bot also owns — so a half-created club is possible, and re-running these is how
+    the owner gets out of it. Both are effectively idempotent."""
+    if character.club_id != club.id:
+        await CharacterService.update_character_club_id(character=character, club_id=club.id)
+    if not await ClubInfrastructureService.get_infrastructure(club_id=club.id):
+        await ClubInfrastructureService.create_infrastructure(club_id=club.id)
+
+
+@team_router.post("/team/create")
+async def create_team(req: CreateClubReq, auth: WebAppInitData = Depends(auth_user)):
+    character = await CharacterService.get_character(character_user_id=auth.user.id)
+    if not character:
+        raise HTTPException(status_code=404, detail="No character")
+
+    # Own a club already? Either you're in it (nothing to do) or a previous attempt
+    # died between the three writes — finish it rather than stranding you with a
+    # club you can't reach and a 409 you can't clear.
+    owned = await ClubService.get_club_by_owner_id(owner_id=auth.user.id)
+    if owned:
+        if character.club_id == owned.id:
+            raise HTTPException(status_code=409, detail="Ти вже маєш команду")
+        if character.club_id:
+            raise HTTPException(status_code=409, detail="Ти вже в команді — спочатку покинь її")
+        await _finish_club_setup(character, owned)
+        return {"ok": True, "club_id": owned.id, "name": owned.name_club}
+
+    if character.club_id:
+        raise HTTPException(status_code=409, detail="Ти вже в команді — спочатку покинь її")
+
+    name = _validate_club_name(req.name)
+    club = await ClubService.create_club_checked(name_club=name, owner_id=auth.user.id)
+    if not club:
+        raise HTTPException(status_code=409, detail="Така назва вже зайнята")
+
+    club_id = club.id
+    await _finish_club_setup(character, club)
+    return {"ok": True, "club_id": club_id, "name": name}
 
 
 @team_router.post("/team/leave")
@@ -233,14 +296,7 @@ async def transfer_owner(req: UserIdReq, auth: WebAppInitData = Depends(auth_use
 @team_router.post("/team/rename")
 async def rename_team(req: RenameReq, auth: WebAppInitData = Depends(auth_user)):
     club = await _owner_club(auth)
-    name = (req.name or "").strip()
-    if not (3 <= len(name) <= 30):
-        raise HTTPException(status_code=400, detail="Назва: від 3 до 30 символів")
-    # The bot renders club names with parse_mode=HTML into league broadcasts sent to
-    # other players. Angle brackets would inject markup (phishing links) or break the
-    # whole broadcast with "can't parse entities".
-    if "<" in name or ">" in name:
-        raise HTTPException(status_code=400, detail="Назва не може містити символи < або >")
+    name = _validate_club_name(req.name)
     if not await ClubService.rename_club(club.id, name):
         raise HTTPException(status_code=409, detail="Така назва вже зайнята")
     return {"ok": True, "name": name}
