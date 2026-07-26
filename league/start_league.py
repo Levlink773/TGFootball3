@@ -12,7 +12,7 @@ from match.entities import MatchData, MatchClub
 from match.core.match import Match
 from match.core.manager import ClubMatchManager
 
-from league.user_sender import UserSender
+from league.user_sender import UserSender, schedule_match_reminders
 from league.create_league.create_league_match import CreateDefaultLeagueMatches
 
 from services.league_services.default_league_service import DefaultLeagueService 
@@ -128,15 +128,11 @@ class StartDefaultLeague:
                                       misfire_grace_time = 10,
 
                                       )
-        # Pre-match registration reminders at T-40 and T-10 (Max 23.07).
-        for mins in (40, 10):
-            remind_at = start_time_fight - timedelta(minutes=mins)
-            if remind_at > datetime.now():
-                self.scheduler_league.add_job(user_sender.send_reminder,
-                                              trigger=DateTrigger(remind_at),
-                                              kwargs={"minutes_left": mins},
-                                              misfire_grace_time=10,
-                                              )
+        # Напоминания о регистрации T-40 / T-15 / T-5 (Max 26.07).
+        schedule_match_reminders(
+            self.scheduler_league, user_sender, start_time_fight,
+            blast_at=start_time_sender,
+        )
         self.scheduler_league.add_job(match_.start_match,
                                       trigger=DateTrigger(start_time_fight),
                                       misfire_grace_time = 10

@@ -8,7 +8,7 @@ from .service.get_new_clubs_league import NewClubLeaguRepository
 
 from database.models.league_fight import LeagueFight
 
-from league.user_sender import UserSender
+from league.user_sender import UserSender, schedule_match_reminders
 from match.entities import MatchData, MatchClub
 from match.core.match import Match
 from match.core.manager import ClubMatchManager
@@ -67,16 +67,12 @@ class NewClubLeague:
             trigger = DateTrigger(time_send_join_match_text),
             misfire_grace_time = 10
         )
-        # Pre-match registration reminders at T-40 and T-10 (Max 23.07).
-        for mins in (40, 10):
-            remind_at = time_start_match - timedelta(minutes=mins)
-            if remind_at > datetime.now():
-                self.scheduler_best_league.add_job(
-                    func = user_sender.send_reminder,
-                    trigger = DateTrigger(remind_at),
-                    kwargs = {"minutes_left": mins},
-                    misfire_grace_time = 10
-                )
+        # Напоминания о регистрации T-40 / T-15 / T-5 (Max 26.07).
+        # blast_at = T-15, поэтому тир 15 пропускается — иначе два сообщения разом.
+        schedule_match_reminders(
+            self.scheduler_best_league, user_sender, time_start_match,
+            blast_at=time_send_join_match_text,
+        )
         self.scheduler_best_league.add_job(
             func    = match_.start_match,
             trigger = DateTrigger(time_start_match),
