@@ -8,10 +8,28 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 F = {
     "/api/player": {
         "user_id": 1, "name": "Андрій Шевчук", "position": "Півзахисник", "gender": "MAN",
-        "exp": 120, "level": 7, "money": 25740, "energy": 120,
+        # exp_floor/exp_next нужны XP-бару на главной; vip_until — ВІП-картке.
+        # Меняй vip_until, чтобы прогнать матрицу «Дійсно ще N днів»/«менше доби»/null.
+        "exp": 120, "exp_floor": 100, "exp_next": 300,
+        "level": 7, "money": 25740, "energy": 120,
         "stats": {"technique": 86, "kicks": 81, "ball_selection": 78, "speed": 89, "endurance": 84},
-        "full_power": 1876, "vip_active": True, "tier": 1,
+        "full_power": 1876, "vip_active": True, "vip_until": "2026-08-07T21:00:00", "tier": 1,
         "club": {"id": 1, "name": "London United Lions", "league": "Вища ліга"},
+    },
+    # Форма 1-в-1 с _payload() в webapp_api/routers/quests.py.
+    "/api/quests": {
+        "quests": [
+            {"key": "trainings", "title": "Проведи тренування", "current": 1, "target": 1,
+             "reward_energy": 20, "claimable": True, "claimed": False},
+            {"key": "matches", "title": "Зіграй 2 матчі", "current": 0, "target": 2,
+             "reward_energy": 30, "claimable": False, "claimed": False},
+            {"key": "wins", "title": "Здобудь перемогу", "current": 0, "target": 1,
+             "reward_energy": 25, "claimable": False, "claimed": False},
+        ],
+        "gift_claimed": False,
+        "bonus_coins": 50,
+        "bonus_claimable": False,
+        "bonus_claimed": False,
     },
     "/api/tutorial": {"completed": False},
     "/api/tutorial/complete": {"completed": True},
