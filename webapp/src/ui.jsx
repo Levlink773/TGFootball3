@@ -58,25 +58,30 @@ export function StatBar({ label, value, max = 100, icon = null, dense = false })
   )
 }
 
-// Segmented cyan energy bar (frame 1)
-export function EnergyBar({ value, max }) {
+// Segmented cyan energy bar (frame 1).
+// `hint` — необов'язковий другий рядок (Home показує там час до поповнення).
+// Player.jsx нічого не передає і нічого зайвого не малює.
+export function EnergyBar({ value, max, hint }) {
   const SEGMENTS = 14
   const lit = Math.round((Math.min(value, max) / max) * SEGMENTS)
   return (
-    <div className="flex items-center gap-3 bg-card rounded-2xl border border-neon/50 ring-glow-neon px-4 py-3">
-      <IconBolt size={22} className="text-neon shrink-0" />
-      <div className="h-display text-2xl shrink-0">
-        <span className="text-neon glow-neon">{value}</span>
-        <span className="text-muted text-base"> /{max}</span>
+    <div className="bg-card rounded-2xl border border-neon/50 ring-glow-neon px-4 py-3">
+      <div className="flex items-center gap-3">
+        <IconBolt size={22} className="text-neon shrink-0" />
+        <div className="h-display text-2xl shrink-0">
+          <span className="text-neon glow-neon">{value}</span>
+          <span className="text-muted text-base"> /{max}</span>
+        </div>
+        <div className="flex-1 flex gap-1">
+          {Array.from({ length: SEGMENTS }, (_, i) => (
+            <span
+              key={i}
+              className={`flex-1 h-4 rounded-[3px] ${i < lit ? 'bar-neon' : 'bg-card2'}`}
+            />
+          ))}
+        </div>
       </div>
-      <div className="flex-1 flex gap-1">
-        {Array.from({ length: SEGMENTS }, (_, i) => (
-          <span
-            key={i}
-            className={`flex-1 h-4 rounded-[3px] ${i < lit ? 'bar-neon' : 'bg-card2'}`}
-          />
-        ))}
-      </div>
+      {hint && <div className="text-muted text-[10px] text-right mt-1.5">{hint}</div>}
     </div>
   )
 }
