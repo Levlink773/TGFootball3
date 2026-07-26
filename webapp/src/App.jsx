@@ -41,6 +41,17 @@ const SCREENS = {
   trainer: Trainer,
 }
 
+// Deep links: кнопки WebAppInfo в уведомлениях передают ?screen=<name>,
+// t.me/<bot>?startapp=<name> приходит как initDataUnsafe.start_param.
+// Резолвится один раз при монтировании (ленивый initializer useState), иначе
+// ре-рендер утащил бы игрока обратно с экрана, куда он сам перешёл.
+function initialScreen() {
+  const q = new URLSearchParams(window.location.search).get('screen')
+  const sp = window.Telegram?.WebApp?.initDataUnsafe?.start_param
+  const s = q || sp
+  return s && SCREENS[s] ? s : 'home'
+}
+
 /**
  * Gate: nothing below this point mounts until a character exists.
  *
@@ -68,7 +79,7 @@ export default function App() {
 }
 
 function AppShell({ player }) {
-  const [tab, setTab] = useState('home')
+  const [tab, setTab] = useState(initialScreen)
   const [highlight, setHighlight] = useState(null)
   const [showTutorial, setShowTutorial] = useState(false)
   // Polled state drives the live training countdown, nav badges and the
