@@ -1,64 +1,56 @@
+"""Напоминание про нагороду навчального центру.
+
+Раньше это был DateTrigger на каждого персонажа, который перевзводился в
+bot/routers/gym/education_center.py после КЛЕЙМА В БОТЕ. Клейм из Mini App
+(webapp_api) перевзвести его не мог: это отдельный процесс со своей памятью —
+значит игрок, забравший награду в приложении, больше НИКОГДА не получал
+напоминания.
+
+Sweep по состоянию в БД чинит это и заодно убирает обход всех персонажей
+при старте. Атомарный claim (claim_education_reminder_send) не тронут — это
+единственная корректная at-most-once гарантия в проекте.
+"""
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from apscheduler.triggers.date import DateTrigger
+from apscheduler.triggers.cron import CronTrigger
 
-from datetime import datetime, timedelta
-
-from database.models.character import Character
 from services.character_service import CharacterService
 
-from loader import bot
-from config import EPOCH_ZERO
 from logging_config import logger
+from utils.notify import notify
 
 
-class EducationRewardReminderScheduler():
-    scheduler = AsyncIOScheduler()
-    bot = bot
+class EducationRewardReminderScheduler:
+    TEMPLATE_TEXT_REWARD_EDUCATION = (
+        "🏫 <b>Навчальний центр</b>\n\n"
+        "Нагорода за навчання вже готова — забирай досвід, монети та енергію! 🎓"
+    )
 
-    TEMPLATE_TEXT_REWARD_EDUCATION = """Не забудьте отримати нагороди за навчання!"""
-
-
-    async def _send_character_remind_reward_message(self, character_user_id: int):
-        # Claim-before-send: the atomic DB flag guarantees at most one reminder
-        # per reward cycle, even across process restarts or duplicate instances.
-        if not await CharacterService.claim_education_reminder_send(character_user_id):
-            return
-        try:
-            await self.bot.send_message(
-                chat_id=character_user_id,
-                text=self.TEMPLATE_TEXT_REWARD_EDUCATION
-            )
-        except Exception as e:
-            logger.warning(
-                "education reminder send failed for user %s: %s", character_user_id, e
-            )
-    async def add_job_remind(self, character: Character,
-                             time_get_reward: datetime):
-        
-        self.scheduler.add_job(func=self._send_character_remind_reward_message, 
-                               args=[character.characters_user_id],
-                               trigger='date',
-                               run_date = time_get_reward,
-                               misfire_grace_time = 10
-
-                               )
-        
+    def __init__(self):
+        self.scheduler = AsyncIOScheduler()
 
     async def start_reminder(self):
-        current_time = datetime.now()
-        one_month_ago = current_time - timedelta(days=30)
-        all_not_bot_users = await CharacterService.get_all_users_not_bot()
-        for character in all_not_bot_users:
-            if character.reminder.education_reward_date == EPOCH_ZERO:
-                continue
-            if character.reminder.education_reward_date < one_month_ago:
-                continue
-            
-            if character.reminder.education_reward_date > current_time:
-                await self.add_job_remind(
-                    character=character,
-                    time_get_reward=character.reminder.education_reward_date
-                )
-            else:
-                await self._send_character_remind_reward_message(character.characters_user_id)
+        self.scheduler.add_job(
+            func=self.remind_due,
+            trigger=CronTrigger(minute=10),
+            misfire_grace_time=600,
+        )
         self.scheduler.start()
+
+    async def remind_due(self):
+        characters = await CharacterService.get_characters_education_reward_due()
+        sent = 0
+        for character in characters:
+            # Claim-before-send: флаг в БД гарантирует не больше одного
+            # напоминания на цикл награды, даже при рестарте или дубле процесса.
+            if not await CharacterService.claim_education_reminder_send(
+                character.characters_user_id
+            ):
+                continue
+            if await notify(
+                character,
+                self.TEMPLATE_TEXT_REWARD_EDUCATION,
+                screen="training",
+                button_text="🏫 До навчального центру",
+            ):
+                sent += 1
+        logger.info(f"Education reward reminder: sent {sent} of {len(characters)} due")

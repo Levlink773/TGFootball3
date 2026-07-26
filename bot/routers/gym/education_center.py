@@ -84,11 +84,10 @@ async def get_rewards_education_cernter(query: CallbackQuery, character: Charact
             amount_money_adjustment=coins
         )
 
-        scheduler_reward_education = EducationRewardReminderScheduler()
-        await scheduler_reward_education.add_job_remind(
-            character=character,
-            time_get_reward=datetime.now() + DELTA_TIME_EDUCATION_REWARD
-        )
+        # Перевзводить напоминание вручную больше не нужно: почасовой sweep в
+        # schedulers/scheduler_education.py сам находит всех, у кого подошёл
+        # education_reward_date. Это же чинит клейм из Mini App, который из
+        # отдельного процесса перевзвести DateTrigger не мог.
 
         await query.message.answer(
             get_text_education_center_reward(
