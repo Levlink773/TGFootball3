@@ -26,6 +26,7 @@ from services.character_service import CharacterService
 from services.reminder_character_service import RemniderCharacterService
 
 from utils.randomaizer import check_chance
+from utils.notify import webapp_button
 from logging_config import logger
 from loader import bot
 
@@ -141,7 +142,9 @@ class Gym:
             await bot.send_photo(
                 chat_id=self.character.characters_user_id,
                 photo=photo,
-                caption=message_text
+                caption=message_text,
+                # Deep link на результаты тренировки в приложении (Max 26.07).
+                reply_markup=webapp_button("training", "📊 Дивитись результати"),
             )
         except Exception as e:
             logger.error(f"Ошибка при отправке сообщения пользователю {self.character.character_name}: {e}")

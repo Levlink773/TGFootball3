@@ -31,6 +31,7 @@ from .templates import (
 from .render_scene import SceneRenderer
 
 from utils.rate_limitter import rate_limiter
+from utils.notify import webapp_button
 
 from loader import bot
 from logging_config import logger
@@ -131,7 +132,9 @@ class MatchSender:
             message_photo = await self.sender.send_messages(
                 text = text,
                 characters = club.club.characters,
-                photo = photo
+                photo = photo,
+                # Deep link, чтобы матч открывался прямо в приложении (Max 26.07).
+                keyboard = webapp_button("matches", "⚽️ Дивитись матч"),
             )
             if message_photo and not is_save:
                 await save_photo_id(
