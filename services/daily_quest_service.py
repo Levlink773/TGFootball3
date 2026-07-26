@@ -74,6 +74,26 @@ class DailyQuestService:
         return False
 
     @classmethod
+    async def claim_gift_notification(cls, character_id: int) -> bool:
+        """Атомарно занять право напомнить про подарок. True не чаще раза в день."""
+        await cls.get_today(character_id)
+        async for session in get_session():
+            async with session.begin():
+                result = await session.execute(
+                    update(DailyQuest)
+                    .where(
+                        DailyQuest.character_id == character_id,
+                        DailyQuest.quest_date == date.today(),
+                        DailyQuest.gift_claimed.is_(False),
+                        DailyQuest.gift_notified.is_(False),
+                    )
+                    .values(gift_notified=True)
+                )
+                await session.commit()
+                return result.rowcount > 0
+        return False
+
+    @classmethod
     async def claim_completion_bonus(cls, character_id: int) -> bool:
         # Reuses the legacy `claimed` column as the completion-bonus flag —
         # atomic, requires all three per-task claims first.

@@ -15,6 +15,9 @@ class DailyQuest(Base):
     wins = Column(Integer, nullable=False, default=0)
     claimed = Column(Boolean, nullable=False, default=False)  # legacy all-at-once claim; unused since per-task claims
     gift_claimed = Column(Boolean, nullable=False, default=False)
+    # Реестр «напомнили про подарок». Уникальность (character_id, quest_date)
+    # даёт ровно одно напоминание на игрока в день бесплатно.
+    gift_notified = Column(Boolean, nullable=False, default=False, server_default="0")
     trainings_claimed = Column(Boolean, nullable=False, default=False)
     matches_claimed = Column(Boolean, nullable=False, default=False)
     wins_claimed = Column(Boolean, nullable=False, default=False)
