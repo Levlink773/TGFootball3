@@ -12,6 +12,10 @@ from .end_training import EndTraining
 from logging_config import logger
 
 class TrainingManager:
+    # ponytail: состояние сессий живёт в памяти процесса — рестарт посреди сессии
+    # теряет идущие тренировки на стороне бота. Строка в training_timer при этом
+    # сохраняется, поэтому окно в приложении остаётся корректным.
+    # Upgrade path: восстанавливать из character_join_training.stage.
     _trainings: Dict[int, Training] = {}
 
     @classmethod

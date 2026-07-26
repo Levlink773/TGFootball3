@@ -8,6 +8,7 @@ from training.constans import TIME_TRAINING, TIME_REGISTER_TRAINING
 
 from training.sender.sender_message import RegisterInTrainingSender
 
+from services.training_service import TrainingService
 
 from .base_timer import BaseTimer
 
@@ -26,6 +27,14 @@ class Timer(BaseTimer):
         self.sender_message: RegisterInTrainingSender = None
         
     async def start_training(self) -> None:
+        # TrainingService.register_training_timer() был определён, но НИ РАЗУ не
+        # вызывался: таблица training_timer оставалась пустой, поэтому
+        # webapp_api/routers/trainer.py::_active_timer() всегда возвращал None и
+        # POST /api/trainer/join отвечал 409 «Зараз немає активної сесії тренера».
+        #
+        # Пишем time_prerigster (10:00), НЕ time_start (10:30): _window() в
+        # trainer.py трактует сохранённое значение как «открытие регистрации».
+        await TrainingService.register_training_timer(time_start=self.time_prerigster)
         await self.send_register_message()
         await self.send_start_message()
         await self.send_end_message()
