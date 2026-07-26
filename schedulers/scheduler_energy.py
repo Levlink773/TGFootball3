@@ -5,51 +5,50 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from database.models.character import Character
 
 from services.character_service import CharacterService
-from services.vip_pass_service import VipPassService
 from services.club_service import ClubService
 
 from constants import TIME_RESET_ENERGY_CHARACTER, TIME_RESET_ENERGY_CLUB
 from logging_config import logger
-from loader import bot
+from utils.notify import notify_many
 
 
 class EnergyResetScheduler:
     def __init__(self):
         self.scheduler = AsyncIOScheduler()
 
+    # Текст описывает то, что реально делает апдейт: энергия ВЫСТАВЛЯЕТСЯ в кап,
+    # и тем, у кого её было больше, не меняется вообще.
+    TEXT_REGULAR = (
+        "🔋 Енергію відновлено до <b>150</b> ⚡️\n\n"
+        "Якщо в тебе було більше — нічого не змінилось.\n"
+        "Заходь тренуватись і реєструйся на матч! ⚽️"
+    )
+    TEXT_VIP = (
+        "👑 <b>VIP</b> — енергію відновлено до <b>300</b> ⚡️\n\n"
+        "Якщо в тебе було більше — нічого не змінилось.\n"
+        "Уперед за перемогами! 🏆"
+    )
+
     async def __send_message_bot(
-        self, 
-        characters: list[Character], 
-        is_vip: bool      
+        self,
+        characters: list[Character],
+        is_vip: bool
     ):
-        if is_vip:
-            text = """
-Ваша енергія ⚡️ повністю відновлена 🔋
-
-<b>Ви отримали 300 енергії</b>
-
-Тепер ви можете користуватися всіма перевагами <b>VIP</b> підписки
-"""
-        else:
-            text = "Ваша енергія ⚡️ повністю відновлена 🔋"
-
-        for character in characters:
-            try:
-                await asyncio.sleep(0.15)
-                await bot.send_message(
-                    chat_id=character.characters_user_id,
-                    text=text
-                )
-            except Exception as E:
-                logger.error(f"Не смог отправить сообщение {character.character_name}")
-
+        text = self.TEXT_VIP if is_vip else self.TEXT_REGULAR
+        sent = await notify_many(
+            characters,
+            text,
+            screen="training",
+            button_text="⚡️ У гру",
+        )
+        logger.info(f"Energy reset DM: {sent}/{len(characters)} (vip={is_vip})")
 
     async def reset_energy_character(self):
-        all_characters = await CharacterService.get_character_how_update_energy()
-        all_vip_characters = await VipPassService.get_have_vip_pass_characters()
+        # Порядок важен: когорты считаются ДО апдейта, иначе фильтр по энергии пуст.
+        regular, vip = await CharacterService.get_characters_energy_restored()
         await CharacterService.update_energy_for_non_bots()
-        asyncio.create_task(self.__send_message_bot(all_characters, False))
-        asyncio.create_task(self.__send_message_bot(all_vip_characters, True))
+        asyncio.create_task(self.__send_message_bot(regular, False))
+        asyncio.create_task(self.__send_message_bot(vip, True))
         logger.info("Обновил енергию для пользователей")
         
         
