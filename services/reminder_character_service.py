@@ -87,11 +87,14 @@ class RemniderCharacterService:
         async for session in get_session():
             async with session as sess:
                 try:
+                    # Единственная точка выхода и для нормального завершения, и для
+                    # отмены — значит здесь же фиксируем «тренувався востаннє».
                     stmt = (update(ReminderCharacter)
                             .where(ReminderCharacter.character_id == character_id)
                             .values(training_stats = None)
                             .values(time_start_training = None)
                             .values(time_training_seconds = None)
+                            .values(last_training_at = datetime.now())
                             )
                     await sess.execute(stmt)
                     await sess.commit()

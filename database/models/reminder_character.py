@@ -18,8 +18,15 @@ class ReminderCharacter(Base):
     
     training_stats        = Column(String(255), nullable=True)
     time_start_training   = Column(DateTime, nullable=True)
-    time_training_seconds = Column(BigInteger, nullable=True)  
-    
+    time_training_seconds = Column(BigInteger, nullable=True)
+
+    # time_start_training обнуляется на КАЖДОМ завершении тренировки, поэтому это
+    # «начало текущей», а не «когда тренировался в последний раз». Для напоминаний
+    # 3/6/24ч нужна отдельная метка, переживающая завершение.
+    last_training_at = Column(DateTime, nullable=True)
+    # Реестр «уже напомнили»: тот же приём, что education_reward_notified_date.
+    idle_notified_at = Column(DateTime, default=datetime(1970, 1, 1), server_default=text('\'1970-01-01 00:00:00\''), nullable=False)
+
     education_reward_date = Column(DateTime, default=datetime(1970, 1, 1), server_default=text('\'1970-01-01 00:00:00\''), nullable=False)
     education_reward_notified_date = Column(DateTime, default=datetime(1970, 1, 1), server_default=text('\'1970-01-01 00:00:00\''), nullable=False)
     time_to_join_club     = Column(DateTime, default=datetime(1970, 1, 1), server_default=text('\'1970-01-01 00:00:00\''), nullable=False)
