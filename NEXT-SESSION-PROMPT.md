@@ -52,6 +52,12 @@ unless explicitly asked.
 
 ## Rules
 - Commit in ~/Personal/projects/tg-football/test, conventional commits, no AI attribution.
+- MAIN repo = `origin` = https://github.com/alotofms/tg-football (PRIVATE, default branch
+  prod-snapshot). Push here. This is the production source of truth.
+- `upstream` = https://github.com/Levlink773/TGFootball3 (PUBLIC, Maxim's/original owner, we have
+  WRITE only). Last synced at 4738b13. It will DRIFT unless someone runs
+  `git push upstream prod-snapshot` — do that only when handing work back to Maxim.
+- GitHub over HTTPS (`gh auth setup-git`); the local ssh key is not registered with GitHub.
 - PROD IS SOURCE OF TRUTH. Backup any VPS file before editing (cp X X.bak-YYYYMMDD).
 - Never cache balances/energy. initData validation on EVERY endpoint.
 - Don't restart footballgame service except step 4, quiet window only.
