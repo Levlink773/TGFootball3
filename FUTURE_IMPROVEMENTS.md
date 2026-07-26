@@ -219,3 +219,11 @@ member position) → mojibake rows that broke `gearArt` matching and 500'd `/api
 - **Venv console scripts had absolute shebangs to the old `~/dev/tg-football-test` path** and broke
   after the 2026-07-26 home reorg. Patched in place; if the repo moves again, either recreate the
   venv or re-patch `.venv/bin/*` + `pyvenv.cfg`.
+
+**Self-heal note (frontend deploy):** `npm run build` with no `VITE_API_URL` bakes the dev
+fallback `http://127.0.0.1:3004` into the bundle, so the shipped app calls the developer's own
+machine and every user sees "Немає з'єднання". This shipped to prod on 2026-07-26 and was caught
+only by loading the real URL after deploy. Fixed at the source: `webapp/.env.production` now pins
+`VITE_API_URL=https://app.football-blitz.online`, so a plain build is deploy-safe. ALWAYS load
+https://app.football-blitz.online after a frontend deploy and confirm the network tab shows the
+API call going to that origin, not to 127.0.0.1.
