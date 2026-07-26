@@ -16,7 +16,9 @@ Blocks: 1 Фундамент ✅ · 2 Mini App ✅ DEPLOYED (test-bot phase) · 
 - Migration a1b2c3d4e5f6 applied: users.bot_buttons_enabled tinyint(1) default 1.
 - All API endpoints verified 200 with forged auth vs prod data; 401 without.
 - Verified test-token initData validates. Backups of .env: /root/.env.bak-20260721, .env.bak-20260721-2.
-- Dev repo: ~/dev/tg-football-test (branch prod-snapshot). NEVER work in iCloud football_game 3.
+- Dev repo: ~/Personal/projects/tg-football/test (branch prod-snapshot).
+  Moved here by the 2026-07-26 home reorg; the old ~/dev/tg-football-test path is GONE.
+  NEVER work in the iCloud "football_game 3" copy.
 - Deploy gotchas learned: macOS tar ships ._AppleDouble files (use COPYFILE_DISABLE=1 tar);
   Cyrillic migration filenames NFC/NFD duplicate on linux — check `alembic heads` after any sync.
 
@@ -49,7 +51,7 @@ safe-area top inset in TG webview · no CORS/401. Fix whatever checklist surface
 unless explicitly asked.
 
 ## Rules
-- Commit in ~/dev/tg-football-test, conventional commits, no AI attribution.
+- Commit in ~/Personal/projects/tg-football/test, conventional commits, no AI attribution.
 - PROD IS SOURCE OF TRUTH. Backup any VPS file before editing (cp X X.bak-YYYYMMDD).
 - Never cache balances/energy. initData validation on EVERY endpoint.
 - Don't restart footballgame service except step 4, quiet window only.

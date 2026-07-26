@@ -149,3 +149,73 @@ the reliable path, backend code needs manual approval.
   payloads — harness-side, API behavior verified correct.
 - **MySQL-restart chaos test skipped** locally (shared dev MySQL). Verify reconnect behavior
   on VPS during a quiet window.
+
+## Max feedback build 2026-07-24 (Phase A + B, deployed to test bot)
+
+Shipped 14 features across 2 phases (GitHub `dcc95b3`, deployed to app.football-blitz.online).
+Phase A (webapp+player.py): gear-slot images, compact stats, XP bar, training-timer CTA,
+nav attention-badges, in-app training-done popup, VIP chip. Phase B (backend+Team.jsx):
+team moderation (kick/transfer/rename/invite-only/description), infra upgrade UI + endpoint,
+training-center→club-power bonus, match reminders (T-40/T-10), idle-training reminder.
+
+**Deferred / needs Maxim sign-off:**
+- **All reward/tuning numbers are placeholders** pending Maxim: quest energy (⚡20/30/25),
+  50💰 completion bonus, daily gift (10-50💰 + 10⚡), and the **training-center power curve**
+  (0/5/10/15/20/30% — reused the config's existing `INFRASTRUCTURE_BONUSES[TRAINING_CENTER]`).
+- **`/api/team` 500s if any member row has an invalid `position` enum.** `full_power` →
+  `position_enum` does `PositionCharacter(self.position)` which raises `ValueError` on a bad
+  value, taking down the whole team view. Pre-existing (not caused by this build); surfaced when
+  a mangled test row was inserted. Consider a defensive fallback in `position_enum`/`full_power`.
+- **Match reminders + idle-training reminder are new schedulers** — verify they actually fire in
+  prod over a real league cycle (next default-league run). Idle reminder: daily 18:00 server time.
+- **SPORTS_MEDICINE training-time reduction still not applied to app-started trainings** (bot
+  applies it; app doesn't — existing `ponytail:` note in `training_actions.py`). The in-app
+  training countdown/popup therefore uses the un-reduced duration.
+- **Join-request approval stays bot-only** (no requests table — per decision). Webapp moderation
+  covers kick/transfer/rename/invite-only/description. Add a `join_requests` table + bot-flow
+  change if webapp approval is wanted later.
+- **Nav quest-badge on Головна is always on while any quest is claimable** — reloads on the 30s
+  App poll, so it can lag ~30s after a claim. Acceptable; tighten if it feels stale.
+
+**Self-heal note (test harness):** the `mysql` CLI mangled UTF-8 twice this session (item name,
+member position) → mojibake rows that broke `gearArt` matching and 500'd `/api/team`. ALWAYS pass
+`--default-character-set=utf8mb4` to `mysql` for any Cyrillic insert/update in test setup.
+
+## 2026-07-26 — notifications + VIP card session
+
+- **Server was `Etc/UTC`, not Kyiv — every cron ran 3h early.** Energy reset fired 01:15 Kyiv,
+  blitz 18:00/22:00, league matches 00:00, coach sessions 13:00/16:00/22:00. Fixed at the systemd
+  layer (`Environment=TZ=Europe/Kyiv` in `footballgame.service` and `footballgame-api.service`,
+  backups `*.bak-20260726`), NOT in code — the codebase stays naive-local throughout, and mixing
+  tz-aware datetimes would break every existing comparison. **Consequence to watch:** stored naive
+  timestamps written under UTC (`vip_pass_expiration_date`, `education_reward_date`) effectively
+  lost 3h once, on the changeover. Self-correcting; no action needed.
+- **`RemniderCharacterService.character_in_training()` returns `character_in_training is not None`**
+  — True whenever a `reminder_characters` ROW exists, ignoring the boolean column. It gates
+  `Gym._run_training` (`gym_character/core/gym.py:93-96`), so that guard is currently a no-op.
+  One-line fix (`return bool(row and row.character_in_training)`), but flipping it could start
+  raising for in-flight trainings whose flag was cleared by a race. Fix under its own test.
+- **`ReminderCharacter.time_left_training` is sign-inverted** (`reminder_character.py`): returns
+  `datetime.now() - end_time_training` instead of `end - now`. Unused by the app path; fix when touched.
+- **Existing senders still bypass `utils/notify.py`** — `blitz/services/message_sender/blitz_sender.py`,
+  `league/user_sender.py`, `training/sender/*` keep their own send paths, so they neither mark
+  `characters.is_blocked` nor carry deep-link buttons. Route them through `notify()` when convenient.
+- **No notification opt-out.** `is_blocked` only covers users who blocked the bot outright. A
+  per-category toggle would be ~15 lines (column + filter + a switch in the existing
+  `webapp_api/routers/settings.py` / `Settings.jsx`, which already ships `bot_buttons_enabled`).
+  Deliberately not built — product decision, ask Max.
+- **Gift amounts are not previewable before claiming.** `/api/quests` doesn't expose `GIFT_REWARD`,
+  so the promoted gift card can't show "+50💰 +30⚡" up front. 2-line addition to `_payload()` in
+  `webapp_api/routers/quests.py` if wanted.
+- **"Останній матч / статистика" on Home was deferred**, not built. The real version needs a
+  last-finished-fight service method (mirror of `get_next_league_fight_by_club` in
+  `league_service.py`), iteration over all four league services
+  (+4 queries on every `/api/matches` call, which Home/Player/Matches all hit) and a
+  `MatchCharacter` join — and still wouldn't cover blitz. Cheap substitute available:
+  `/api/statistics` already returns `month: {matches, goals, mvp_score}`.
+- **"Повідомлення / події" (notifications icon + unread count) was skipped** — no table, no
+  endpoint, no concept anywhere in the codebase. It is a separate scope item with a migration and
+  scheduler write-sites, not a Home tweak. Quote it separately.
+- **Venv console scripts had absolute shebangs to the old `~/dev/tg-football-test` path** and broke
+  after the 2026-07-26 home reorg. Patched in place; if the repo moves again, either recreate the
+  venv or re-patch `.venv/bin/*` + `pyvenv.cfg`.

@@ -4,12 +4,12 @@
     {
       "name": "webapp",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev", "--prefix", "/Users/oneboyx/dev/tg-football-test/webapp"],
+      "runtimeArgs": ["run", "dev", "--prefix", "/Users/oneboyx/Personal/projects/tg-football/test/webapp"],
       "port": 5173
     },
     {
       "name": "api",
-      "runtimeExecutable": "/Users/oneboyx/dev/tg-football-test/.venv/bin/uvicorn",
+      "runtimeExecutable": "/Users/oneboyx/Personal/projects/tg-football/test/.venv/bin/uvicorn",
       "runtimeArgs": ["webapp_api.app:app", "--host", "127.0.0.1", "--port", "3004"],
       "port": 3004
     }
