@@ -37,8 +37,11 @@ class Character(Base):
     
     created_at      = Column(DateTime, default=datetime.datetime.now)
     is_bot          = Column(Boolean, default=False, server_default="0", nullable=False)
-    
-    referal_user_id            = Column(BigInteger, nullable=True)  
+    # Ставится при TelegramForbiddenError (utils/notify.py), снимается на /start.
+    # Без него каждая рассылка вечно долбится в заблокировавших бота.
+    is_blocked      = Column(Boolean, default=False, server_default="0", nullable=False)
+
+    referal_user_id            = Column(BigInteger, nullable=True)
     referral_award_is_received = Column(Boolean, default=False, server_default="0", nullable=False)
     
     owner = relationship("UserBot", back_populates="characters", lazy="selectin")

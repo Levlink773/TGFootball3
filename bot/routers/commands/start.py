@@ -26,8 +26,11 @@ async def start_command_handler(
     command: Command    
 ):
     
+    # /start = юзер снова в чате с ботом, значит бот разблокирован (или и не был).
+    await CharacterService.unmark_blocked(characters_user_id=user.user_id)
+
     if command.args:
-        await register_referal(user=user, referal=command.args) 
+        await register_referal(user=user, referal=command.args)
     if not user.end_register:
         # PRE_RIGSTER_STATUS used to start the chat registration FSM here. That flow
         # is gone (players register in the Mini App now), so a brand-new user falls

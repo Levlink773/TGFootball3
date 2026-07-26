@@ -265,20 +265,48 @@ class CharacterService:
                     raise e
 
     @classmethod
-    async def get_character_how_update_energy(cls) -> list[Character]:
+    async def get_characters_energy_restored(cls) -> tuple[list[Character], list[Character]]:
+        """Кому 22:15 реально ДОБАВИЛ энергии: (обычные, VIP).
+
+        Вызывать ДО update_energy_for_non_bots() — после апдейта фильтр по
+        current_energy уже никого не найдёт.
+
+        Два бага, которые это чинит:
+        1) старый фильтр `vip_pass_expiration_date <= now()` — в SQL `NULL <= NOW()`
+           это NULL, а не TRUE, поэтому все, кто НИКОГДА не покупал VIP (то есть
+           большинство), молча выпадали из рассылки и DM не получали;
+        2) VIP-когорта бралась из get_have_vip_pass_characters() вообще без фильтра
+           по энергии — випу с 500 энергии писали «енергію відновлено», хотя
+           апдейт его не трогал.
+
+        Строгое `<`, а не `<=`: тот, кто ровно на капе, ничего не получает.
+        """
+        now = datetime.now()
         async for session in get_session():
             async with session.begin():
-                try:
-                    result = await session.execute(
-                        select(Character)
-                        .where(Character.is_bot == False)
-                        .where(Character.current_energy <= CONST_ENERGY)
-                        .where(Character.vip_pass_expiration_date <= datetime.now())
-                    )
-                    all_characters_not_bot = result.unique().scalars().all()
-                    return all_characters_not_bot
-                except Exception as e:
-                    raise e
+                regular = await session.execute(
+                    select(Character)
+                    .where(Character.is_bot == False)
+                    .where(Character.is_blocked == False)
+                    .where(Character.characters_user_id.isnot(None))
+                    .where(Character.current_energy < CONST_ENERGY)
+                    .where(or_(
+                        Character.vip_pass_expiration_date.is_(None),
+                        Character.vip_pass_expiration_date <= now,
+                    ))
+                )
+                vip = await session.execute(
+                    select(Character)
+                    .where(Character.is_bot == False)
+                    .where(Character.is_blocked == False)
+                    .where(Character.characters_user_id.isnot(None))
+                    .where(Character.current_energy < CONST_VIP_ENERGY)
+                    .where(Character.vip_pass_expiration_date > now)
+                )
+                return (
+                    list(regular.unique().scalars().all()),
+                    list(vip.unique().scalars().all()),
+                )
 
     @classmethod
     async def leave_club(cls, character: Character):
@@ -348,6 +376,79 @@ class CharacterService:
                 merged_obj = await session.merge(character)
                 await session.commit()
                 return merged_obj
+
+    @classmethod
+    async def mark_blocked(cls, character_id: int) -> None:
+        """Персонаж заблокировал бота (TelegramForbiddenError). Снимается на /start."""
+        async for session in get_session():
+            async with session.begin():
+                await session.execute(
+                    update(Character)
+                    .where(Character.id == character_id)
+                    .values(is_blocked=True)
+                )
+                await session.commit()
+
+    @classmethod
+    async def unmark_blocked(cls, characters_user_id: int) -> None:
+        """/start — единственный надёжный сигнал, что бот снова разблокирован.
+
+        Условие is_blocked == True держит это в нуле записей для 99% /start.
+        """
+        async for session in get_session():
+            async with session.begin():
+                await session.execute(
+                    update(Character)
+                    .where(Character.characters_user_id == characters_user_id)
+                    .where(Character.is_blocked == True)
+                    .values(is_blocked=False)
+                )
+                await session.commit()
+
+    @classmethod
+    async def get_characters_education_reward_due(cls) -> list[Character]:
+        """Кому пора напомнить про награду навчального центру.
+
+        `notified_date < reward_date` — тот же инвариант, что и в атомарном
+        claim_education_reminder_send, поэтому выборка и claim согласованы.
+        """
+        now = datetime.now()
+        async for session in get_session():
+            async with session.begin():
+                result = await session.execute(
+                    select(Character)
+                    .join(ReminderCharacter, ReminderCharacter.character_id == Character.id)
+                    .where(Character.is_bot == False)
+                    .where(Character.is_blocked == False)
+                    .where(Character.characters_user_id.isnot(None))
+                    .where(ReminderCharacter.education_reward_date <= now)
+                    .where(ReminderCharacter.education_reward_date > now - timedelta(days=30))
+                    .where(
+                        ReminderCharacter.education_reward_notified_date
+                        < ReminderCharacter.education_reward_date
+                    )
+                )
+                return list(result.unique().scalars().all())
+
+    @classmethod
+    async def claim_idle_training_reminder(cls, character_id: int, due: datetime) -> bool:
+        """Атомарно занять право отправить напоминание за конкретный рубеж.
+
+        `due` — момент пересечённого рубежа (last_training_at + 3ч/6ч/24ч*k).
+        Рубежи монотонно растут, поэтому UPDATE проходит ровно один раз на рубеж,
+        переживая рестарты и параллельные процессы. Один столбец вместо реестра
+        на каждый тир. Тот же приём, что claim_education_reminder_send.
+        """
+        async for session in get_session():
+            async with session.begin():
+                result = await session.execute(
+                    update(ReminderCharacter)
+                    .where(ReminderCharacter.character_id == character_id)
+                    .where(ReminderCharacter.idle_notified_at < due)
+                    .values(idle_notified_at=datetime.now())
+                )
+                await session.commit()
+                return result.rowcount > 0
 
     @classmethod
     async def claim_education_reminder_send(cls, characters_user_id: int) -> bool:
